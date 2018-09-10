@@ -1,0 +1,47 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.5, width=10cm,
+tick scale labels in axis labels/.code={
+            \pgfkeysgetvalue{/pgfplots/xtick scale label code/.@cmd}\temp
+            % remember the original value of 'xtick scale label code':
+            \pgfkeyslet{/pgfplots/xtick scale label code orig/.@cmd}\temp
+            %
+            \pgfkeysalso{
+                % simply remember the value in some global macro:
+                xtick scale label code/.code={
+                    \gdef\xTickScale{##1}
+                },
+               ytick scale label code/.code={
+                    \gdef\xTickScale{##1}
+                },
+                ztick scale label code/.code={
+                    \gdef\xTickScale{##1}
+                },
+                % now, _modify_ any user-specified value of 'xlabel' by
+                % appending the tick scale label.
+                % In order to evaluate this modification AFTER the user
+                % wrote "xlabel={$x$}", we add it to 'every axis':
+                every axis/.append style={
+                    % because we don't need the "binop" in this context just
+                    % set it to nothing
+                    tick scale binop={},
+                    xlabel/.add = {}{(\pgfplotsset{xtick scale label code orig=\xTickScale}\,km)},
+                    ylabel/.add = {}{(\pgfplotsset{xtick scale label code orig=\xTickScale}\,km)},
+                    zlabel/.add = {}{(\pgfplotsset{xtick scale label code orig=\xTickScale}\,km)}
+                },
+            }
+        },
+        }
+\begin{document}
+\begin{tikzpicture}
+\begin{axis}[
+	tick scale labels in axis labels,
+	view={35}{30},
+	xlabel={$x \;$ },
+	ylabel={$y \;$ },
+	zlabel={$z \;$ },
+	]
+\addplot3[teal] table [col sep=comma, x index=1,y index=2,z index=3] {kepler_orbit_dopri5.dat};
+\end{axis}
+\end{tikzpicture}
+\end{document}
