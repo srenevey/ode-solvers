@@ -1,6 +1,6 @@
 # ODE-solvers
 
-Ode-solvers is a toolbox offering several methods to solve ordinary differential equations (ODEs) in Rust. The following instructions should get you up and running in no time.
+Ode-solvers is a toolbox offering several methods to solve ordinary differential equations (ODEs) in Rust. The following instructions should get you up and running in no time. For more details, see the [documentation](https://srenevey.github.io/ode-solvers/).
 
 
 
