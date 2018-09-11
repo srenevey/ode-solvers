@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <meta name="author" content="Sylvain Renevey">
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Three-body Problem - Ode-solvers Docs</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/docco.min.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="../index.html">Ode-solvers Docs</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="../index.html">Quick reference</a>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="kepler_orbit.html">Kepler Orbit</a>
+</li>
+                                    
+<li class="active">
+    <a href="three_body_problem.html">Three-body Problem</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="kepler_orbit.html">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="disabled">
+                                <a rel="prev" >
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#three-body-problem">Three-Body Problem</a></li>
+            <li><a href="#problem-definition">Problem Definition</a></li>
+            <li><a href="#implementation">Implementation</a></li>
+            <li><a href="#results">Results</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<style scoped>img.latex-inline { vertical-align: middle; }</style>
+<h1 id="three-body-problem">Three-Body Problem</h1>
+<h2 id="problem-definition">Problem Definition</h2>
+<p>In this problem, we consider the circular restricted three body problem in which a spacecraft evolves under the influence of the Earth and the Moon. The second order nondimensional equations of motion of this problem are</p>
+<p><img class='latex-inline math-true' alt='ddotx2dotyxfrac1muxmud3fracmux1mur3' id='ddotx2dotyxfrac_1' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAAAVBAMAAACK8n6QAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAImYyRFTNdqsQ3ZnvibtLa6zcAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACW0lEQVRIx61VTWvUUBS9ySTtpGli7MaNaPysIIUgiGBBIxZcSCUIYxdDy/gDhDA6uBBkNoLLIH4gfkx/QhbdFHHlwu10QIdZBBR1X3/BeF8yb95LUn0vg2eVk3vOO0nuy30A1aGD5tJrwyecw/OymiLvmgF9OBdOyRrhKYJsdb+kpiAufeqqjpoLKgs2CecT4pKagrgs6poBVjQN7taRIW8M4jS4Dl0YcVLktMoFp64Zgm2gwVr8HtTABsPbDtLgm8Y3OMNJkdMqC85cAEs11hUl+YFtCGSCV5IktIINVCNXuvAuuZdEX/QQGpwUeVZVk2SILiP5mowyF8Cd+S7XsKsRWLHsG9vOjq/6NigXQj994+/mGpzmpMhplb1x5sqveQwWQnGPHdj6lV4tdj462GNHaw+cNPhzcy/XY+S0iiAui7ryax51Fvoyu3qC1cKursX5XU04t6vTp6YuMJYbba7Q81c8mz3Os86Ge8B/PAHZR9e5/5hsGc1jQsKhXxwnE5dq/H7IFR5rl8JFRt3eEfz25lOEf8AswucOCpPrxd8nV96l1La5O0pLmfNuMe5cLrvGAjDloX+q5klT1A8I8sdH0IMhXpxHTgqP+Eh6UwgpYT14zcgeBFvwk6s+MaLSp87jrLouN3gKuuZbjw0M9dRFt2nss/7sftJF663qtuShltdtPmg7U3J8PPbebLaYdnjjhGi9k7AsOWtFOsutMLiVzt3DpifWvRrsCnTK/ssqJ8YctJZkenytFYh07VGV4Ct4Hkk1OIT/i3X1vpROph2VYN7ekdLVizf+AP45z+sgyro+AAAAAElFTkSuQmCC'></p>
+<p><img class='latex-inline math-true' alt='ddoty2dotxyfrac1muyd3fracmuyr3' id='ddoty2dotxyfrac_2' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK0AAAAVCAMAAAAD6J5pAAAAM1BMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADxgEwMAAAAEHRSTlMAImYyRFTNdquJuxDvmd0wTH9IaAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAdlJREFUSMfNV4uurCAMLC21ArLH///aWxSfC/ER7zk2mmywgzNlqCzA7wTrbfF7PFh4Xzi9sZXCE/s+ujRUFUtsIb6vtKHAth2u9CxghPAe1h6+2VplmMaRwUIDVirYQdSixyBQ0TzGOU/DFuHn2KJLob8cA0uenBy4in9HUYsebkDaiqOoT2vo4n+orTcQ0xZDvYWVTcVEo6iKnqWMJr3jI4/41qSZvV+vUScc03jyNAnX2GZRFT1LGU2nc33ccz1hOxRXL0RgrECzqEkPOvWmD+WGEnqrDhdmKc22gx702x0219nSsNw1spOorMeS6GJ3lfYnPiWG3kjBERtobHPY6resFOFgA0+ish4DDYH1ZbamGTLoU5xpD61GfypOQNNiK3OZ6/NZ16cdV1lmCRhzZJ/M0O+ibDJPxxGMtTjeFmubtmxaiZYhhAPogRN2nBptXFf275zNcahRgS0iESPH0FHZdzvohR4RdUJ/ATBnh8iuKXawwSrETqygKW6RLfRCqbB2xqkilmyHt49EDi9TNdo6jdGmT2eygziMP1O26SGs63Ph7XvoyWjSZc761mpf4iVb0AW4F7eg5Mez12nLPvLtvxtaJRQ6nx/pL9lCZIwX/t6sj4f/AJteEL693EtRAAAAAElFTkSuQmCC'></p>
+<p><img class='latex-inline math-true' alt='ddotzfrac1muzd3fracmuzr3' id='ddotzfrac1muzd3_3' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAAVBAMAAACDNRyvAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAImYyRFTNdqvvEJm73YnDn2TGAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABRElEQVQ4y2NgwAZYGVgUYGwuBwYSwAMGjQI4x4UEjcwKDEwIndwk6ORbANfZwAHkMWcfJFInDwNMJ8uGNQxMAQzcCkiyHAwNEKOEmB2w69R7966ALyCcgTWA4TmyrDfXAYhRYewNuO3kEdjiwOTA/gDZ8KesBahGIftTgCHmKJjFWbpPgG+BzFtk1x7kdkE1CjVsocAaS9hOj34IMUpTIQBLfEKBKhA7oxm7AcYqVAcSOzo6OlqQ0xACcKEZzITgW2FY+R8TICT5IQIfgLYvQNKjvXv37g3YPc8ElNqNImLFIIDhWpjiBJUH2E3xA3mpRBp3+t0QcAB7XgLGOIMwzxWcOpkUkBI+ClDHn3zFwwQFNmMKL3+0S5DbAK/OBDZGbP50TAgQ8sOfSw+swe7JAkJ5jeWBOlY3EXApCGzVxpquOSAUAKMFXF7dO7/lAAAAAElFTkSuQmCC'></p>
+<p>where</p>
+<p><img class='latex-inline math-true' alt='dleftxmu2y2z2rightfrac12' id='dleftxmu2y2z2ri_4' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKMAAAAXBAMAAACVGeLQAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARN12u+8izWaZiatUMhDCDwpgAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB80lEQVQ4y9WVv0sjQRTHv+vGNWsmw4IiWCiC1WGzh5UgEv0DJOU1yqKNnbGzEWJznGIRrhNFAhZaqKhYGYscsVALCeoVJ8exCIJiof+BzqzeZJ4ZfyBpnCW783lkP3lv5+0EqPHI11oIlqm5EpufQWlNVIXm/Re+G5/x3mJ73nhnDnCqoyI0xtMkZGIXuL+/k7l2UuWvaqUdohXDJGRiV1E/UXLf2G3c6SAREwuldRRRmijdQEFRzaaBRDnqOxUysFD+dWXYyRBlgjyFp3ENfI0mldoMLOFGfJpm8kR5Dlz1lrJKyfJWHg1g3rFSxNcxqDPi35hkAbwvhLXZIOpzC2J4keUHkL0d9ZUyUXSziIXj0VI+Ktq6kdYZ9pgvWcDIToC6cn1IsuwFghOt8PqgLkDi/wOOFMGUldIZSIYa/MYF7cs1ce6R04VCV2ELuBTH01qIYrZlMfyu0dcZ+Kf793HISeEiS+zxUGW5j2YHMZIlS8U8kmUydDTlGSbbSZYlsKUhVil8AbvtYnmIMndLGKWWnKZsPDgvEuUN2HLT94qya+6PWB6i4IsrhJ3ygEc7Cq/15eOrfEqzwuozNoBmYZWkZXOyaAPcUBuOPI3zDOG3lM/+PWz5C8kijc2GxptfVF4ZNsv37b9m5Rf/4zu6/TO6PADG9oLvHZ5g3gAAAABJRU5ErkJggg=='></p>
+<p><img class='latex-inline math-true' alt='rleftx1mu2y2z2right' id='rleftx1mu2y2z2r_5' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALIAAAATBAMAAADG5EoQAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAdpkiVEQQu4nv3atmMs1//giNAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB4UlEQVQ4y62UzyuEQRjHv++8s+8udvWmzclhW3HA4XWVg1WyJUUKxzc3EVsiOVE4byknSri5KFy8tt5ycaBWSXJy8Af4CzDzzu6774zZ/Mgcpvf7/Pi8zzzPNMBf1m3H7zRfWRvmN1gHpj8rWTTayKppGWBIMd0puhWxTIMbteg0+Uq2bNmSO1ZCEoDbJ5s0WkMmjmJ6DfaBUCfHgBL/oLWYkhJT0pGboCVnQm1lYIzxj1qy0LUYpgmM9kFHIj8B8+mcryfnMQ28YIi6IfmmHHeFFjHJPcr9BJOrcUbu9jzvQjhvAX+x19aTz9EDrJgfH2HNsXu7oaJFjNFvc03g7CrdSLN79VyvGzs4As4qjoBsNpenIheLrZQrnOaBQt5kews/VZatKrnbO+FnsopWsTou4l16HuvvIjZEaiUGj5Xf0lNhDbuR5oe2XG3NtBArOFiK1oxhLEs1p1xTOImv1JwD7dyn+m6Q06Ytl00wSh603iRybkKEIu4o5DnQjfHrmmX6vTXMarwaZRMsSOSZ/EuUbJbXlCtZ/z5H6gmeh5QtkZHw5QlKziiADmjJQfpIQKrOIBncjbcFOaY+Gev1nzk+XTzItrZtbaiOPP/NK+r/6Akn2nb+x/pCPrT/B2x0fQK1rmgdmFaDWwAAAABJRU5ErkJggg=='></p>
+<p><img class='latex-inline math-true' alt='mu' id='mu_6' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAKBAMAAACUK2mNAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAVIlEq5lm7yLdELsydtrDr+4AAAAJcEhZcwAADsQAAA7EAZUrDhsAAAA6SURBVAjXY2AQYjBiYGBwZAgDkhUMMxgYuAq4ChgYGDcwb2hgYHVgUV7AwOkmA5RdzgACImDyIogAAPqgCB2TpUimAAAAAElFTkSuQmCC'> is a parameter of the system. For the Earth-Moon system, <img class='latex-inline math-true' alt='mu00123' id='mu00123_7' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAOBAMAAABk/qeLAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVIlEq5lm7yLdELsyds1wv11QAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABEklEQVQY02NgQAFcF+8AybWyBxjYDjA0aR9g6E0RQFXBwHKAD0j6MDxgvCnAEMDzi2EHEKMCdgZWoK4ChkAGPgGODQxzGR5y/UFTYsnAGsDAPIEhFKSkgmESAwNPAQODEIMRQkkmA5MDA9sEBhWgEqDLPjMw8B5gYHBkCAPKhbi4uDgzMOQx8G5gYHvAcBusBMjm0ATSFQwzUEzZADJFG6ykDyjC85mBq4CrAKHEHOyWArBbGBi8GBgWMJQwMG5g3tAAt4idgQXsI0eQEqYGRuYfDFMZWB1YlBcgh8sCQWC4vAIpSTsjxuEA9DSnm0wYUuiq6TCoMixKOsCs/3bF//9/GGyvGDAsZyAIRAgruUhQBQAoxT0KlUWr/gAAAABJRU5ErkJggg=='>. Rewriting this system in state space form yields</p>
+<p><img class='latex-inline math-true' alt='dotx1x4' id='dotx1x4_8' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAOBAMAAACbXIJpAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVImZEGZ2IjLdq+9Eu80IrNfJAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAfElEQVQY02NgYBBkwAGUGagEWMIEU7EKsLJ8T4OIWK1atWoNQoCdYwIDw1EkHWAB1gMMDGwGDKzLkM0CCjDUASW4BFwYwpCMAgsEHWAQ9m4QgEhAAUiA0ekAg1BOagGKBEjAh+kAhBOG5gfRWHPsEgzMEB2MdwXQJE4uBwDPLx1felh0gQAAAABJRU5ErkJggg=='></p>
+<p><img class='latex-inline math-true' alt='dotx2x5' id='dotx2x5_9' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAOBAMAAACbXIJpAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAVImZEGZ2IjLdq+9Eu86AlKYAAAAJcEhZcwAADsQAAA7EAZUrDhsAAACISURBVBjTY2BgEGTAAZQZqARYwgRTsQqwsjxPg4hYrVq1ag1CgJ1jAgNr8AGEDpAAc7kAAwObAUMpywYks4ACvK8cGBi4BFwOM2xBGAUSYAVSwt4NAizsExAaQAJMYgcYhHJSCxi4GhASYAEGqMocND8UMkwH04wHRFAlWqE66t49QJVgDWoAAIPUH71xSI8QAAAAAElFTkSuQmCC'></p>
+<p><img class='latex-inline math-true' alt='dotx3x6' id='dotx3x6_10' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAOBAMAAACbXIJpAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVImZEGZ2IjLdq+9EzbvIr92wAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAiElEQVQY02NgYBBkwAGUGagEWMIEU7EKsLJ8T4OIWK1atWoNQoCdYwID61EBhA6QAEtiAAMDmwEDL8sGJLOAAnwODxgYuARcGBgNEEaBBPqAlLB3gwCDlANCA0hACmi2UE5qAQP7BIQESCCW4QqUtwPVD6cYXkB0M2xBleCD6nA8LIAqwZgmAAAHKh494kxp0AAAAABJRU5ErkJggg=='></p>
+<p><img class='latex-inline math-true' alt='dotx4x12x5frac1mux1mud3fracmux11mur3' id='dotx4x12x5frac1_11' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQQAAAAVBAMAAABS242zAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVImZEGZ2IjLdq+9EzbvIr92wAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACg0lEQVRIx7VVS2jUUBS9L59mjOOYtkx3isbRWVWCIwili7aICA7STukIopIuKi66GIVSEQoDg+CqlC4UXHUhCoNr3YZK/UALxY3bceXOlaCIML5PkvcyySTPgGeVe3LffSf3F4CcsGAvfK5TO4J6wgGO4nzwpHl5BYAC+kse0cN29KqiFzsg4KYLgNjjfm4JjwGa3HKI7eNUQMUOcOhuqEnNLaESSjBhB1sVQGOLgQRGCdgxBQdBAuaVmbwSeqGEd1oPFrB99QgKJDBKKL1zXXDgEgivk8KNZtz24Hx7iATdts/BaeTiENh+RMLO2Z/tGUYJfWBNhA70jO5q9qRdITwiEs5kSHAKP9Ky8E3dh1vYftgswgmWBUZxlFrTHnfgWSC87mVNHoDRg6fxN1VA31nvvxmv4kJX4X3jBm4CKoFRHEeXL7S4A8bJr1QC4bN6gbS18Ra2EyeCoeAIE8Ek+BRHJzxgRqa0wyZCa46uRIKLBIuj/Yk58TEn7VRs+/aBRzLnUxwL4YEDnnbE+I84hPbzLtCCTHW73dc+sSdKGOkRTl23hi272fh2nE3djsIHY9oobAFsCD1BiGDzMQkblCv9Fqp2vJ8J4Z4sxxF8T0NsS0LQbp/qPidpgReU0+nLxVqt5sguD1ln07qM5oRCECIYOHpeaSHCKRNp43Nb35Vea4Ou49faVl3xokREwtKTMuVgKyVsB5WkJQy6jq2utMp3LkUJUYLR7/8i3H14lhJ2SfxrZSHJVfWSnZzIJhieBWP5y7ralrr+ytmLia6fXg2kyt9882IFG8PvOAaHa5K98OHQWpNvG3ls4l+jbCO48F+wq9+TdZWs1z9DLU/Lupox5i90is8aJaPogQAAAABJRU5ErkJggg=='></p>
+<p><img class='latex-inline math-true' alt='dotx52x4x2frac1mux2d3fracmux2r3' id='dotx52x4x2frac1_12' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAM4AAAAVBAMAAAD8yMwbAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVImZEGZ2IjLdq+9Eu80IrNfJAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACG0lEQVRIx2NgoAgIMByFs30YaAaYGFiXwTk8B2hmTysDQxiCZ0Aze1Tg9nAxLADyBFVpY9cFuD2HWS4wBLI0TBBAVbCAC2G3IDYTinQbiLWHVUlJjUGRMQFoEPsCBh4hJHkeA1+Q3RAxZWwmGHB8Ick/15nPMMSwtyYcaGRGciCTgBjIbhQxFMB+gWEaavrFCtQZGO9CpLYJqzOo8KSqFjB4IcnzFtgcB9qNIoZqz3aGSSjew5neIIDDAKaIJcUBIc+daFQDtBskxhImmIrNCJY/yDIQIzCUMsEYrEBf8YADp3JtAUK+GUKBxFhZvqcxl4M8b7Vq1ao1cCVsF0AyDAwxCHtAAqzBB3CFpyOmYwORQohjAgPvLwcMJXVgGQb2Nwh7QAKlLBsQavj/YwMfEAoQgkCHGzCwIlvAagwEDAxLwDIMrDpgn84C+xQocJhhC1wJbhAMlEePUi4BFyaxA+jhxlTACJJhENFBSgdAARb2CdgMZn0Qo4DLUtZDIFLYuwEYyBiaQztEQTIsB5DsASvlwpoVOAwELuCyh5EXRArlpBYUMkxHT9f///8AyTCGXi6A2wMSYMjB7uYA1gScoRiGyAYTcCqyQc0/jAdEsCgqkysvsMCq3U3VpBxeGrAG4SzMeGaB/RMA49cjJyc4eMDHjiN+jj8QKD1ErWKb44IvzshJoGL1wKMQhitAmBuoaA+DYTCuOpsLSgMAgJiWj2kZ30AAAAAASUVORK5CYII='></p>
+<p><img class='latex-inline math-true' alt='dotx5frac1mux3d3fracmux3r3' id='dotx5frac1mux3d_13' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIUAAAAVBAMAAACakjBMAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVImZEGZ2IjLdq+9Eu80IrNfJAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABdklEQVQ4y2NgwAUYGXgCYGyWAwxkAQWGqAQ45wxZRnAEMLAizGAmywwmB7gZC7iAPEahYJLN4GWAmcFj4MvAKuDByYiqgIthAcJcQTxmBCkpJTAJiDEwCjBUMTDEKCApOMxyAWQuREyZgDt4C2wOsB6oCONhELiApECRMQFkLooYengUMMheBLO4E40KmByOBYUjBzIDw3XmMyBzUcQw4wUKmmHxwl5ggaRgm7A60FywGEuYYCqO9AEFgUB8AmwGcnhwGDDAxVhZvqcxlwsAuVarVq1ag5xOEYBFAMMKViQhdo4JDLy/HDDU/McKEPL8cLEPDAxsBgysKBYYAwHucMIqzSXgwiR2ANMvcBDHeginiZAQEvZuAPpsAp4U28zIi1MOkjqEclILChmm4zEjlCEMt8/gqaMVjzvYE5+XMzdgk2FJCnZHpBjWoAacZvAxPCjFHh48dYwoKQY36GXBmSHEiC0DDrFm4JKyINYMZlEbXFILoDQAZI1kTNETNMwAAAAASUVORK5CYII='></p>
+<h2 id="implementation">Implementation</h2>
+<p>The problem is solved using Dop853. The crate is first imported and the modules are brought into scope:</p>
+<pre><code class="Rust">extern crate ode_solvers;
+use ode_solvers::*;
+use ode_solvers::dop853::*;
+</code></pre>
+
+<p>Type aliases are then defined for the state vector and the time:</p>
+<pre><code class="Rust">type State = Vector6&lt;f64&gt;;
+type Time = f64;
+</code></pre>
+
+<p>Next, we define the problem specific <img class='latex-inline math-true' alt='mu' id='mu_14' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAKBAMAAACUK2mNAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAVIlEq5lm7yLdELsydtrDr+4AAAAJcEhZcwAADsQAAA7EAZUrDhsAAAA6SURBVAjXY2AQYjBiYGBwZAgDkhUMMxgYuAq4ChgYGDcwb2hgYHVgUV7AwOkmA5RdzgACImDyIogAAPqgCB2TpUimAAAAAElFTkSuQmCC'> constant</p>
+<pre><code class="Rust">const MU: f64 = 0.012300118882173;
+</code></pre>
+
+<p>and finally the ODEs to be solved:</p>
+<pre><code class="Rust">fn system(_t: Time, y: &amp;State) -&gt; State {
+    let d = ((y[0]+MU).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
+    let r = ((y[0]-1.0+MU).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
+
+    let mut dy = State::zeros();
+    dy[0] = y[3];
+    dy[1] = y[4];
+    dy[2] = y[5];
+    dy[3] = y[0] + 2.0*y[4] - (1.0-MU)*(y[0]+MU)/d.powi(3) - MU*(y[0]-1.0+MU)/r.powi(3);
+    dy[4] = -2.0*y[3] + y[1] - (1.0-MU)*y[1]/d.powi(3) - MU*y[1]/r.powi(3);
+    dy[5] = -(1.0-MU)*y[2]/d.powi(3) - MU*y[2]/r.powi(3);
+    dy
+}
+</code></pre>
+
+<p>The intial state vector of the spacecraft is defined in the <em>main</em> function. A Dop853 structure is created and the <em>integrate()</em> function is called. The result is handled with a <em>match</em> statement.</p>
+<pre><code class="Rust">fn main() {
+    let y0 = State::new(-0.271, -0.42, 0.0, 0.3, -1.0, 0.0);
+    let mut stepper = Dop853::new(system, 0.0, 150.0, 0.001, y0, 1.0e-14, 1.0e-14);
+    let res = stepper.integrate();
+
+    // Handle result
+    match res {
+        Ok(stats) =&gt; {
+            stats.print();
+            // Do something with the results...
+            // let path = Path::new(&quot;./outputs/three_body_dop853.dat&quot;);
+            // save(stepper.x_out(), stepper.y_out(), path);  
+            // println!(&quot;Results saved in: {:?}&quot;, path);
+        },
+        Err(_) =&gt; println!(&quot;An error occured.&quot;),
+    }
+}
+</code></pre>
+
+<h2 id="results">Results</h2>
+<p>The trajectory of the spacecraft for a duration of 150 (dimensionless time) is shown on the following figure:</p>
+<p><center><img alt="Three body problem" src="images/three_body_dop853.png" /></center></p>
+<p>On that figure, the Earth is located at (0, 0) and the Moon is at (0.9877, 0). We see that the spacecraft is first on an orbit about the Earth before moving to the vicinity of the Moon. The accuracy of the integration can be assessed by looking at the Jacobi constant. The Jacobi constant is given by</p>
+<p><center><img class='latex-inline math-true' alt='Cfrac21mudfrac2murx2y2v2' id='Cfrac21mudfrac2_15' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMsAAAAVBAMAAAAa4QdfAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAIpmriRBmu912VDLNRO+j3/tcAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACMklEQVRIx2NgQAdpugwMCxiuwfmxDLQAjAlxDCwMbJZwAd4LaG6gCuBV4AvYxsCQiRBRQHUDBmBLuoAZHgyE3BYgweAKt4aZwQDEQ3YDhgYx1gcY4YGPDwXWDAVway6xFjBkoboBZDMKuMTwFCM8sPCFTFwdkEQ5L0CsYXNx8WTw4prAsArVDSCbUQArYwNGeGDy2UoZmJHVreUKQPimkOkuQy6qG0A2owLmDRjhgcmfzsDAhRzL//8zODJwlS8A814ucoTGzQKYG0A2IwRAYC6Y5EJ2CwoA8Rk/MjBwL0AV3wZjcCvAU5oCzA0gm1ESINeFpSCKCTk8UIwD8XmAEcqK5kkWeFoF2s+7AcVUbgXkdM6auWqa/P8PCGtSNrAHAt0CBykbFoPcxhAP9QmTMRDAfIvsuyjU3MO2ANkaNtaPM6F8sDW8OyfwoaSynRNiwIz9aPHH/x8DfICbCpVECkVueOoBW8PIs+E6Sp7h2cAJZsgHEFNsKRs3G9tiE+BUgAWGBTgw4hk8IQJJSkpKQLk4aGjwAeUmoAcaGOSgWKSAbjNEgHlBKLJvGJYz1KKoWsxwFZJODjCwCWD1wSYirFkUt2EBijWLWD+gqFoEi+fLbgnYAyqNCGuWzJ0mgGJN0JIDKKqY0ghUCLMOYrOGdUpSAHZ7ofmGJYGkCoGHAdVZUN28MlyoAoj6AOy4DzGk1Tvb0UtIKFiJX9s0V9KsucI2G6u4NnUra6Zl2OtjA7JMAwAJpZVUqpT/qQAAAABJRU5ErkJggg=='></center></p>
+<p>and is an integral of the motion (i.e. is constant as long as no external force is applied). Based on the initial conditions, the Jacobi constant yields</p>
+<p><center><img class='latex-inline math-true' alt='C031830' id='C031830_16' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEwAAAAOBAMAAAB3Ked/AAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAIpmriRBmu912VDLNRO+j3/tcAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVQoz4WPv0vDUBSFv6iJmjQlqIuTQXFxqtSpJSAUf2wG69JBWlCE4mIH9yBOTgWlWlze4CIuGZxtERx0CgiCUwP+AdLBqQg+GyHNoJ7hvvse373nPGBiaWWZQU3vCFk1n1I1UBo5Ste+vB4y7CWwmvEB+oWgzvyo1XLztOFcPtkJ7EntyZoSHLCfEmU/ZAGlC4ZIYBhhhN0j5+9Mj1lSGVCTFON+hHWOLbjUPAqU401z2WzWkaeyLiJs6L3C1InWlsFa35P6np8w/YywxaJsWi8ea8y4sF2UaWO5vPUxw6agknZCmS0dQP2KWmxqdjnqY3qFzY41Zofk0NtoVhMnXqZk1J4uJKZmuJmk7Od5gOfVCmeDGK+nwYhtbjy6t83AbDps7f4kj0z/VfILv0qrBn8DXyCBT6qqGbjHAAAAAElFTkSuQmCC'></center></p>
+<p>By computing the Jacobi constant at each time step and plotting the difference <img class='latex-inline math-true' alt='CC0' id='CC0_17' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAOBAMAAABJDIgxAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAIpmriRBmu912VDLNRO+j3/tcAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAr0lEQVQY02NgYBAycXVggANGZZcQMIOtlIG5ASGeHsBgAWZMZ2DgUoALcxYwMCwC6/vIwMC9AC4uL8DAsAvE4DFgYGBFGHMYiANAjHiEWiBg/QVj7d+ALM79G0QuywYaCNQVC2QnKSkpKTAwfgXquWrAzsDAd4GBYQJCw1ugk7gc2AUYuA4wsAkgxNcwMCRyTmAGKr7sloBkAa9JGgOnA0gcE4DNwQJYQfZiA2lzGQA5lB1kWoR1TwAAAABJRU5ErkJggg=='>, we get the figure below:</p>
+<p><center><img alt="Error on the Jacobi constant" src="images/err_jacobi_dop853.png" /></center></p>
+<p>As can be seen on that figure, the Jacobi constant is constant up to the 11th digit after the decimal point. This accuracy is quite reasonable for that kind of problem but if a higher accuracy is required, the relative tolerance and/or the absolute tolerance could be reduced.</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"search": 83, "next": 78, "help": 191, "previous": 80};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

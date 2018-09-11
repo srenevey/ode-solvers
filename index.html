@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="None">
+        <meta name="author" content="Sylvain Renevey">
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Ode-solvers Docs</title>
+        <link href="css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/docco.min.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="js/jquery-1.10.2.min.js" defer></script>
+        <script src="js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body class="homepage">
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="index.html">Ode-solvers Docs</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="active">
+                                <a href="index.html">Quick reference</a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="examples/kepler_orbit.html">Kepler Orbit</a>
+</li>
+                                    
+<li >
+    <a href="examples/three_body_problem.html">Three-body Problem</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="disabled">
+                                <a rel="next" >
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="examples/kepler_orbit.html">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#odes-solving-in-rust">ODEs Solving in Rust</a></li>
+            <li><a href="#importing-the-crate">Importing the crate</a></li>
+            <li><a href="#type-alias-definition">Type alias definition</a></li>
+            <li><a href="#system-definition">System definition</a></li>
+            <li><a href="#method-selection">Method selection</a></li>
+            <li><a href="#adaptive-step-size">Adaptive Step Size</a></li>
+            <li><a href="#references-and-acknowledgments">References and Acknowledgments</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<style scoped>img.latex-inline { vertical-align: middle; }</style>
+<h1 id="odes-solving-in-rust">ODEs Solving in Rust</h1>
+<p>Ode-solvers is a toolbox offering several methods to solve ordinary differential equations (ODEs) in Rust. The following instructions should get you up and running in no time.</p>
+<h2 id="importing-the-crate">Importing the crate</h2>
+<p>To start using the crate in your project, add the following dependency in your project's Cargo.toml file:</p>
+<pre><code class="rust">[dependencies]
+ode-solvers = &quot;0.1.0&quot;
+</code></pre>
+
+<p>Then, in your main file, add</p>
+<pre><code class="rust">extern crate ode-solvers;
+use ode-solvers::*;
+</code></pre>
+
+<h2 id="type-alias-definition">Type alias definition</h2>
+<p>The numerical integration methods implemented in the crate support multi-dimensional systems. In order to define the dimension of the system, declare a type alias for the state vector. For instance</p>
+<pre><code class="rust">type State = Vector3&lt;f64&gt;;
+</code></pre>
+
+<p>The state representation of the system is based on the VectorN&lt;T,D&gt; structure defined in the <a href="http://nalgebra.org/">nalgebra</a> crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a VectorN&lt;T,D&gt;  where the second type parameter of VectorN is a dimension name defined in nalgebra. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:</p>
+<pre><code class="rust">extern crate nalgebra as na;
+type State = VectorN&lt;f64, na::U9&gt;;
+</code></pre>
+
+<h2 id="system-definition">System definition</h2>
+<p>The first order ODE(s) must be defined in a function with the following signature</p>
+<pre><code class="rust">fn system(x: f64, y: &amp;State) -&gt; State
+</code></pre>
+
+<p>where the first argument is the independent variable (usually time) and the second one is a vector containing the dependent variable(s).</p>
+<h2 id="method-selection">Method selection</h2>
+<p>The following explicit Runge-Kutta methods are implemented in the current version (0.1.0) of the crate:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Name</th>
+<th>Order</th>
+<th>Error estimate order</th>
+<th>Dense output order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dormand-Prince</td>
+<td>Dopri5</td>
+<td>5</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Dormand-Prince</td>
+<td>Dop853</td>
+<td>8</td>
+<td>(5,3)</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+<p>These methods are defined in the modules dopri5 and dop853 and feature: </p>
+<ul>
+<li>
+<p>Adaptive step size control</p>
+</li>
+<li>
+<p>Automatic initial step size selection</p>
+</li>
+<li>
+<p>Sparse or dense output</p>
+</li>
+</ul>
+<p>The first step is to bring the desired module into scope:</p>
+<pre><code class="rust">use ode_solvers::dopri5::*;
+</code></pre>
+
+<p>Then, a structure is created using the <em>new</em> or the <em>from_param</em> method of the corresponding struct. Refer to the API documentation for a description of the input arguments.</p>
+<pre><code class="rust">let mut stepper = Dopri5::new(system, x0, x_end, dx, y0, rtol, atol);
+</code></pre>
+
+<p>The system is integrated using</p>
+<pre><code class="rust">let res = stepper.integrate();
+</code></pre>
+
+<p>which returns Result&lt;Stats, IntegrationError&gt;. Upon successful completion, res = Ok(Stats) where Stats is a structure containing some information on the integration process. If an error occurs, res = Err(IntegrationError). Finally, the results can be retrieved with</p>
+<pre><code class="rust">let x_out = stepper.x_out();
+let y_out = stepper.y_out();
+</code></pre>
+
+<h2 id="adaptive-step-size">Adaptive Step Size</h2>
+<p>The adaptive step size is computed using a PI controller</p>
+<p><center><img class='latex-inline math-true' alt='hn1hnserrnalphaerrn1beta' id='hn1hnserrnalpha_1' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALsAAAASBAMAAADxrbJ/AAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB+klEQVQ4y2NgoB3gdLtAQ9MZ9nI3MDDIK+CQZfwEZzKhO0MXtxRCvIERKKeMy3ImA4Q3HdDkpkBUpAhcwJBCaHFLBNKuuIxnCSBkPLtCRwJu4zkVWIG0GC7jGRPwGd8oKJiwlWE6HtdzMPAA6QrHBuwK2FskwDR3iwPQjGluDHlX3rK99buAcP1EhqkMGFJw4/kYrgLpn0wLUI19GhoaGgmk+SdoQaxhKAL6VICRU0fg7KSDPEjGM7rMc8CQghvP1gL0PmcBdwFcbAayNdMZtoNp/lwFTgdmFydeZgWGC0bIYQ8xBk0KLNgAFN8LYrEJsAlAYpKBgSMM2fhEhkSIRH0Dp8MuIOMWAwPvAkzj0aRAoDUBKA6OFJ4J7HshPgXiNuTAOclQDfZtA/cBTofpDAwKrojUhGw8mhQIcCTAUgM/AzOHWkobkvEw8IHBoCnNI4G3gBuY+rQYOBheMDDwNTAwAcVQjEeTQjVeh4HPd+4CHkzjmQ4wPLl5i+EAQ6cHUC1LShPDWaBfLzBwgsSQjUeTQjUeHLoJE5kExQWFUF0PAm6cAhjpHiQ2BXuWAEpxCAqKoRnPt+HlBMzAAYHXfDMxzACJ4TAeqhzNeFaGjAsg41nOoGfBALZeDDNAYjiMhypn8DmCkdEZ8RSt3BPQBHbilsIhzkKLIh8AlvOIqJLsy74AAAAASUVORK5CYII='></center></p>
+<p>where <img class='latex-inline math-true' alt='s' id='s_2' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHBAMAAAA2fErgAAAAIVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADdcGRXAAAACnRSTlMAMmZUzRB2IrtEfPKReAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAClJREFUCNdjYBAyZmBgcGAJYGBYVgpkmSxiYGBikGBgKGEQA7ImKzAAAEeuBCRDzId/AAAAAElFTkSuQmCC'> is a safety factor (usually 0.9), <img class='latex-inline math-true' alt='errn' id='errn_3' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAPBAMAAABzWwAZAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAECJEVDJ2ie/dzWaZu6sqiYYyAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAgklEQVQY02MQYkAFQgwmaCImRIowpySwHfJRyFE5BBMxZygwvM6rLFtwCSbS4iKg0MjAxCEA08U6gYGBCYg14eYwL2BgZHnAwOAHF2GcwLCBZwMDw2kGBrGUbWBz3LwFeBUYGIDmGk3gRXMPS4I5mghPwGEDVBE+hmwFE4ZgNF8EAwDMhhpBKC1xNwAAAABJRU5ErkJggg=='> is the current error , and <img class='latex-inline math-true' alt='errn1' id='errn1_4' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADEAAAAPBAMAAAC/wjryAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAECJEVDJ2ie/dzWaZu6sqiYYyAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAm0lEQVQY02MQYsAKGBUYTLDLMDuQKcOcksB2yEchR+UQuow5Q4HhdV5l2YJL6DItLgIKjQxMHAIIcWuwDOsEBgYmINZESHA/A8swL2BgZHnAwOCHZNY2sAzjBIYNPBsYGE4zMIilbEOWYXDzFuBVYGAA2m80gRdFBgFYEswZtpeXJ2DK8AQcNsCuh48hWwGs964DUCYYe+iwGgAAmxwi1W7CX7wAAAAASUVORK5CYII='> is the previous error. The coefficients <img class='latex-inline math-true' alt='alpha' id='alpha_5' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAHBAMAAAAotXpTAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMolmmRBEu6vd71TNInaC3aTdAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAM0lEQVQI12NgEDIJYGBgK2BrMGDgTGBdmsAgxcDwm4FhDwPDRwaGmwzcHwIYmK1NHwsAAKmuCYITnLi7AAAAAElFTkSuQmCC'> and <img class='latex-inline math-true' alt='beta' id='beta_6' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAOBAMAAAAPuiubAAAAJ1BMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAilU6eAAAADHRSTlMAMmaJEER2VJkiq7uvTvxIAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAASklEQVQI12NgYBBSZmBgYAlgK2BgYGPgCGBgcGeYARQpSF4AIhmEweRskBKGKAYG1gkMTQwMTAWMGxgY2EPVgJLsDCAQAiYLQAQApI4Jc+pcSKIAAAAASUVORK5CYII='> determine the behavior of the controller. In order to make sure that <img class='latex-inline math-true' alt='h' id='h_7' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAALBAMAAACwtdEWAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAOUlEQVQI12NgkFdgYGBQBmIGVxAhBiIqHBsYGH4yLWDgLOAuYGATYBNg4JnAvpeBn4GZg0GHgc8XAJ+pBrP9mR/mAAAAAElFTkSuQmCC'> doesn't change too abruptly, bounds on the factor of <img class='latex-inline math-true' alt='hn' id='hn_8' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAOBAMAAAACpFvcAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAVElEQVQI12NgkFdggABlKM3gCmOIwRgVjg0Qxk+mBWCas4C7AMxgE2ATADN4JrDvBTP4GZg51FLaGBh0GPh85y7ggWhkSZgIYfBteDkBzGBlyLgAAGGcDXU7SMLAAAAAAElFTkSuQmCC'> are enforced:</p>
+<p><center><img class='latex-inline math-true' alt='fminleqserrnalphaerrn1betaleqfmax' id='fminleqserrnalp_9' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANoAAAARBAMAAABJHK+fAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVHaZ3SLNMmarRBCJ77v+As5kAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACPklEQVQ4y71VPW/TUBQ9juuPvDitY5ZURMhphWBgiKiiVoghCwNiMaICdcvGwEAlKBIMldtSKS0ZQifUySmiEtDBQnxsYGAD/4MuYegEAws7z3ZI3vOrzYK4y7Xuufecd+/7MPDPjVgO/p+taG4OKs1mIaX0It9kQ+O4a3CY1eASJq4LNdpwJmYq3k8Y64EjQBiVWOc4lkttLuGeWLKTq6b6HTtbjfhFlkXjxbAhjPYJMtW6YWjfx35ObzomWRadH6R+2eYL9MfJHNZMSrlnYfZqs9A84Yx7O8BzCNBITcYSw4KHOzz7zVRnu4lXcYuOJTDI++Do5Y9JRs2oPDUFaKRWWLMZFqjLPP3PxBnDsHLej/3UaZ+Y5cpJpezDOWT3LWFNQXHQpfEVjgVTvJjSSo1euRgnSrddYt6lH4vjHFYtBUW2ZdO4ybFEKdzkesKd+RzNxtUGxNwH/OlxDquWguK9spmDlbBgmucu2KWZ6scaNqiz/yTStbU1esxfQ8cCILuIUVYtBQlqMQswg1f1biVQzl6RavT0Fz2yiEOVvKVuwKxiu0pLpfojHAH0IMQoq5aCRLXEdvGsVfbbKtrvJiT6lNDHRWssYR0WCYSHgXmBKNrPhPQw/HSsWguSfUfprZYG0c34cA2Y192O992bl19EC5yjdgxlhGaoJYVcb0OW0q8G5OWOvn2gn7mxTmB8BXqyU/MW/F5hM6e3CO1nQ5Gd+ib0Fvoooil9kasX9rqbuf8OzUsFHmRDf4kn9htJbIx7Xbxx4AAAAABJRU5ErkJggg=='></center></p>
+<p>If <img class='latex-inline math-true' alt='serrnalphaerrn1betaleqfmin' id='serrnalphaerrn1_10' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAAARBAMAAAC7oPo6AAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMmZUzRB2IrtEie/dmatpiiVLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB1ElEQVQ4y2NgIBdwmhUwUB2IMyrglQ/HzQ/HroO1gEGBC8WlzLloSiZj5bMmLyjAkIL53YDBLAvGEQARPCVEGcoSoJSA21DOAD4oe14CiBRhIGio1qpVCXIMU/C4lImBA8K0gwStLoq8kDFQJ2dyAtt124Lc4usIS2YxzGPAkIIbystQB2bpGYAppnMJyIY6sARMBhqwYGoXR2XEgnaEoVzGcw0Y0KXghrIpg02xmwAVcURx6bdSoM7NxgEFWxnYuQPQgwNdCgwmAQ0VhzBrU6FiHyAUFzjWGEw+MUxmPMDAwA7ENRhhjC4F9uozoKEGUE7tUjAFUoKkgkGCYTKnAwMr8wOgZzANRZMCAzVQkoKBKHBYg5QgQAmDGMNk1gMMCrzAWLzEwBCWrIZiKJoUpqEMUReABFsCa5rRYisGXSCVwMA0WQFoiJlRAAcwgwDjYvoBDtQwRZXCYigY8E3grGHYysIZAqQaMNIpc8IsVENRpUAJGJuhPAwMZowX6oBSZpwLMHTyCtycgMNQkBS6S3Xv3r0L9H58LQPDRSYFpQmtEy7yzsTQyceQVIDDUJAU2MUdBugu5QKmgQe8BVYTLgU8YFMHC0mi+UUSKxMZME7AV+oBAPkfgycg0tzvAAAAAElFTkSuQmCC'>, then <img class='latex-inline math-true' alt='hn1hnfmin' id='hn1hnfmin_11' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAF8AAAAQBAMAAACCbL5/AAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABKklEQVQoz2NgkFdgwA4YP8FYbg+QxZVxqGdgMoCx1hYgi7vi0sASAGVwo6hnEMOlgTEByuBAcRFDhWMDdg3sLRIQRlcYivhPpgWoCp+GhoZGAmn+CVpQnRuQpTkLkJw4A1lmOsN2CIMfKiANJtkE2AQgfgQ6FsXuRCAEg1soDuCZwL4X4kcgbkN20kmG6gtYwpGfgZlDLaUNSQMMfGAwaErzAAZVGoNaSqOLAMcDsDodBj7fuQt4MDUwHWB4cvMWwwEGhkiGuQuYFQomFYDVgZ2fMJFJUFxQCNUGcKLgBHpwAVDBPt4AjgSgOogw34aXEzCdBAKv+WYy/X0AVNDB0cmjCVYHAqwMGRdAGljOOKBpCGDrZRBUACp4yyLJ1wRWh0gJDCQCFuKUAQDJtkNXg0YOFQAAAABJRU5ErkJggg=='> and if <img class='latex-inline math-true' alt='serrnalphaerrn1betageqfmax' id='serrnalphaerrn1_12' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKkAAAARBAMAAABUYpEEAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMmZUzRB2IrtEie/dmatpiiVLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB1klEQVQ4y2NgIBdwmhUwUB+IMyrgVxCOmx+OXQdrAYMCF4pbmXPR1UzGymdNXlCAIQXzvgGDWRaIIQAT4SkhzlSWAKUE3KZyBvCBGHIJUBERBsKmaq1alSDHMAWPW5kYOMAs2VSIiC6qAiFjoFbO5AS267YFucXXEbbMYpjHgCEFN5WXoQ7CrF0KIpnOJaCY6sASMBlowoKpXRyVEQvaEaZyGc81YECXgpvKpgwzJuoCiHREdeu3UqDWzcYBBVsZ2LkD0EMEXQoMJgFNFYfz7MAp7AOqqSafGCYzHmBgYAfiGoxwRpcC+/YZ0FQDuKFgFkgJEmBikGCYzOnAwMr8AKgC01Q0KTBQA6UsKNCbAEmuD1BMLWEQY5jMeoBBgRfokUsMDGHJaiimokmhm2oLTbBsCaxpRoutGMp0AowXXWBgmqwANMXMKIADmFWAETL9AAdquKJKYbgVCvgmcNYwbGUBxj2rwAEDjPTKnDAL1VRUKVBCxmYqDwODGeOFOsaGCAb2B5haeQVuTsBhKkgK3a26d+/eBaas+FoGhotMCkozF6iJCyVMwNDKx5BUgMNUkBTYzR0G6G7lAmaFB7wFVhMu685MWgQpdiTRvCOJlYkMGCfgLQQBEcGDklXoRB8AAAAASUVORK5CYII='>, <img class='latex-inline math-true' alt='hn1hnfmax' id='hn1hnfmax_13' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAQBAMAAAAblGfKAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABMUlEQVQoz2NgkFdgwA4YP8FYbg+QxZVxqGdgMoCx1hYgi7vi0sASAGVwo6hnEMOlgTEByuBAcRFDhWMDdg3sLRIQRlcYivhPpgWoCp+GhoZGAmn+CVpQnRuQpTkLkJw4A1lmOsN2CIMfxTw2ATYBiB+BjkWxOxEIweAWigaeCex7IX4E4jZkJ51kqL6AJRz5GZg51FLakDTAwAcGg6Y0D2BQpTGopTS6CPBmLGJx7GPQYeDznbuAB1MD0wGGJzdvMRxgYIhkmLuAWaGAnaFAm4sF4vyEiUyC4oJCqDaAEwUn0IMLgAr28QbsARpxFSLMt+HlBEwngcBrvplMfx8AFXRwdE7kyL7dxgkWZmXIuADSwHLGAU1DAFsvg6ACUMFbFkk+j5fTGnuRUgIDiYCFOGUALDpDoV6VGOEAAAAASUVORK5CYII='>.</p>
+<p>The default values of these parameters are listed in the table below.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Dopri5</th>
+<th>Dopri853</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img class='latex-inline math-true' alt='alpha' id='alpha_14' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAHBAMAAAAotXpTAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMolmmRBEu6vd71TNInaC3aTdAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAM0lEQVQI12NgEDIJYGBgK2BrMGDgTGBdmsAgxcDwm4FhDwPDRwaGmwzcHwIYmK1NHwsAAKmuCYITnLi7AAAAAElFTkSuQmCC'></td>
+<td>0.17</td>
+<td>1/8</td>
+</tr>
+<tr>
+<td><img class='latex-inline math-true' alt='beta' id='beta_15' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAOBAMAAAAPuiubAAAAJ1BMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAilU6eAAAADHRSTlMAMmaJEER2VJkiq7uvTvxIAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAASklEQVQI12NgYBBSZmBgYAlgK2BgYGPgCGBgcGeYARQpSF4AIhmEweRskBKGKAYG1gkMTQwMTAWMGxgY2EPVgJLsDCAQAiYLQAQApI4Jc+pcSKIAAAAASUVORK5CYII='></td>
+<td>0.04</td>
+<td>0</td>
+</tr>
+<tr>
+<td><img class='latex-inline math-true' alt='fmin' id='fmin_16' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAOBAMAAADOPWE3AAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVHaZ3SLNMmarRBCJ77v+As5kAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAd0lEQVQI12NgYGBUZkAGLGEo3DIUHkMzCo/DUwGFn46q+AOE4ikAU6wOKJKME1C4TArcShIHZRiagRTQUM4FXCEMt9m4tgGpB0BHMTAIsRtEMjQxCHEdYNgfzMBgztHQseD1AnPmVQw8pxkYJjAHyCyw2DCBqRUAnJgWhWTFvv8AAAAASUVORK5CYII='></td>
+<td>0.2</td>
+<td>0.333</td>
+</tr>
+<tr>
+<td><img class='latex-inline math-true' alt='fmax' id='fmax_17' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAOBAMAAAAh/woJAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVHaZ3SLNMmarRBCJ77v+As5kAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAe0lEQVQI12NgYGBUZkABLGGo/DJULkMzKpfDUwFVIB1N/QdULqsDKp9xAiqfSYFbSeKgDENQywbBEwYMDJwLuEIYbrMxJLBxFzgIAJ3HwCDEbhDJ/mAfAytQ6/5gBgZzjoaOVQeaSisUFjDwnGZgmMAcILPAsHmVxokAAC2pGOhPt+TwAAAAAElFTkSuQmCC'></td>
+<td>10.0</td>
+<td>6.0</td>
+</tr>
+<tr>
+<td><img class='latex-inline math-true' alt='s' id='s_18' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHBAMAAAA2fErgAAAAIVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADdcGRXAAAACnRSTlMAMmZUzRB2IrtEfPKReAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAClJREFUCNdjYBAyZmBgcGAJYGBYVgpkmSxiYGBikGBgKGEQA7ImKzAAAEeuBCRDzId/AAAAAElFTkSuQmCC'></td>
+<td>0.9</td>
+<td>0.9</td>
+</tr>
+</tbody>
+</table>
+<p>These default values can be overridden by using the method <em>from_param</em>.</p>
+<p>For Dopri5, a 5th order approximation <img class='latex-inline math-true' alt='y1' id='y1_19' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAKBAMAAAByAqLJAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAZokyuxBEdu8izVSZqyMp+XYAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABDSURBVAjXY2BUZnBlYGBILmdoAFITFrM5sAkwsD5gKpAtYOB2YElgBFIH4hiAFOtpLRDFwKAIouaxLgBR7EIBDFu8AbahDQqFMh5XAAAAAElFTkSuQmCC'> and a 4th order approximation <img class='latex-inline math-true' alt='haty1' id='haty1_20' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAOBAMAAADpk+DfAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAiRB2MpkiZrtE781Uq5tbJQIAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABSSURBVAjXY2BgEGIAAWZXBRClxuDAAAfsIgxNQGqKMcMCIJWwhbOBs4CB6QGjQa0BA08DxwR2IBWgxwCkmGKkQRQDgziIymPaAKKYCxUYTvQAAPwvDRTmgPimAAAAAElFTkSuQmCC'> are constructed using the coefficients of the method. The error estimator is then</p>
+<p><center><img class='latex-inline math-true' alt='errsqrtfrac1nsumi1nfracy1ihaty1isci' id='errsqrtfrac1nsu_21' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAAAbBAMAAABsAWvXAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARHZUie8QMt3NZpkiu6s3F+5SAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACCUlEQVRIx2NgwA3k/5MG8BjFsIGBaoB9AfXMYkkgUiGzAEElfEAsRYxZgjYElRxiYOB6hMRPUl5Eth91gBhZt0wDL5ydtSEbKxsXeAA1K7979+59878wMCuIwOUEJghhZeMAPA5Qs7j+AAk2Vwbugo3wQGZ3cGRwYGBmWOLiogBj4wFMBTA/3gQRjAJ8DFoH4JIGE5gnYGHjiUaIWakgFzIcQEl7yhMYHrAJobOFjBi0D+9h2mN9ANWsFFDKuWsActJ3DIu4mBcAw3MhGpvRgYUx1+GO2BVeoFn73r179xCqfDlCpytGqmWxYmCcyOCMxmY1NuNhTWA4EIaslA2SG/mBGfYDkMnxAN0sbFn7A0MFUOYEMNYakJWeQM3ZPH/AlDuYZMSdTSUZGBLsgCEDthrqR7b1BSiZjFEBScM6BZxmZTBwMexiYOBGsY1XgYEbiXsaJdhxm8WsvIzhDlA3SiwyTUAxCxJcXBsImYU9zX9jEAZFgZIVSCM3yB42A7EJKS4uLgnIZikvYFN2IGRYMDjoGU8wXABSiuCkewBqCJJZzA4GnAkKzATM2geJRiNGB0jIs52KYOBNRHcX21aDOsKeFIUU0Nu5BYFB2QECXQzcy8BStpcRJRqPQgnDMUKlBH8JOKk/YFqDTxWXVQKLscBCAmbxahMfUc4E5JmCqFcHQXMNdQA59SwAnmO5+2kpqOgAAAAASUVORK5CYII='></center></p>
+<p>where <img class='latex-inline math-true' alt='n' id='n_22' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAHBAMAAAAotXpTAAAAKlBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADmU0mKAAAADXRSTlMAdpkQZqtEuzIi791UkCiWPAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAADNJREFUCNdjYFR2CWBgSC5iqGBgmLCYYTEDA+cG5gUMDDwKjAoTGJgcWHMMGNgnsLgxAACtbQfZlQJHUAAAAABJRU5ErkJggg=='> is the dimension of the system and <img class='latex-inline math-true' alt='sci' id='sci_23' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAKBAMAAACgUqiRAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAMmZUzRB2IrtEie/dmYONxR4AAAAJcEhZcwAADsQAAA7EAZUrDhsAAABPSURBVAjXY2AQMmZgXKzAAAQOLAEzGLaDWM9KGU4yFHAJMDCYPGLcABJhYGKQYHYAs0oYxNgPMJjqAsUmKzAoGVWGMMCAGpzVOgHGuhQAAPdhDaXfNtz0AAAAAElFTkSuQmCC'> is a scale factor given by</p>
+<p><center><img class='latex-inline math-true' alt='sciatolrtolmaxy0iy1i' id='sciatolrtolmaxy_24' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMkAAAAQBAMAAABO2UbRAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMmZUzRB2IrtEie/dmatpiiVLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACgUlEQVQ4y62UT2gTQRTG3+xkN7trE4JIG/+VNUhEIbIkVnowZRXiOYeQ9FBxoVjxIgsq6kFdkFw8jaYttvYQm/SQWymIJ8GrCFLaQ/FSFjyIlyAeiifxTXcz2aRoesgcZuebmf1+82bmDcAQivPf0SgMpVAmdzkVXoW07CjFoVDKoJlC1HgV0tisH8bEHDRhZwDl/GEom4MmeAMoN/BzNAekYfT8tnjX6KcoO3mx1yutqXtTCe3VmvS58scBUkcr6S1UwxShkRLBjxUpvob3vCPWxsJwwIuwfsrCC1VQpIJUoN4RloeZhzZKA61ezsF6mCI0UlQ8/r0H8AkcPdG1HUmM+NeCfhQU510weAVtXWoRN7rYBHqdh2milXNVc7NnQE8EFK41AzVS4ri+S7/Ieu8+n4QZAJffdA9gt/2l/QObCFT54FOkeNQlVsw+BsApOqfIP/VbntqNBbV90fZjiSdAgiS1fPfOjk1CXpY5RTJELBSB07yR6lBOwXyFrDhBLNRVa3W+qQEFNZMCCnbfh1Fc50QmFEsSri2c/ibPbsYdQYkZQHbNch6+dyhv4OxYWcMFUpu7bt5U7DjLICUHvgakZILTl2oGpLKPSyGKnj1h6kwtzka6p8+X2YKqYqLt/EZy49Ge3hif+0B+M5D5TZa3m0o9vlRCShN8jRSttB+LcE735UCkOA7b0735UiBebML9V76sUtyxNFKony+rPJY0b46KmVXWR9GWwVre7xS5Yy3VI1rrICWHVs9kS8bTr7KAgppTqgwpa2LmVt+TFjunX3ae9KK3nMbt6NeDFB1dlQtFSN1BmxqMQaAnn6PWTGIO5bWUDdJdznFehTRhEsBfbPWp1jeYfBQAAAAASUVORK5CYII='></center></p>
+<p>For Dop853, an 8th order approximation <img class='latex-inline math-true' alt='y1' id='y1_25' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAKBAMAAAByAqLJAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAZokyuxBEdu8izVSZqyMp+XYAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABDSURBVAjXY2BUZnBlYGBILmdoAFITFrM5sAkwsD5gKpAtYOB2YElgBFIH4hiAFOtpLRDFwKAIouaxLgBR7EIBDFu8AbahDQqFMh5XAAAAAElFTkSuQmCC'>, a 5th order approximation <img class='latex-inline math-true' alt='haty1' id='haty1_26' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAOBAMAAADpk+DfAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAiRB2MpkiZrtE781Uq5tbJQIAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABSSURBVAjXY2BgEGIAAWZXBRClxuDAAAfsIgxNQGqKMcMCIJWwhbOBs4CB6QGjQa0BA08DxwR2IBWgxwCkmGKkQRQDgziIymPaAKKYCxUYTvQAAPwvDRTmgPimAAAAAElFTkSuQmCC'>, and a 3rd order approximation <img class='latex-inline math-true' alt='tildey1' id='tildey1_27' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAOBAMAAADpk+DfAAAALVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAOrOgAAAADnRSTlMAEKt2VES7MmaJ7yLNmab0NT8AAAAJcEhZcwAADsQAAA7EAZUrDhsAAABPSURBVAjXY2AQMnBgAIKAsAIGdMAxnSERSIUbMywAUhuOsyawNjAwPuA0aDJgYElgC+AAUhfkGIAU45U5IIqBYQaI2sd4AEQxdwowuKUAAIKlD4Lus/TTAAAAAElFTkSuQmCC'> are constructed using the coefficients of the method. Two error estimators are computed:</p>
+<p><center><img class='latex-inline math-true' alt='err5sqrtfrac1nsumi1nfracy1ihaty1isci' id='err5sqrtfrac1ns_28' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAAbBAMAAAB7I/seAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARHZUie8QMt3NZpkiu6s3F+5SAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACK0lEQVRIx2NgwAv4/5MG8JvGwM1AVVBFXePciFTHLECUsgcMDFLEqBO0IUYVjwID1yMkfpLyIkr8ynSAgQHZAJkGXjg7a0M2VjYewMcAMS6/e/fuffO/MDAriMDlBCYIYWXjAUegxnH9ARJsrgzcBRvhYc7u4MjgwMDMsMTFRQHGJgDUocYx3AQRjAJ8DFoH4AFhMIF5AhY2/oiFGJfqACIPIMuxK09geMAmhM4WMmLQPryHaY/1AQzT2ICGMN81ADnsO4YkF/MCoHUL0diMDiyMuQ53xK7wHthzGMjf9+7du4cwHQVwza4J6MaxWDEwTmRwRmOzGpvxsCYwHAhjYLj/DFl5AjjHgsqAD0AexwN047CVAB8YKoAyJ4AJtoGBYQFKCm5AKQB4/oApdzDJuABnaEsC3WEHDCKg7c6KSJ7NAoaWIUIZowKSnnUKOI3LYOBi2AV0CMhCDmSJSwwMGxC80yixgNs4ZuVlDHcYGHgPMPAYcCBHriaKcZCg49pAyDikhLQAxXXnExiBSYRNyQqklxtkEZuB2IQUFxeXBGTjlBewKTtgNW+VOzKP1QAUE4wnGC4AKUVwDj4ANQfJOGYHA84EBWbCjuV+AI5YI0YHSESwnYpg4E1Edx3bVoM6ogonxgBwyb6dWxAYsh0g0MXAvQwsZXsZUQLyKJQwHCOmPPkOLtkfMK3Bp4jLKoHFWGAhEcZd2kB0MetMhBpVBQZqgvMHqGocOVU2AKmSwe3y6bIKAAAAAElFTkSuQmCC'> &nbsp; and &nbsp;  <img class='latex-inline math-true' alt='err3sqrtfrac1nsumi1nfracy1itildey1isci' id='err3sqrtfrac1ns_29' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJwAAAAbBAMAAAB7I/seAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARHZUie8QMt3NZpkiu6s3F+5SAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACK0lEQVRIx2NgwAv4/5MG8JvGwM1AVVBFXePciFQnbUWUsgcMDFLEqBN7Q4wqHgUGrkdI/CTlRZT4lekAAwOyATINvHB21oZsrGw8gI8BYlx+9+7d++Z/YWBWEIHLCUwQwsrGA45AjeP6AyTYXBm4CzYKwOTYHRwZHBiYGZa4uCjA2ASAOtQ4hpsgglGAj0HrADwgDCYwT8DCxh+xEONSHUDkAWQ5duUJDA/YhNDZQkYM2of3MO2xPoBhGhvQEOa7BiCHfceQ5GJeALRuIRqb0YGFMdfhjtgV3gMLFwP5+969e/cQpqMArtk1Ad04FisGxokMzmhsVmMzHtYEhgNhDAwTUpGVJ4BzLKgM+ADkcTxANw5bCfCBoQIocwKYYBuAtDVyCm5AKQB4/oApdzDJuABnaEsC3WEHDCKg7czPkDybBQwtQ4QyRgUkPesUcBqXwcDFsAvokAUQVyLAJQaGDQjeaZRYwG0cs/IyhjsMDLygeGUtQJLQRDEOEnRcGwgZh2TwBlbk6DufwAhMImxKViC93CDb2AzEJqS4uLgkIBunvIBN2QGbcWyGm5G5rAagmGA8wXABSCmCc/ABqDlIxjE7GHAmKDATdiz3A3DEGjE6QCKC7VQEA28iuuvYthrUEVU4MQaAS/bt3ILAkO0AgS4G7mVgKdvLiBKQR6GE4Rgx5cl3cMn+gGkNPkVcVgksxgILiTDu0gaii1lnItSoKjBQE5w/QFXjyKmyAfzIwozE/na4AAAAAElFTkSuQmCC'></center></p>
+<p>which are combined into a single error estimator</p>
+<p><center><img class='latex-inline math-true' alt='errerr5fracerr5sqrterr52001err32' id='errerr5fracerr5_30' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJ0AAAAZCAMAAAAc2dwqAAAANlBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHL6OuAAAAEXRSTlMARHZUie8QMt3NZpkiu6sgMD27wU8AAAAJcEhZcwAADsQAAA7EAZUrDhsAAAG2SURBVEjH5VaJbsMwCMWG2g4+tv7/z85n5WRJm6TuFGlIwagF+QV4BIC/EUeIoCSx/UpKwaXEKJAg3ASY1bXA6Qkx5gslVOXthRBqCxDRWQ1V7cYmZHobaR1a1453/FYltp0ACMnMSmvaBy66EQjlCbyrR/7Dhiriud+pXCKQ3uN4w9QSDm6JR/XY7WedO9c/Qstdb2Eq5U1/7PXz95BQ3j8kIKZ0iwLM7dCO35Vd9+MPs0mZcoktF1k+5EcoxcJvaO7i+EGO1aktvt3pW36LViB3mTGWKGHmcOwaBZCO0+ZEzJIqvMyd1Kvjw3Y/I7PuDcHwMuacMC/GVlhv2kqlZvvO4CCfxYwUXn1fJVWejrlWqWK5a5vB8lnMSAmzZUkV7UwoJMroZASTh1QzMrpl0HeLGcOPkjoxW5ZgsS0VdNTQUYduO2iACMMtdf2yVHWuFBFN8VGrld0IGiWYqJvWkNmyVPRjl6OODO5Bj4zuVxALGgjvho2w3bJUNM4qG3mevi9eVwO9x9UgPxCdjM2y0S2PXe5QNnhofe86vNrlDvS6cwOmcf+BNfjeLjdHN7bvQE3wz+QHA6kaKSFupTgAAAAASUVORK5CYII='></center></p>
+<p>For a thorough discussion, see Hairer et al. [1].</p>
+<h2 id="references-and-acknowledgments">References and Acknowledgments</h2>
+<p>The algorithms implemented in this crate are described in references [1] and [2]. They were originally implemented in FORTRAN by E. Hairer and G. Wanner, Université de Genève, Switzerland. This Rust implementation has been adapted from the C version written by J. Colinge, Université de Genève, Switzerland and the C++ version written by Blake Ashby, Stanford University, USA.</p>
+<p>[1] Hairer, E., Nørsett, S.P., Wanner, G., <em>Solving Ordinary Differential Equations I, Nonstiff Problems</em>, Second Revised Edition, Springer, 2008</p>
+<p>[2] Hairer, E., Wanner, G., <em>Solving Ordinary Differential Equations II, Stiff and Differential-Algebraic Problems</em>, Second Revised Edition, Springer, 2002</p>
+<p>[3] Butcher, J.C., <em>Numerical Methods for Ordinary Differential Equations</em>, Third Edition, John Wiley and Sons, 2016</p>
+<p>[4] Gustafsson, K., Control-Theoretic Techniques for Stepsize Selection in Explicit Runge-Kutta Methods. <em>ACM Transactions on Mathematical Software</em>, 17, 4 (December 1991), 533-554.</p>
+<p>[5] Gustafsson, K., Control-Theoretic Techniques for Stepsize Selection in Implicit Runge-Kutta Methods. <em>ACM Transactions on Mathematical Software</em>, 20, 4 (December 1994), 496-517. </p>
+<p>[6] Söderlind, G., Automatic Control and Adaptive Time-Stepping, <em>Numerical Algorithms</em> (2002) 31: 281-310.</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = ".",
+                shortcuts = {"search": 83, "next": 78, "help": 191, "previous": 80};
+        </script>
+        <script src="js/base.js" defer></script>
+        <script src="search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.0.3
+Build Date UTC : 2018-09-11 00:09:22
+-->
