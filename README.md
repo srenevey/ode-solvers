@@ -1,6 +1,6 @@
 # ODE-solvers
 
-[![Crates.io](https://img.shields.io/crates/v/ode_solvers.svg)](https://crates.io/crates/ode_solvers/)[![Docs](https://docs.rs/ode_solvers/badge.svg)](https://docs.rs/ode_solvers)![Crates.io](https://img.shields.io/crates/l/ode_solvers.svg)
+[![Crates.io](https://img.shields.io/crates/v/ode_solvers.svg)](https://crates.io/crates/ode_solvers/) [![Docs](https://docs.rs/ode_solvers/badge.svg)](https://docs.rs/ode_solvers) ![Crates.io](https://img.shields.io/crates/l/ode_solvers.svg)
 
 Ode-solvers is a toolbox offering several numerical methods to solve ordinary differential equations (ODEs) in Rust. The following instructions should get you up and running in no time. For more details, see the [homepage](https://srenevey.github.io/ode-solvers/).
 
