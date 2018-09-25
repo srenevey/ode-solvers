@@ -1,3 +1,6 @@
+// The equations of motion describing the motion of a spacecraft on a Kepler
+// orbit are integrated using Dopri5.
+
 extern crate ode_solvers;
 use ode_solvers::*;
 use ode_solvers::dopri5::*;
@@ -19,7 +22,7 @@ fn main() {
     // Orbit with: a = 20000km, e = 0.7, i = 35 deg, raan = 100 deg, arg_per = 65 deg, true_an = 30 deg
     let y0 = State::new(-5007.248417988539, -1444.918140151374, 3628.534606178356, 0.717716656891, -10.224093784269, 0.748229399696);
 
-    let mut stepper = Dopri5::new(system, 0.0, 5.0 * period, 60.0, y0, 1.0e-10, 1.0e-10);
+    let mut stepper = Dopri5::new(system, 0.0, 5.0*period, 60.0, y0, 1.0e-10, 1.0e-10);
     let res = stepper.integrate();
     
     // Handle result
@@ -35,7 +38,7 @@ fn main() {
     
 }
 
-/// Equations of motion of the system
+// Equations of motion of the system
 fn system(_t: Time, y: &State) -> State {
     let r = (y[0]*y[0] + y[1]*y[1] + y[2]*y[2]).sqrt() ;
     let mut dy = State::zeros();
