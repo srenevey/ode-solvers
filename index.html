@@ -92,23 +92,24 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#odes-solving-in-rust">ODEs Solving in Rust</a></li>
-            <li><a href="#importing-the-crate">Importing the crate</a></li>
+            <li><a href="#installation">Installation</a></li>
             <li><a href="#type-alias-definition">Type alias definition</a></li>
             <li><a href="#system-definition">System definition</a></li>
             <li><a href="#method-selection">Method selection</a></li>
             <li><a href="#adaptive-step-size">Adaptive Step Size</a></li>
-            <li><a href="#references-and-acknowledgments">References and Acknowledgments</a></li>
+            <li><a href="#acknowledgments">Acknowledgments</a></li>
+            <li><a href="#references">References</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
 <style scoped>img.latex-inline { vertical-align: middle; }</style>
 <h1 id="odes-solving-in-rust">ODEs Solving in Rust</h1>
-<p>Ode-solvers is a toolbox offering several methods to solve ordinary differential equations (ODEs) in Rust. The following instructions should get you up and running in no time.</p>
-<h2 id="importing-the-crate">Importing the crate</h2>
+<p>Ode-solvers is a collection of numerical methods to solve ordinary differential equations (ODEs) in Rust. The following instructions should get you up and running in no time. See the examples and the API documentation for more details.</p>
+<h2 id="installation">Installation</h2>
 <p>To start using the crate in your project, add the following dependency in your project's Cargo.toml file:</p>
 <pre><code class="rust">[dependencies]
-ode-solvers = &quot;0.1.0&quot;
+ode-solvers = &quot;0.1.1&quot;
 </code></pre>
 
 <p>Then, in your main file, add</p>
@@ -133,7 +134,7 @@ type State = VectorN&lt;f64, na::U9&gt;;
 
 <p>where the first argument is the independent variable (usually time) and the second one is a vector containing the dependent variable(s).</p>
 <h2 id="method-selection">Method selection</h2>
-<p>The following explicit Runge-Kutta methods are implemented in the current version (0.1.0) of the crate:</p>
+<p>The following explicit Runge-Kutta methods are implemented in the current version of the crate:</p>
 <table>
 <thead>
 <tr>
@@ -163,21 +164,16 @@ type State = VectorN&lt;f64, na::U9&gt;;
 </table>
 <p>These methods are defined in the modules dopri5 and dop853 and feature: </p>
 <ul>
-<li>
-<p>Adaptive step size control</p>
-</li>
-<li>
-<p>Automatic initial step size selection</p>
-</li>
-<li>
-<p>Sparse or dense output</p>
-</li>
+<li>Adaptive step size control</li>
+<li>Automatic initial step size selection</li>
+<li>Automatic stiffness detection</li>
+<li>Sparse or dense output</li>
 </ul>
 <p>The first step is to bring the desired module into scope:</p>
 <pre><code class="rust">use ode_solvers::dopri5::*;
 </code></pre>
 
-<p>Then, a structure is created using the <em>new</em> or the <em>from_param</em> method of the corresponding struct. Refer to the API documentation for a description of the input arguments.</p>
+<p>Then, a structure is created using the <em>new</em> or the <em>from_param</em> method of the corresponding struct. Refer to the <a href="https://docs.rs/ode_solvers">API documentation</a> for a description of the input arguments.</p>
 <pre><code class="rust">let mut stepper = Dopri5::new(system, x0, x_end, dx, y0, rtol, atol);
 </code></pre>
 
@@ -185,7 +181,7 @@ type State = VectorN&lt;f64, na::U9&gt;;
 <pre><code class="rust">let res = stepper.integrate();
 </code></pre>
 
-<p>which returns Result&lt;Stats, IntegrationError&gt;. Upon successful completion, res = Ok(Stats) where Stats is a structure containing some information on the integration process. If an error occurs, res = Err(IntegrationError). Finally, the results can be retrieved with</p>
+<p>which returns Result&lt;Stats, IntegrationError&gt;. Upon successful completion, res = Ok(Stats) where Stats is a structure containing some information on the integration process (such as number of function evaluations). If an error occurs, res = Err(IntegrationError). Finally, the results can be retrieved with</p>
 <pre><code class="rust">let x_out = stepper.x_out();
 let y_out = stepper.y_out();
 </code></pre>
@@ -193,7 +189,7 @@ let y_out = stepper.y_out();
 <h2 id="adaptive-step-size">Adaptive Step Size</h2>
 <p>The adaptive step size is computed using a PI controller</p>
 <p><center><img class='latex-inline math-true' alt='hn1hnserrnalphaerrn1beta' id='hn1hnserrnalpha_1' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALsAAAASBAMAAADxrbJ/AAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB+klEQVQ4y2NgoB3gdLtAQ9MZ9nI3MDDIK+CQZfwEZzKhO0MXtxRCvIERKKeMy3ImA4Q3HdDkpkBUpAhcwJBCaHFLBNKuuIxnCSBkPLtCRwJu4zkVWIG0GC7jGRPwGd8oKJiwlWE6HtdzMPAA6QrHBuwK2FskwDR3iwPQjGluDHlX3rK99buAcP1EhqkMGFJw4/kYrgLpn0wLUI19GhoaGgmk+SdoQaxhKAL6VICRU0fg7KSDPEjGM7rMc8CQghvP1gL0PmcBdwFcbAayNdMZtoNp/lwFTgdmFydeZgWGC0bIYQ8xBk0KLNgAFN8LYrEJsAlAYpKBgSMM2fhEhkSIRH0Dp8MuIOMWAwPvAkzj0aRAoDUBKA6OFJ4J7HshPgXiNuTAOclQDfZtA/cBTofpDAwKrojUhGw8mhQIcCTAUgM/AzOHWkobkvEw8IHBoCnNI4G3gBuY+rQYOBheMDDwNTAwAcVQjEeTQjVeh4HPd+4CHkzjmQ4wPLl5i+EAQ6cHUC1LShPDWaBfLzBwgsSQjUeTQjUeHLoJE5kExQWFUF0PAm6cAhjpHiQ2BXuWAEpxCAqKoRnPt+HlBMzAAYHXfDMxzACJ4TAeqhzNeFaGjAsg41nOoGfBALZeDDNAYjiMhypn8DmCkdEZ8RSt3BPQBHbilsIhzkKLIh8AlvOIqJLsy74AAAAASUVORK5CYII='></center></p>
-<p>where <img class='latex-inline math-true' alt='s' id='s_2' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHBAMAAAA2fErgAAAAIVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADdcGRXAAAACnRSTlMAMmZUzRB2IrtEfPKReAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAClJREFUCNdjYBAyZmBgcGAJYGBYVgpkmSxiYGBikGBgKGEQA7ImKzAAAEeuBCRDzId/AAAAAElFTkSuQmCC'> is a safety factor (usually 0.9), <img class='latex-inline math-true' alt='errn' id='errn_3' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAPBAMAAABzWwAZAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAECJEVDJ2ie/dzWaZu6sqiYYyAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAgklEQVQY02MQYkAFQgwmaCImRIowpySwHfJRyFE5BBMxZygwvM6rLFtwCSbS4iKg0MjAxCEA08U6gYGBCYg14eYwL2BgZHnAwOAHF2GcwLCBZwMDw2kGBrGUbWBz3LwFeBUYGIDmGk3gRXMPS4I5mghPwGEDVBE+hmwFE4ZgNF8EAwDMhhpBKC1xNwAAAABJRU5ErkJggg=='> is the current error , and <img class='latex-inline math-true' alt='errn1' id='errn1_4' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADEAAAAPBAMAAAC/wjryAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAECJEVDJ2ie/dzWaZu6sqiYYyAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAm0lEQVQY02MQYsAKGBUYTLDLMDuQKcOcksB2yEchR+UQuow5Q4HhdV5l2YJL6DItLgIKjQxMHAIIcWuwDOsEBgYmINZESHA/A8swL2BgZHnAwOCHZNY2sAzjBIYNPBsYGE4zMIilbEOWYXDzFuBVYGAA2m80gRdFBgFYEswZtpeXJ2DK8AQcNsCuh48hWwGs964DUCYYe+iwGgAAmxwi1W7CX7wAAAAASUVORK5CYII='> is the previous error. The coefficients <img class='latex-inline math-true' alt='alpha' id='alpha_5' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAHBAMAAAAotXpTAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMolmmRBEu6vd71TNInaC3aTdAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAM0lEQVQI12NgEDIJYGBgK2BrMGDgTGBdmsAgxcDwm4FhDwPDRwaGmwzcHwIYmK1NHwsAAKmuCYITnLi7AAAAAElFTkSuQmCC'> and <img class='latex-inline math-true' alt='beta' id='beta_6' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAOBAMAAAAPuiubAAAAJ1BMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAilU6eAAAADHRSTlMAMmaJEER2VJkiq7uvTvxIAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAASklEQVQI12NgYBBSZmBgYAlgK2BgYGPgCGBgcGeYARQpSF4AIhmEweRskBKGKAYG1gkMTQwMTAWMGxgY2EPVgJLsDCAQAiYLQAQApI4Jc+pcSKIAAAAASUVORK5CYII='> determine the behavior of the controller. In order to make sure that <img class='latex-inline math-true' alt='h' id='h_7' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAALBAMAAACwtdEWAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAOUlEQVQI12NgkFdgYGBQBmIGVxAhBiIqHBsYGH4yLWDgLOAuYGATYBNg4JnAvpeBn4GZg0GHgc8XAJ+pBrP9mR/mAAAAAElFTkSuQmCC'> doesn't change too abruptly, bounds on the factor of <img class='latex-inline math-true' alt='hn' id='hn_8' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAOBAMAAAACpFvcAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAVElEQVQI12NgkFdggABlKM3gCmOIwRgVjg0Qxk+mBWCas4C7AMxgE2ATADN4JrDvBTP4GZg51FLaGBh0GPh85y7ggWhkSZgIYfBteDkBzGBlyLgAAGGcDXU7SMLAAAAAAElFTkSuQmCC'> are enforced:</p>
+<p>where <img class='latex-inline math-true' alt='s' id='s_2' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHBAMAAAA2fErgAAAAIVBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADdcGRXAAAACnRSTlMAMmZUzRB2IrtEfPKReAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAClJREFUCNdjYBAyZmBgcGAJYGBYVgpkmSxiYGBikGBgKGEQA7ImKzAAAEeuBCRDzId/AAAAAElFTkSuQmCC'> is a safety factor, <img class='latex-inline math-true' alt='errn' id='errn_3' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAPBAMAAABzWwAZAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAECJEVDJ2ie/dzWaZu6sqiYYyAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAgklEQVQY02MQYkAFQgwmaCImRIowpySwHfJRyFE5BBMxZygwvM6rLFtwCSbS4iKg0MjAxCEA08U6gYGBCYg14eYwL2BgZHnAwOAHF2GcwLCBZwMDw2kGBrGUbWBz3LwFeBUYGIDmGk3gRXMPS4I5mghPwGEDVBE+hmwFE4ZgNF8EAwDMhhpBKC1xNwAAAABJRU5ErkJggg=='> is the current error , and <img class='latex-inline math-true' alt='errn1' id='errn1_4' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADEAAAAPBAMAAAC/wjryAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAECJEVDJ2ie/dzWaZu6sqiYYyAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAm0lEQVQY02MQYsAKGBUYTLDLMDuQKcOcksB2yEchR+UQuow5Q4HhdV5l2YJL6DItLgIKjQxMHAIIcWuwDOsEBgYmINZESHA/A8swL2BgZHnAwOCHZNY2sAzjBIYNPBsYGE4zMIilbEOWYXDzFuBVYGAA2m80gRdFBgFYEswZtpeXJ2DK8AQcNsCuh48hWwGs964DUCYYe+iwGgAAmxwi1W7CX7wAAAAASUVORK5CYII='> is the previous error. The coefficients <img class='latex-inline math-true' alt='alpha' id='alpha_5' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAHBAMAAAAotXpTAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMolmmRBEu6vd71TNInaC3aTdAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAM0lEQVQI12NgEDIJYGBgK2BrMGDgTGBdmsAgxcDwm4FhDwPDRwaGmwzcHwIYmK1NHwsAAKmuCYITnLi7AAAAAElFTkSuQmCC'> and <img class='latex-inline math-true' alt='beta' id='beta_6' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAOBAMAAAAPuiubAAAAJ1BMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAilU6eAAAADHRSTlMAMmaJEER2VJkiq7uvTvxIAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAASklEQVQI12NgYBBSZmBgYAlgK2BgYGPgCGBgcGeYARQpSF4AIhmEweRskBKGKAYG1gkMTQwMTAWMGxgY2EPVgJLsDCAQAiYLQAQApI4Jc+pcSKIAAAAASUVORK5CYII='> determine the behavior of the controller. In order to make sure that <img class='latex-inline math-true' alt='h' id='h_7' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAALBAMAAACwtdEWAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAOUlEQVQI12NgkFdgYGBQBmIGVxAhBiIqHBsYGH4yLWDgLOAuYGATYBNg4JnAvpeBn4GZg0GHgc8XAJ+pBrP9mR/mAAAAAElFTkSuQmCC'> doesn't change too abruptly, bounds on the factor of <img class='latex-inline math-true' alt='hn' id='hn_8' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAOBAMAAAACpFvcAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAVElEQVQI12NgkFdggABlKM3gCmOIwRgVjg0Qxk+mBWCas4C7AMxgE2ATADN4JrDvBTP4GZg51FLaGBh0GPh85y7ggWhkSZgIYfBteDkBzGBlyLgAAGGcDXU7SMLAAAAAAElFTkSuQmCC'> are enforced:</p>
 <p><center><img class='latex-inline math-true' alt='fminleqserrnalphaerrn1betaleqfmax' id='fminleqserrnalp_9' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANoAAAARBAMAAABJHK+fAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVHaZ3SLNMmarRBCJ77v+As5kAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACPklEQVQ4y71VPW/TUBQ9juuPvDitY5ZURMhphWBgiKiiVoghCwNiMaICdcvGwEAlKBIMldtSKS0ZQifUySmiEtDBQnxsYGAD/4MuYegEAws7z3ZI3vOrzYK4y7Xuufecd+/7MPDPjVgO/p+taG4OKs1mIaX0It9kQ+O4a3CY1eASJq4LNdpwJmYq3k8Y64EjQBiVWOc4lkttLuGeWLKTq6b6HTtbjfhFlkXjxbAhjPYJMtW6YWjfx35ObzomWRadH6R+2eYL9MfJHNZMSrlnYfZqs9A84Yx7O8BzCNBITcYSw4KHOzz7zVRnu4lXcYuOJTDI++Do5Y9JRs2oPDUFaKRWWLMZFqjLPP3PxBnDsHLej/3UaZ+Y5cpJpezDOWT3LWFNQXHQpfEVjgVTvJjSSo1euRgnSrddYt6lH4vjHFYtBUW2ZdO4ybFEKdzkesKd+RzNxtUGxNwH/OlxDquWguK9spmDlbBgmucu2KWZ6scaNqiz/yTStbU1esxfQ8cCILuIUVYtBQlqMQswg1f1biVQzl6RavT0Fz2yiEOVvKVuwKxiu0pLpfojHAH0IMQoq5aCRLXEdvGsVfbbKtrvJiT6lNDHRWssYR0WCYSHgXmBKNrPhPQw/HSsWguSfUfprZYG0c34cA2Y192O992bl19EC5yjdgxlhGaoJYVcb0OW0q8G5OWOvn2gn7mxTmB8BXqyU/MW/F5hM6e3CO1nQ5Gd+ib0Fvoooil9kasX9rqbuf8OzUsFHmRDf4kn9htJbIx7Xbxx4AAAAABJRU5ErkJggg=='></center></p>
 <p>If <img class='latex-inline math-true' alt='serrnalphaerrn1betaleqfmin' id='serrnalphaerrn1_10' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAAARBAMAAAC7oPo6AAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMmZUzRB2IrtEie/dmatpiiVLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB1ElEQVQ4y2NgIBdwmhUwUB2IMyrglQ/HzQ/HroO1gEGBC8WlzLloSiZj5bMmLyjAkIL53YDBLAvGEQARPCVEGcoSoJSA21DOAD4oe14CiBRhIGio1qpVCXIMU/C4lImBA8K0gwStLoq8kDFQJ2dyAtt124Lc4usIS2YxzGPAkIIbystQB2bpGYAppnMJyIY6sARMBhqwYGoXR2XEgnaEoVzGcw0Y0KXghrIpg02xmwAVcURx6bdSoM7NxgEFWxnYuQPQgwNdCgwmAQ0VhzBrU6FiHyAUFzjWGEw+MUxmPMDAwA7ENRhhjC4F9uozoKEGUE7tUjAFUoKkgkGCYTKnAwMr8wOgZzANRZMCAzVQkoKBKHBYg5QgQAmDGMNk1gMMCrzAWLzEwBCWrIZiKJoUpqEMUReABFsCa5rRYisGXSCVwMA0WQFoiJlRAAcwgwDjYvoBDtQwRZXCYigY8E3grGHYysIZAqQaMNIpc8IsVENRpUAJGJuhPAwMZowX6oBSZpwLMHTyCtycgMNQkBS6S3Xv3r0L9H58LQPDRSYFpQmtEy7yzsTQyceQVIDDUJAU2MUdBugu5QKmgQe8BVYTLgU8YFMHC0mi+UUSKxMZME7AV+oBAPkfgycg0tzvAAAAAElFTkSuQmCC'>, then <img class='latex-inline math-true' alt='hn1hnfmin' id='hn1hnfmin_11' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAF8AAAAQBAMAAACCbL5/AAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABKklEQVQoz2NgkFdgwA4YP8FYbg+QxZVxqGdgMoCx1hYgi7vi0sASAGVwo6hnEMOlgTEByuBAcRFDhWMDdg3sLRIQRlcYivhPpgWoCp+GhoZGAmn+CVpQnRuQpTkLkJw4A1lmOsN2CIMfKiANJtkE2AQgfgQ6FsXuRCAEg1soDuCZwL4X4kcgbkN20kmG6gtYwpGfgZlDLaUNSQMMfGAwaErzAAZVGoNaSqOLAMcDsDodBj7fuQt4MDUwHWB4cvMWwwEGhkiGuQuYFQomFYDVgZ2fMJFJUFxQCNUGcKLgBHpwAVDBPt4AjgSgOogw34aXEzCdBAKv+WYy/X0AVNDB0cmjCVYHAqwMGRdAGljOOKBpCGDrZRBUACp4yyLJ1wRWh0gJDCQCFuKUAQDJtkNXg0YOFQAAAABJRU5ErkJggg=='> and if <img class='latex-inline math-true' alt='serrnalphaerrn1betageqfmax' id='serrnalphaerrn1_12' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKkAAAARBAMAAABUYpEEAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAMmZUzRB2IrtEie/dmatpiiVLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB1klEQVQ4y2NgIBdwmhUwUB+IMyrgVxCOmx+OXQdrAYMCF4pbmXPR1UzGymdNXlCAIQXzvgGDWRaIIQAT4SkhzlSWAKUE3KZyBvCBGHIJUBERBsKmaq1alSDHMAWPW5kYOMAs2VSIiC6qAiFjoFbO5AS267YFucXXEbbMYpjHgCEFN5WXoQ7CrF0KIpnOJaCY6sASMBlowoKpXRyVEQvaEaZyGc81YECXgpvKpgwzJuoCiHREdeu3UqDWzcYBBVsZ2LkD0EMEXQoMJgFNFYfz7MAp7AOqqSafGCYzHmBgYAfiGoxwRpcC+/YZ0FQDuKFgFkgJEmBikGCYzOnAwMr8AKgC01Q0KTBQA6UsKNCbAEmuD1BMLWEQY5jMeoBBgRfokUsMDGHJaiimokmhm2oLTbBsCaxpRoutGMp0AowXXWBgmqwANMXMKIADmFWAETL9AAdquKJKYbgVCvgmcNYwbGUBxj2rwAEDjPTKnDAL1VRUKVBCxmYqDwODGeOFOsaGCAb2B5haeQVuTsBhKkgK3a26d+/eBaas+FoGhotMCkozF6iJCyVMwNDKx5BUgMNUkBTYzR0G6G7lAmaFB7wFVhMu685MWgQpdiTRvCOJlYkMGCfgLQQBEcGDklXoRB8AAAAASUVORK5CYII='>, <img class='latex-inline math-true' alt='hn1hnfmax' id='hn1hnfmax_13' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAQBAMAAAAblGfKAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAiRDvVKt2zWZE3TK7IpnPw5g6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABMUlEQVQoz2NgkFdgwA4YP8FYbg+QxZVxqGdgMoCx1hYgi7vi0sASAGVwo6hnEMOlgTEByuBAcRFDhWMDdg3sLRIQRlcYivhPpgWoCp+GhoZGAmn+CVpQnRuQpTkLkJw4A1lmOsN2CIMfxTw2ATYBiB+BjkWxOxEIweAWigaeCex7IX4E4jZkJ51kqL6AJRz5GZg51FLakDTAwAcGg6Y0D2BQpTGopTS6CPBmLGJx7GPQYeDznbuAB1MD0wGGJzdvMRxgYIhkmLuAWaGAnaFAm4sF4vyEiUyC4oJCqDaAEwUn0IMLgAr28QbsARpxFSLMt+HlBEwngcBrvplMfx8AFXRwdE7kyL7dxgkWZmXIuADSwHLGAU1DAFsvg6ACUMFbFkk+j5fTGnuRUgIDiYCFOGUALDpDoV6VGOEAAAAASUVORK5CYII='>.</p>
 <p>The default values of these parameters are listed in the table below.</p>
@@ -202,7 +198,7 @@ let y_out = stepper.y_out();
 <tr>
 <th></th>
 <th>Dopri5</th>
-<th>Dopri853</th>
+<th>Dop853</th>
 </tr>
 </thead>
 <tbody>
@@ -243,8 +239,9 @@ let y_out = stepper.y_out();
 <p>which are combined into a single error estimator</p>
 <p><center><img class='latex-inline math-true' alt='errerr5fracerr5sqrterr52001err32' id='errerr5fracerr5_30' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJ0AAAAZCAMAAAAc2dwqAAAANlBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHL6OuAAAAEXRSTlMARHZUie8QMt3NZpkiu6sgMD27wU8AAAAJcEhZcwAADsQAAA7EAZUrDhsAAAG2SURBVEjH5VaJbsMwCMWG2g4+tv7/z85n5WRJm6TuFGlIwagF+QV4BIC/EUeIoCSx/UpKwaXEKJAg3ASY1bXA6Qkx5gslVOXthRBqCxDRWQ1V7cYmZHobaR1a1453/FYltp0ACMnMSmvaBy66EQjlCbyrR/7Dhiriud+pXCKQ3uN4w9QSDm6JR/XY7WedO9c/Qstdb2Eq5U1/7PXz95BQ3j8kIKZ0iwLM7dCO35Vd9+MPs0mZcoktF1k+5EcoxcJvaO7i+EGO1aktvt3pW36LViB3mTGWKGHmcOwaBZCO0+ZEzJIqvMyd1Kvjw3Y/I7PuDcHwMuacMC/GVlhv2kqlZvvO4CCfxYwUXn1fJVWejrlWqWK5a5vB8lnMSAmzZUkV7UwoJMroZASTh1QzMrpl0HeLGcOPkjoxW5ZgsS0VdNTQUYduO2iACMMtdf2yVHWuFBFN8VGrld0IGiWYqJvWkNmyVPRjl6OODO5Bj4zuVxALGgjvho2w3bJUNM4qG3mevi9eVwO9x9UgPxCdjM2y0S2PXe5QNnhofe86vNrlDvS6cwOmcf+BNfjeLjdHN7bvQE3wz+QHA6kaKSFupTgAAAAASUVORK5CYII='></center></p>
 <p>For a thorough discussion, see Hairer et al. [1].</p>
-<h2 id="references-and-acknowledgments">References and Acknowledgments</h2>
+<h2 id="acknowledgments">Acknowledgments</h2>
 <p>The algorithms implemented in this crate are described in references [1] and [2]. They were originally implemented in FORTRAN by E. Hairer and G. Wanner, Université de Genève, Switzerland. This Rust implementation has been adapted from the C version written by J. Colinge, Université de Genève, Switzerland and the C++ version written by Blake Ashby, Stanford University, USA.</p>
+<h2 id="references">References</h2>
 <p>[1] Hairer, E., Nørsett, S.P., Wanner, G., <em>Solving Ordinary Differential Equations I, Nonstiff Problems</em>, Second Revised Edition, Springer, 2008</p>
 <p>[2] Hairer, E., Wanner, G., <em>Solving Ordinary Differential Equations II, Stiff and Differential-Algebraic Problems</em>, Second Revised Edition, Springer, 2002</p>
 <p>[3] Butcher, J.C., <em>Numerical Methods for Ordinary Differential Equations</em>, Third Edition, John Wiley and Sons, 2016</p>
@@ -333,5 +330,5 @@ let y_out = stepper.y_out();
 
 <!--
 MkDocs version : 1.0.3
-Build Date UTC : 2018-09-11 00:40:04
+Build Date UTC : 2018-09-25 00:16:59
 -->
