@@ -1,3 +1,5 @@
+//! Butcher tableaux containing the coefficients of the Runge-Kutta methods.
+
 /// Structure containing the coefficients for the Dormand-Prince method of order 5(4) with dense output of order 4.
 pub struct Dopri54 {
     num_stages:         usize,
