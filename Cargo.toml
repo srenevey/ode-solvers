@@ -2,6 +2,7 @@
 name = "ode_solvers"
 version = "0.1.1"
 authors = ["Sylvain Renevey <syl.renevey@gmail.com>"]
+description = "Numerical methods to solve ordinary differential equations (ODEs) in Rust."
 
 documentation = "https://docs.rs/ode_solvers/"
 homepage = "https://srenevey.github.io/ode-solvers/"
