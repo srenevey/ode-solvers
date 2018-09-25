@@ -1,3 +1,5 @@
+//! Adaptive step size control.
+
 /// Used for adaptive step size control
 pub struct Controller {
 	alpha:			f64,
@@ -8,6 +10,7 @@ pub struct Controller {
     h_max:          f64,
 	reject:         bool,
     safety_factor:	f64,
+    posneg:         f64,
 }
 
 impl Controller {
@@ -22,16 +25,17 @@ impl Controller {
     /// * `h_max`   - Maximum step size
     /// * `safety_factor`   - Safety factor of the PI controller
     ///
-    pub fn new(alpha: f64, beta: f64, fac_max: f64, fac_min: f64, h_max: f64, safety_factor: f64) -> Controller {
+    pub fn new(alpha: f64, beta: f64, fac_max: f64, fac_min: f64, h_max: f64, safety_factor: f64, posneg: f64) -> Controller {
         Controller {
             alpha,
             beta,
             facc1: 1.0/fac_min,
             facc2: 1.0/fac_max,
             fac_old: 1.0E-4,
-            h_max,
+            h_max: h_max.abs(),
             reject: false,
             safety_factor,
+            posneg
         }
     }
 
@@ -47,10 +51,10 @@ impl Controller {
             self.fac_old = err.max(1.0E-4);
 
             if h_new.abs() > self.h_max {
-                *h_new = self.h_max;
+                *h_new = self.posneg * self.h_max;
             }
             if self.reject {
-                *h_new = h_new.abs().min(h.abs());
+                *h_new = self.posneg * h_new.abs().min(h.abs());
             }
 
             self.reject = false;

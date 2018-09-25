@@ -1,3 +1,6 @@
+//! # ODEs Solvers
+//! `ode-solvers` is a collection of numerical methods to solve ordinary differential equations (ODEs).
+
 extern crate alga;
 extern crate nalgebra as na;
 

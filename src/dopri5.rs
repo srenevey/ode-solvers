@@ -44,6 +44,8 @@
 //
 //===================================================================//
 
+//! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 5(4) and dense output of order 4.
+
 use alga::linear::{InnerSpace, FiniteDimInnerSpace};
 use alga::general::SubsetOf;
 use std::f64;
@@ -62,6 +64,7 @@ pub enum OutputType {
 pub enum IntegrationError {
     MaxNumStepReached,
     StepSizeUnderflow,
+    StiffnessDetected
 }
 
 /// Contains some statistics of the integration.
@@ -69,7 +72,7 @@ pub enum IntegrationError {
 pub struct Stats {
     num_eval:           u32,
     accepted_steps:     u32,
-    rejected_steps:     u32,
+    rejected_steps:     u32
 }
 
 impl Stats {
@@ -89,7 +92,7 @@ impl Stats {
     }
 }
 
-/// Explicit Runge-Kutta method with Dormand-Prince coefficients of order 5(4) and dense output of order 4.
+/// Structure containing the parameters for the numerical integration.
 pub struct Dopri5<V> 
     where V: FiniteDimInnerSpace + Copy,
 {
@@ -108,6 +111,7 @@ pub struct Dopri5<V>
     h:              f64,
     h_old:          f64,
     n_max:          u32,
+    n_stiff:        u32,
     coeffs:         Dopri54,
     controller:     Controller,
     out_type:       OutputType,
@@ -150,8 +154,9 @@ impl<V> Dopri5<V>
             h: 0.0,
             h_old: 0.0,
             n_max: 100000,
+            n_stiff: 1000,
             coeffs: Dopri54::new(),
-            controller: Controller::new(alpha, 0.04, 10.0, 0.2, x_end-x, 0.9),
+            controller: Controller::new(alpha, 0.04, 10.0, 0.2, x_end-x, 0.9, sign(1.0, x_end-x)),
             out_type: OutputType::Dense,
             rcont: [V::zero(); 5],
             stats: Stats::new()
@@ -170,15 +175,16 @@ impl<V> Dopri5<V>
     /// * `rtol`    - Relative tolerance used in the computation of the adaptive step size
     /// * `atol`    - Absolute tolerance used in the computation of the adaptive step size
     /// * `safety_factor`   - Safety factor used in the computation of the adaptive step size
-    /// * `beta`    - Value of the beta coefficient of the PI controller
-    /// * `fac_min` - Minimum factor between two successive steps
-    /// * `fac_max` - Maximum factor between two successive steps
-    /// * `h_max`   - Maximum step size
-    /// * `h`       - Initial value of the step size
-    /// * `n_max`   - Maximum number of iterations
-    /// * `out_type`    - Type of the output. Must be a variant of the OutputType enum
+    /// * `beta`    - Value of the beta coefficient of the PI controller. Default is 0.04
+    /// * `fac_min` - Minimum factor between two successive steps. Default is 0.2
+    /// * `fac_max` - Maximum factor between two successive steps. Default is 10.0
+    /// * `h_max`   - Maximum step size. Default is `x_end-x`
+    /// * `h`       - Initial value of the step size. If h = 0.0, the intial value of h is computed automatically
+    /// * `n_max`   - Maximum number of iterations. Default is 100000
+    /// * `n_stiff` - Stifness is tested when the number of iterations is a multiple of n_stiff. Default is 1000
+    /// * `out_type`    - Type of the output. Must be a variant of the OutputType enum. Default is Dense
     ///  
-    pub fn from_param(f: fn(f64, &V) -> V, x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64, safety_factor: f64, beta: f64, fac_min: f64, fac_max: f64, h_max: f64, h: f64, n_max: u32, out_type: OutputType) -> Dopri5<V> {
+    pub fn from_param(f: fn(f64, &V) -> V, x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64, safety_factor: f64, beta: f64, fac_min: f64, fac_max: f64, h_max: f64, h: f64, n_max: u32, n_stiff: u32, out_type: OutputType) -> Dopri5<V> {
         let alpha = 0.2 - beta*0.75;
         Dopri5 {
             f,
@@ -196,8 +202,9 @@ impl<V> Dopri5<V>
             h,
             h_old: 0.0,
             n_max,
+            n_stiff,
             coeffs: Dopri54::new(),
-            controller: Controller::new(alpha, beta, fac_max, fac_min, h_max, safety_factor),
+            controller: Controller::new(alpha, beta, fac_max, fac_min, h_max, safety_factor, sign(1.0, x_end-x)),
             out_type,
             rcont: [V::zero(); 5],
             stats: Stats::new()
@@ -207,6 +214,7 @@ impl<V> Dopri5<V>
     /// Compute the initial stepsize
     fn hinit(&self) -> f64 {
         let f0 = (self.f)(self.x, &self.y);
+        let posneg = sign(1.0, self.x_end-self.x);
 
         // Compute the norm of y0 and f0
         let dim = na::dimension::<V>();
@@ -227,7 +235,8 @@ impl<V> Dopri5<V>
             0.01*(d0/d1).sqrt()
         };
 
-        h0 = h0.min(self.controller.h_max());
+        h0 =  h0.min(self.controller.h_max());
+        h0 = sign(h0, posneg);
 
         let y1 = self.y + f0*na::convert(h0);
         let f1 = (self.f)(self.x+h0, &y1);
@@ -243,13 +252,13 @@ impl<V> Dopri5<V>
         }
         d2 = d2.sqrt() / h0;
 
-        let h1 = if d1.sqrt().max(d2) <= 1.0E-15 {
+        let h1 = if d1.sqrt().max(d2.abs()) <= 1.0E-15 {
             (1.0E-6 as f64).max(h0.abs()*1.0E-3)
         } else {
             (0.01/(d1.sqrt().max(d2))).powf(1.0/5.0)
         };
 
-        (100.0*h0.abs()).min(h1.min(self.controller.h_max()))
+         sign((100.0*h0.abs()).min(h1.min(self.controller.h_max())), posneg)
     }
 
     /// Core integration method.
@@ -261,12 +270,22 @@ impl<V> Dopri5<V>
         let mut last = false;
         let mut h_new = 0.0;
         let dim = na::dimension::<V>();
+        let mut iter_non_stiff = 1..7;
+        let mut iter_iasti = 1..16;
+        let posneg = sign(1.0, self.x_end-self.x);
 
         if self.h == 0.0 {
             self.h = self.hinit();
             self.stats.num_eval += 2;
         }
         self.h_old = self.h;
+
+        // Save initial values
+        if self.out_type == OutputType::Sparse {
+            let y_tmp = self.y.clone();
+            self.x_out.push(self.x);
+            self.y_out.push(y_tmp);    
+        }
 
         let mut k: Vec<V> = vec![V::zero(); 7];
         k[0] = (self.f)(self.x , &self.y);
@@ -290,7 +309,7 @@ impl<V> Dopri5<V>
             }
 
             // Check if it's the last iteration
-            if self.x + 1.01*self.h - self.x_end > 0.0 {
+            if (self.x + 1.01*self.h - self.x_end)*posneg > 0.0 {
                 self.h = self.x_end - self.x;
                 last = true;
             }
@@ -298,12 +317,16 @@ impl<V> Dopri5<V>
 
             // 6 Stages
             let mut y_next = V::zero();
+            let mut y_stiff = V::zero();
             for s in 1..7 {
                 y_next = self.y.clone();
                 for j in 0..s {
                     y_next += k[j]*na::convert( self.h * self.coeffs.a(s+1,j+1) );
                 } 
                 k[s] = (self.f)(self.x + self.h*self.coeffs.c(s+1) , &y_next);
+                if s == 5 {
+                    y_stiff = y_next;
+                }
             }
             k[1] = k[6];
             self.stats.num_eval += 6;
@@ -335,6 +358,26 @@ impl<V> Dopri5<V>
             if self.controller.accept(&err, &self.h, &mut h_new) {
                 self.stats.accepted_steps += 1;
 
+
+                // Stifness detection
+                if (self.stats.accepted_steps % self.n_stiff != 0) || dim > 0 {
+                    let num: f64 = na::convert( na::dot(&(k[1]-k[5]), &(k[1]-k[5])) );
+                    let den: f64 = na::convert( na::dot(&(y_next-y_stiff), &(y_next-y_stiff)) );
+                    let h_lamb = if den > 0.0 { self.h*(num/den).sqrt() } else { 0.0 };
+                    
+                    if h_lamb > 3.25 {
+                        iter_non_stiff = 1..7;
+                        if iter_iasti.next() == Some(15) {
+                            self.h_old = self.h;
+                            println!("The problem seems to become stiff at x = {:?}.", self.x);
+                            return Err(IntegrationError::StiffnessDetected);
+                        }
+                    } else {
+                        if iter_non_stiff.next() == Some(6) { iter_iasti = 1..16; }
+                    }
+                } 
+
+
                 // Prepare dense output
                 if self.out_type == OutputType::Dense {
                     let ydiff = y_next - self.y;
@@ -355,7 +398,7 @@ impl<V> Dopri5<V>
 
                 // Normal exit
                 if last {
-                    self.h_old = h_new;
+                    self.h_old = posneg * h_new;
                     return Ok(self.stats);
                 }
             } else {
@@ -363,15 +406,15 @@ impl<V> Dopri5<V>
                     self.stats.rejected_steps += 1;
                 }
             }     
-            self.h = h_new;
+            self.h =  h_new;
         }
         Ok(self.stats)
     }
 
     fn solution_output(&mut self, y_next: V) {
         if self.out_type == OutputType::Dense {
-            while self.xd <= self.x {
-                if self.x_old <= self.xd && self.x >= self.xd {
+            while self.xd.abs() <= self.x.abs() {
+                if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
                     let theta = (self.xd - self.x_old)/self.h_old;
                     let theta1 = 1.0 - theta;
                     self.x_out.push(self.xd);
@@ -393,5 +436,13 @@ impl<V> Dopri5<V>
     /// Getter for the dependent variables' output.
     pub fn y_out(&self) -> &Vec<V> {
         &self.y_out
+    }
+}
+
+fn sign(a: f64, b: f64) -> f64 {
+    if b > 0.0 {
+        a.abs()
+    } else {
+        -a.abs()
     }
 }
