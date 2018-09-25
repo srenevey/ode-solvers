@@ -8,13 +8,13 @@ Numerical methods to solve ordinary differential equations (ODEs) in Rust.
 
 
 
-## Importing the crate
+## Installation
 
 To start using the crate in your project, add the following dependency in your project's Cargo.toml file:
 
 ```rust
 [dependencies]
-ode-solvers = "0.1.0"
+ode-solvers = "0.1.1"
 ```
 
 Then, in your main file, add
@@ -57,26 +57,20 @@ where the first argument is the independent variable (usually time) and the seco
 
 ## Method selection
 
-The following explicit Runge-Kutta methods are implemented in the current version (0.1.0) of the crate:
+The following explicit Runge-Kutta methods are implemented in the current version of the crate:
 
 | Method         | Name   | Order | Error estimate order | Dense output order |
 | -------------- | ------ | ----- | -------------------- | ------------------ |
 | Dormand-Prince | Dopri5 | 5     | 4                    | 4                  |
 | Dormand-Prince | Dop853 | 8     | (5,3)                | 7                  |
 
-These methods are defined in the modules dopri5 and dop853 and feature: 
-
-- Adaptive step size control
-- Automatic initial step size selection
-- Sparse or dense output
-
-The first step is to bring the desired module into scope:
+These methods are defined in the modules dopri5 and dop853. The first step is to bring the desired module into scope:
 
 ```rust
 use ode_solvers::dopri5::*;
 ```
 
-Then, a structure is created using the *new* or the *from_param* method of the corresponding struct. Refer to the API documentation for a description of the input arguments.
+Then, a structure is created using the *new* or the *from_param* method of the corresponding struct. Refer to the [API documentation](https://docs.rs/ode_solvers) for a description of the input arguments.
 
 ```rust
 let mut stepper = Dopri5::new(system, x0, x_end, dx, y0, rtol, atol);
@@ -88,12 +82,22 @@ The system is integrated using
 let res = stepper.integrate();
 ```
 
-which returns Result&lt;Stats, IntegrationError&gt;. Upon successful completion, res = Ok(Stats) where Stats is a structure containing some information on the integration process. If an error occurs, res = Err(IntegrationError). Finally, the results can be retrieved with
+and the results are retrieved with
 
 ```rust
 let x_out = stepper.x_out();
 let y_out = stepper.y_out();
 ```
+
+See the [homepage](https://srenevey.github.io/ode-solvers/) for more details.
+
+## Changelog
+
+- [0.1.1]
+  - Added automatic stiffness detection
+  - x_end - x0 can be positive or negative
+  - Fixed bug in sparse output of dopri5
+  - Added Lorenz attractor example
 
 
 
