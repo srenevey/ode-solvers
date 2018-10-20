@@ -97,7 +97,7 @@
         <li class="main active"><a href="#odes-solving-in-rust">ODEs Solving in Rust</a></li>
             <li><a href="#installation">Installation</a></li>
             <li><a href="#type-alias-definition">Type alias definition</a></li>
-            <li><a href="#system-definition">System definition</a></li>
+            <li><a href="#function-definition">Function definition</a></li>
             <li><a href="#method-selection">Method selection</a></li>
             <li><a href="#adaptive-step-size">Adaptive Step Size</a></li>
             <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -112,7 +112,7 @@
 <h2 id="installation">Installation</h2>
 <p>To start using the crate in your project, add the following dependency in your project's Cargo.toml file:</p>
 <pre><code class="rust">[dependencies]
-ode-solvers = &quot;0.1.1&quot;
+ode-solvers = &quot;0.1.2&quot;
 </code></pre>
 
 <p>Then, in your main file, add</p>
@@ -130,12 +130,12 @@ use ode-solvers::*;
 type State = VectorN&lt;f64, na::U9&gt;;
 </code></pre>
 
-<h2 id="system-definition">System definition</h2>
+<h2 id="function-definition">Function definition</h2>
 <p>The first order ODE(s) must be defined in a function with the following signature</p>
-<pre><code class="rust">fn system(x: f64, y: &amp;State) -&gt; State
+<pre><code class="rust">fn f(x: f64, y: &amp;State, dy: &amp;mut State)
 </code></pre>
 
-<p>where the first argument is the independent variable (usually time) and the second one is a vector containing the dependent variable(s).</p>
+<p>where the first argument is the independent variable (usually time), the second one is a vector containing the dependent variable(s), and the third one will contain the output of the function (namely the derivative(s) of y with respect to x).</p>
 <h2 id="method-selection">Method selection</h2>
 <p>The following explicit Runge-Kutta methods are implemented in the current version of the crate:</p>
 <table>
@@ -333,5 +333,5 @@ let y_out = stepper.y_out();
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2018-10-01 01:21:26
+Build Date UTC : 2018-10-20 22:25:24
 -->
