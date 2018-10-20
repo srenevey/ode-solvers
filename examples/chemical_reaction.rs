@@ -20,10 +20,8 @@ fn main() {
     }
 }
 
-fn system(_: Time, y: &State) -> State {
-    let mut dy = State::zeros();
+fn system(_: Time, y: &State, dy: &mut State) {
     dy[0] = -0.04*y[0] + 10000.0*y[1]*y[2];
     dy[1] = 0.04*y[0] - 10000.0*y[1]*y[2] - 3.0*(10.0 as f64).powi(7)*y[1]*y[1];
     dy[2] = 3.0*(10.0 as f64).powi(7)*y[1]*y[1];
-    dy
 }

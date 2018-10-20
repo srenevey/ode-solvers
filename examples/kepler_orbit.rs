@@ -39,16 +39,15 @@ fn main() {
 }
 
 // Equations of motion of the system
-fn system(_t: Time, y: &State) -> State {
+fn system(_t: Time, y: &State, dy: &mut State) {
     let r = (y[0]*y[0] + y[1]*y[1] + y[2]*y[2]).sqrt() ;
-    let mut dy = State::zeros();
+    
     dy[0] = y[3];
     dy[1] = y[4];
     dy[2] = y[5];
     dy[3] = -MU*y[0]/r.powi(3);
     dy[4] = -MU*y[1]/r.powi(3);
     dy[5] = -MU*y[2]/r.powi(3);
-    dy
 }
 
 

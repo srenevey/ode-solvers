@@ -14,7 +14,7 @@ To start using the crate in your project, add the following dependency in your p
 
 ```rust
 [dependencies]
-ode-solvers = "0.1.1"
+ode-solvers = "0.1.2"
 ```
 
 Then, in your main file, add
@@ -43,15 +43,15 @@ type State = VectorN<f64, na::U9>;
 
 
 
-## System definition
+## Function definition
 
 The first order ODE(s) must be defined in a function with the following signature
 
 ```rust
-fn system(x: f64, y: &State) -> State
+fn f(x: f64, y: &State, dy: &mut State)
 ```
 
-where the first argument is the independent variable (usually time) and the second one is a vector containing the dependent variable(s).
+where the first argument is the independent variable (usually time) and the second one is a vector containing the dependent variable(s), and the third one will contain the output of the function (namely the derivative(s) of y with respect to x).
 
 
 
@@ -93,6 +93,8 @@ See the [homepage](https://srenevey.github.io/ode-solvers/) for more details.
 
 ## Changelog
 
+- [0.1.2]
+  - Changed the signature of the function defining the ODE(s) to reduce the number of allocations.
 - [0.1.1]
   - Added automatic stiffness detection
   - x_end - x0 can be positive or negative

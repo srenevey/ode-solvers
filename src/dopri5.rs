@@ -96,7 +96,7 @@ impl Stats {
 pub struct Dopri5<V> 
     where V: FiniteDimInnerSpace + Copy,
 {
-    f:              fn(f64, &V) -> V,
+    f:              fn(f64, &V, &mut V),
 	x:              f64,
     x_old:          f64,
     x_end:          f64,
@@ -136,7 +136,7 @@ impl<V> Dopri5<V>
     /// * `rtol`    - Relative tolerance used in the computation of the adaptive step size
     /// * `atol`    - Absolute tolerance used in the computation of the adaptive step size
     ///
-    pub fn new(f: fn(f64, &V) -> V, x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64) -> Dopri5<V> {
+    pub fn new(f: fn(f64, &V, &mut V), x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64) -> Dopri5<V> {
         let alpha = 0.2 - 0.04*0.75;
         Dopri5 {
             f,
@@ -184,7 +184,7 @@ impl<V> Dopri5<V>
     /// * `n_stiff` - Stifness is tested when the number of iterations is a multiple of n_stiff. Default is 1000
     /// * `out_type`    - Type of the output. Must be a variant of the OutputType enum. Default is Dense
     ///  
-    pub fn from_param(f: fn(f64, &V) -> V, x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64, safety_factor: f64, beta: f64, fac_min: f64, fac_max: f64, h_max: f64, h: f64, n_max: u32, n_stiff: u32, out_type: OutputType) -> Dopri5<V> {
+    pub fn from_param(f: fn(f64, &V, &mut V), x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64, safety_factor: f64, beta: f64, fac_min: f64, fac_max: f64, h_max: f64, h: f64, n_max: u32, n_stiff: u32, out_type: OutputType) -> Dopri5<V> {
         let alpha = 0.2 - beta*0.75;
         Dopri5 {
             f,
@@ -213,7 +213,8 @@ impl<V> Dopri5<V>
 
     /// Compute the initial stepsize
     fn hinit(&self) -> f64 {
-        let f0 = (self.f)(self.x, &self.y);
+        let mut f0 = V::zero();
+        (self.f)(self.x, &self.y, &mut f0);
         let posneg = sign(1.0, self.x_end-self.x);
 
         // Compute the norm of y0 and f0
@@ -239,7 +240,8 @@ impl<V> Dopri5<V>
         h0 = sign(h0, posneg);
 
         let y1 = self.y + f0*na::convert(h0);
-        let f1 = (self.f)(self.x+h0, &y1);
+        let mut f1 = V::zero();
+        (self.f)(self.x+h0, &y1, &mut f1);
         
         // Compute the norm of f1-f0 divided by h0
         let mut d2: f64 = 0.0;
@@ -288,7 +290,7 @@ impl<V> Dopri5<V>
         }
 
         let mut k: Vec<V> = vec![V::zero(); 7];
-        k[0] = (self.f)(self.x , &self.y);
+        (self.f)(self.x , &self.y, &mut k[0]);
         self.stats.num_eval += 1;
 
         // Main loop
@@ -323,7 +325,7 @@ impl<V> Dopri5<V>
                 for j in 0..s {
                     y_next += k[j]*na::convert( self.h * self.coeffs.a(s+1,j+1) );
                 } 
-                k[s] = (self.f)(self.x + self.h*self.coeffs.c(s+1) , &y_next);
+                (self.f)(self.x + self.h*self.coeffs.c(s+1) , &y_next, &mut k[s]);
                 if s == 5 {
                     y_stiff = y_next;
                 }

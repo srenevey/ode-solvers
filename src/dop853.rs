@@ -93,7 +93,7 @@ impl Stats {
 pub struct Dop853<V> 
     where V: FiniteDimInnerSpace + Copy,
 {
-    f:              fn(f64, &V) -> V,
+    f:              fn(f64, &V, &mut V),
     x:              f64,
     x0:             f64,
     x_old:          f64,
@@ -133,7 +133,7 @@ impl<V> Dop853<V>
     /// * `rtol`    - Relative tolerance used in the computation of the adaptive step size
     /// * `atol`    - Absolute tolerance used in the computation of the adaptive step size
     ///
-    pub fn new(f: fn(f64, &V) -> V, x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64) -> Dop853<V> {
+    pub fn new(f: fn(f64, &V, &mut V), x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64) -> Dop853<V> {
         let alpha = 1.0/8.0;
         Dop853 {
             f,
@@ -182,7 +182,7 @@ impl<V> Dop853<V>
     /// * `n_stiff` - Stifness is tested when the number of iterations is a multiple of n_stiff. Default is 1000
     /// * `out_type`    - Type of the output. Must be a variant of the OutputType enum. Default is Dense
     /// 
-    pub fn from_param(f: fn(f64, &V) -> V, x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64, safety_factor: f64, beta: f64, fac_min: f64, fac_max: f64, h_max: f64, h: f64, n_max: u32, n_stiff: u32, out_type: OutputType) -> Dop853<V> {
+    pub fn from_param(f: fn(f64, &V, &mut V), x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64, safety_factor: f64, beta: f64, fac_min: f64, fac_max: f64, h_max: f64, h: f64, n_max: u32, n_stiff: u32, out_type: OutputType) -> Dop853<V> {
         let alpha = 1.0/8.0 - beta*0.2;
         Dop853 {
             f,
@@ -212,7 +212,8 @@ impl<V> Dop853<V>
 
     /// Compute the initial stepsize
     fn hinit(&self) -> f64 {
-        let f0 = (self.f)(self.x, &self.y);
+        let mut f0 = V::zero();
+        (self.f)(self.x, &self.y, &mut f0);
         let posneg = sign(1.0, self.x_end-self.x);
 
         // Compute the norm of y0 and f0
@@ -238,7 +239,8 @@ impl<V> Dop853<V>
         h0 = sign(h0, posneg);
 
         let y1 = self.y + f0*na::convert(h0);
-        let f1 = (self.f)(self.x+h0, &y1);
+        let mut f1 = V::zero();
+        (self.f)(self.x+h0, &y1, &mut f1);
         
         // Compute the norm of f1-f0 divided by h0
         let mut d2: f64 = 0.0;
@@ -284,7 +286,7 @@ impl<V> Dop853<V>
         self.solution_output(y_tmp);
 
         let mut k: Vec<V> = vec![V::zero(); 12];
-        k[0] = (self.f)(self.x , &self.y);
+        (self.f)(self.x , &self.y, &mut k[0]);
         self.stats.num_eval += 1;
 
         // Main loop
@@ -319,7 +321,7 @@ impl<V> Dop853<V>
                 for j in 0..s {
                     y_next += k[j]*na::convert( self.h * self.coeffs.a(s+1,j+1) );
                 } 
-                k[s] = (self.f)(self.x + self.h*self.coeffs.c(s+1), &y_next);
+                (self.f)(self.x + self.h*self.coeffs.c(s+1), &y_next, &mut k[s]);
             }
             k[1] = k[10];
             k[2] = k[11];
@@ -362,7 +364,8 @@ impl<V> Dop853<V>
             // Step size control
             if self.controller.accept(&err, &self.h, &mut h_new) {
                 self.stats.accepted_steps += 1;
-                k[3] = (self.f)(self.x + self.h, &k[4]);
+                let y_tmp = k[4];
+                (self.f)(self.x + self.h, &y_tmp, &mut k[3]);
                 self.stats.num_eval += 1;
 
                 // Stifness detection
@@ -400,13 +403,13 @@ impl<V> Dop853<V>
                 
                     // Next three function evaluations
                     let mut y_next = self.y + (k[0]*na::convert(self.coeffs.a(14,1)) + k[6]*na::convert(self.coeffs.a(14,7)) + k[7]*na::convert(self.coeffs.a(14,8)) + k[8]*na::convert(self.coeffs.a(14,9)) + k[9]*na::convert(self.coeffs.a(14,10)) + k[1]*na::convert(self.coeffs.a(14,11)) + k[2]*na::convert(self.coeffs.a(14,12)) + k[3]*na::convert(self.coeffs.a(14,13)))*na::convert(self.h);
-                    k[9] = (self.f)(self.x + self.h*self.coeffs.c(14), &y_next);
+                    (self.f)(self.x + self.h*self.coeffs.c(14), &y_next, &mut k[9]);
 
                     y_next = self.y + (k[0]*na::convert(self.coeffs.a(15,1)) + k[5]*na::convert(self.coeffs.a(15,6)) + k[6]*na::convert(self.coeffs.a(15,7)) + k[7]*na::convert(self.coeffs.a(15,8)) + k[1]*na::convert(self.coeffs.a(15,11)) + k[2]*na::convert(self.coeffs.a(15,12)) + k[3]*na::convert(self.coeffs.a(15,13)) + k[9]*na::convert(self.coeffs.a(15,14)))*na::convert(self.h);
-                    k[1] = (self.f)(self.x + self.h*self.coeffs.c(15), &y_next);
+                    (self.f)(self.x + self.h*self.coeffs.c(15), &y_next, &mut k[1]);
 
                     y_next = self.y + (k[0]*na::convert(self.coeffs.a(16,1)) + k[5]*na::convert(self.coeffs.a(16,6)) + k[6]*na::convert(self.coeffs.a(16,7)) + k[7]*na::convert(self.coeffs.a(16,8)) + k[8]*na::convert(self.coeffs.a(16,9)) + k[3]*na::convert(self.coeffs.a(16,13)) + k[9]*na::convert(self.coeffs.a(16,14)) + k[1]*na::convert(self.coeffs.a(16,15)))*na::convert(self.h);
-                    k[2] = (self.f)(self.x + self.h*self.coeffs.c(16), &y_next);
+                    (self.f)(self.x + self.h*self.coeffs.c(16), &y_next, &mut k[2]);
 
                     self.stats.num_eval += 3;
 

@@ -36,12 +36,10 @@ fn main() {
     }
 }
 
-fn system(_: Time, y: &State) -> State {
-    let mut dy = State::zeros();
+fn system(_t: Time, y: &State, dy: &mut State) {
     dy[0] = SIG*(y[1]-y[0]);
     dy[1] = y[0]*(RHO-y[2]) - y[1];
     dy[2] = y[0]*y[1] - BETA*y[2];
-    dy
 }
 
 pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {

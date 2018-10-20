@@ -31,18 +31,16 @@ fn main() {
     }
 }
 
-fn system(_t: Time, y: &State) -> State {
+fn system(_t: Time, y: &State, dy: &mut State) {
     let d = ((y[0]+MU).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
     let r = ((y[0]-1.0+MU).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
-
-    let mut dy = State::zeros();
+    
     dy[0] = y[3];
     dy[1] = y[4];
     dy[2] = y[5];
     dy[3] = y[0] + 2.0*y[4] - (1.0-MU)*(y[0]+MU)/d.powi(3) - MU*(y[0]-1.0+MU)/r.powi(3);
     dy[4] = -2.0*y[3] + y[1] - (1.0-MU)*y[1]/d.powi(3) - MU*y[1]/r.powi(3);
     dy[5] = -(1.0-MU)*y[2]/d.powi(3) - MU*y[2]/r.powi(3);
-    dy
 }
 
 
