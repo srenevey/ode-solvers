@@ -51,7 +51,7 @@ The first order ODE(s) must be defined in a function with the following signatur
 fn f(x: f64, y: &State, dy: &mut State)
 ```
 
-where the first argument is the independent variable (usually time) and the second one is a vector containing the dependent variable(s), and the third one will contain the output of the function (namely the derivative(s) of y with respect to x).
+where the first argument is the independent variable (usually time), the second one is a vector containing the dependent variable(s), and the third one will contain the output of the function (namely the derivative(s) of y with respect to x).
 
 
 
