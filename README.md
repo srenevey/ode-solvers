@@ -14,7 +14,7 @@ To start using the crate in your project, add the following dependency in your p
 
 ```rust
 [dependencies]
-ode-solvers = "0.1.2"
+ode-solvers = "0.2.0"
 ```
 
 Then, in your main file, add
@@ -93,6 +93,8 @@ See the [homepage](https://srenevey.github.io/ode-solvers/) for more details.
 
 ## Changelog
 
+- [0.2.0]
+  - Updated dependencies, use slightly more idiomatic Rust.
 - [0.1.2]
   - Changed the signature of the function defining the ODE(s) to reduce the number of allocations.
 - [0.1.1]
