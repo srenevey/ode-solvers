@@ -1,9 +1,9 @@
-// Chemical reaction of Robertson. 
+// Chemical reaction of Robertson.
 // This ode is stiff and is used to test the automatic stiffness detection in dopri5 and/or dop853.
 
 extern crate ode_solvers;
-use ode_solvers::*;
 use ode_solvers::dop853::*;
+use ode_solvers::*;
 
 type State = Vector3<f64>;
 type Time = f64;
@@ -15,13 +15,13 @@ fn main() {
 
     // Handle result
     match res {
-        Ok(stats)   => stats.print(),
-        Err(_)      => println!("The integration process has been aborted.")
+        Ok(stats) => println!("{}", stats),
+        Err(e) => println!("An error occured: {}", e),
     }
 }
 
 fn system(_: Time, y: &State, dy: &mut State) {
-    dy[0] = -0.04*y[0] + 10000.0*y[1]*y[2];
-    dy[1] = 0.04*y[0] - 10000.0*y[1]*y[2] - 3.0*(10.0 as f64).powi(7)*y[1]*y[1];
-    dy[2] = 3.0*(10.0 as f64).powi(7)*y[1]*y[1];
+    dy[0] = -0.04 * y[0] + 10000.0 * y[1] * y[2];
+    dy[1] = 0.04 * y[0] - 10000.0 * y[1] * y[2] - 3.0 * (10.0 as f64).powi(7) * y[1] * y[1];
+    dy[2] = 3.0 * (10.0 as f64).powi(7) * y[1] * y[1];
 }

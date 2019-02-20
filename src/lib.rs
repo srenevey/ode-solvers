@@ -9,6 +9,7 @@ pub use na::{Vector1, Vector2, Vector3, Vector4, Vector5, Vector6, VectorN};
 
 // Declare modules
 pub mod butcher_tableau;
-pub mod dopri5;
-pub mod dop853;
 pub mod controller;
+pub mod dop853;
+pub mod dopri5;
+pub mod dop_shared;
