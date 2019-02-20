@@ -2,27 +2,27 @@
 // Copyright (c) 2018, Sylvain Renevey
 // Copyright (c) 2004, Ernst Hairer
 
-// Redistribution and use in source and binary forms, with or without 
-// modification, are permitted provided that the following conditions are 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
 // met:
 
-// - Redistributions of source code must retain the above copyright 
+// - Redistributions of source code must retain the above copyright
 // notice, this list of conditions and the following disclaimer.
 
-// - Redistributions in binary form must reproduce the above copyright 
-// notice, this list of conditions and the following disclaimer in the 
+// - Redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
 // documentation and/or other materials provided with the distribution.
 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS 
-// IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
-// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR 
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS
+// IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Written by:
@@ -44,85 +44,50 @@
 //
 //===================================================================//
 
+#![allow(clippy::needless_range_loop, clippy::unreadable_literal)]
+
 //! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 5(4) and dense output of order 4.
 
-use alga::linear::{InnerSpace, FiniteDimInnerSpace};
 use alga::general::SubsetOf;
-use std::f64;
-use na;
+use alga::linear::{FiniteDimInnerSpace, InnerSpace};
 use butcher_tableau::Dopri54;
 use controller::Controller;
-
-/// Enumeration of the types of the integration output.
-#[derive(PartialEq)]
-pub enum OutputType {
-    Dense,
-    Sparse,
-}
-
-/// Enumeration of the errors that may arise during integration.
-pub enum IntegrationError {
-    MaxNumStepReached,
-    StepSizeUnderflow,
-    StiffnessDetected
-}
-
-/// Contains some statistics of the integration.
-#[derive(Clone,Copy)]
-pub struct Stats {
-    num_eval:           u32,
-    accepted_steps:     u32,
-    rejected_steps:     u32
-}
-
-impl Stats {
-    fn new() -> Stats {
-        Stats {
-            num_eval: 0,
-            accepted_steps: 0,
-            rejected_steps: 0
-        }
-    }
-
-    /// Prints some statistics related to the integration process.
-    pub fn print(&self) {
-        println!("Number of function evaluations: {:?}", self.num_eval);
-        println!("Number of accepted steps: {:?}", self.accepted_steps);
-        println!("Number of rejected steps: {:?}", self.rejected_steps);
-    }
-}
+use dop_shared::*;
+use na;
+use std::f64;
 
 /// Structure containing the parameters for the numerical integration.
-pub struct Dopri5<V> 
-    where V: FiniteDimInnerSpace + Copy,
+pub struct Dopri5<V>
+where
+    V: FiniteDimInnerSpace + Copy,
 {
-    f:              fn(f64, &V, &mut V),
-	x:              f64,
-    x_old:          f64,
-    x_end:          f64,
-    xd:             f64,
-    dx:             f64,
-	y: 	            V,
-	rtol:	        f64,
-	atol:	        f64,
-    x_out:          Vec<f64>,
-    y_out:          Vec<V>,
-    uround:         f64,
-    h:              f64,
-    h_old:          f64,
-    n_max:          u32,
-    n_stiff:        u32,
-    coeffs:         Dopri54,
-    controller:     Controller,
-    out_type:       OutputType,
-    rcont:          [V; 5],
-    stats:          Stats
+    f: fn(f64, &V, &mut V),
+    x: f64,
+    x_old: f64,
+    x_end: f64,
+    xd: f64,
+    dx: f64,
+    y: V,
+    rtol: f64,
+    atol: f64,
+    x_out: Vec<f64>,
+    y_out: Vec<V>,
+    uround: f64,
+    h: f64,
+    h_old: f64,
+    n_max: u32,
+    n_stiff: u32,
+    coeffs: Dopri54,
+    controller: Controller,
+    out_type: OutputType,
+    rcont: [V; 5],
+    stats: Stats,
 }
 
-
-impl<V> Dopri5<V> 
-    where V: FiniteDimInnerSpace + Copy,
-          <V as InnerSpace>::Real: SubsetOf<f64>
+impl<V> Dopri5<V>
+where
+    V: FiniteDimInnerSpace + Copy,
+    <V as InnerSpace>::Real: SubsetOf<f64>,
 {
     /// Default initializer for the structure
     ///
@@ -136,8 +101,16 @@ impl<V> Dopri5<V>
     /// * `rtol`    - Relative tolerance used in the computation of the adaptive step size
     /// * `atol`    - Absolute tolerance used in the computation of the adaptive step size
     ///
-    pub fn new(f: fn(f64, &V, &mut V), x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64) -> Dopri5<V> {
-        let alpha = 0.2 - 0.04*0.75;
+    pub fn new(
+        f: fn(f64, &V, &mut V),
+        x: f64,
+        x_end: f64,
+        dx: f64,
+        y: V,
+        rtol: f64,
+        atol: f64,
+    ) -> Dopri5<V> {
+        let alpha = 0.2 - 0.04 * 0.75;
         Dopri5 {
             f,
             x,
@@ -156,10 +129,18 @@ impl<V> Dopri5<V>
             n_max: 100000,
             n_stiff: 1000,
             coeffs: Dopri54::new(),
-            controller: Controller::new(alpha, 0.04, 10.0, 0.2, x_end-x, 0.9, sign(1.0, x_end-x)),
+            controller: Controller::new(
+                alpha,
+                0.04,
+                10.0,
+                0.2,
+                x_end - x,
+                0.9,
+                sign(1.0, x_end - x),
+            ),
             out_type: OutputType::Dense,
             rcont: [V::zero(); 5],
-            stats: Stats::new()
+            stats: Stats::new(),
         }
     }
 
@@ -183,9 +164,27 @@ impl<V> Dopri5<V>
     /// * `n_max`   - Maximum number of iterations. Default is 100000
     /// * `n_stiff` - Stifness is tested when the number of iterations is a multiple of n_stiff. Default is 1000
     /// * `out_type`    - Type of the output. Must be a variant of the OutputType enum. Default is Dense
-    ///  
-    pub fn from_param(f: fn(f64, &V, &mut V), x: f64, x_end: f64, dx: f64, y: V, rtol: f64, atol: f64, safety_factor: f64, beta: f64, fac_min: f64, fac_max: f64, h_max: f64, h: f64, n_max: u32, n_stiff: u32, out_type: OutputType) -> Dopri5<V> {
-        let alpha = 0.2 - beta*0.75;
+    ///
+    #[allow(clippy::too_many_arguments)]
+    pub fn from_param(
+        f: fn(f64, &V, &mut V),
+        x: f64,
+        x_end: f64,
+        dx: f64,
+        y: V,
+        rtol: f64,
+        atol: f64,
+        safety_factor: f64,
+        beta: f64,
+        fac_min: f64,
+        fac_max: f64,
+        h_max: f64,
+        h: f64,
+        n_max: u32,
+        n_stiff: u32,
+        out_type: OutputType,
+    ) -> Dopri5<V> {
+        let alpha = 0.2 - beta * 0.75;
         Dopri5 {
             f,
             x,
@@ -204,10 +203,18 @@ impl<V> Dopri5<V>
             n_max,
             n_stiff,
             coeffs: Dopri54::new(),
-            controller: Controller::new(alpha, beta, fac_max, fac_min, h_max, safety_factor, sign(1.0, x_end-x)),
+            controller: Controller::new(
+                alpha,
+                beta,
+                fac_max,
+                fac_min,
+                h_max,
+                safety_factor,
+                sign(1.0, x_end - x),
+            ),
             out_type,
             rcont: [V::zero(); 5],
-            stats: Stats::new()
+            stats: Stats::new(),
         }
     }
 
@@ -215,7 +222,7 @@ impl<V> Dopri5<V>
     fn hinit(&self) -> f64 {
         let mut f0 = V::zero();
         (self.f)(self.x, &self.y, &mut f0);
-        let posneg = sign(1.0, self.x_end-self.x);
+        let posneg = sign(1.0, self.x_end - self.x);
 
         // Compute the norm of y0 and f0
         let dim = na::dimension::<V>();
@@ -224,25 +231,25 @@ impl<V> Dopri5<V>
         for i in 0..dim {
             let y_i: f64 = na::convert(self.y[i]);
             let sci: f64 = self.atol + y_i.abs() * self.rtol;
-            d0 += (y_i/sci)*(y_i/sci);
+            d0 += (y_i / sci) * (y_i / sci);
             let f0_i: f64 = na::convert(f0[i]);
-            d1 += (f0_i/sci)*(f0_i/sci);
+            d1 += (f0_i / sci) * (f0_i / sci);
         }
 
         // Compute h0
         let mut h0 = if d0 < 1.0E-10 || d1 < 1.0E-10 {
             1.0E-6
         } else {
-            0.01*(d0/d1).sqrt()
+            0.01 * (d0 / d1).sqrt()
         };
 
-        h0 =  h0.min(self.controller.h_max());
+        h0 = h0.min(self.controller.h_max());
         h0 = sign(h0, posneg);
 
-        let y1 = self.y + f0*na::convert(h0);
+        let y1 = self.y + f0 * na::convert(h0);
         let mut f1 = V::zero();
-        (self.f)(self.x+h0, &y1, &mut f1);
-        
+        (self.f)(self.x + h0, &y1, &mut f1);
+
         // Compute the norm of f1-f0 divided by h0
         let mut d2: f64 = 0.0;
         for i in 0..dim {
@@ -250,22 +257,24 @@ impl<V> Dopri5<V>
             let f1_i: f64 = na::convert(f1[i]);
             let y_i: f64 = na::convert(self.y[i]);
             let sci: f64 = self.atol + y_i.abs() * self.rtol;
-            d2 += ((f1_i-f0_i)/sci) * ((f1_i-f0_i)/sci);
+            d2 += ((f1_i - f0_i) / sci) * ((f1_i - f0_i) / sci);
         }
         d2 = d2.sqrt() / h0;
 
         let h1 = if d1.sqrt().max(d2.abs()) <= 1.0E-15 {
-            (1.0E-6 as f64).max(h0.abs()*1.0E-3)
+            (1.0E-6 as f64).max(h0.abs() * 1.0E-3)
         } else {
-            (0.01/(d1.sqrt().max(d2))).powf(1.0/5.0)
+            (0.01 / (d1.sqrt().max(d2))).powf(1.0 / 5.0)
         };
 
-         sign((100.0*h0.abs()).min(h1.min(self.controller.h_max())), posneg)
+        sign(
+            (100.0 * h0.abs()).min(h1.min(self.controller.h_max())),
+            posneg,
+        )
     }
 
     /// Core integration method.
     pub fn integrate(&mut self) -> Result<Stats, IntegrationError> {
-        
         // Initilization
         self.x_old = self.x;
         let mut n_step = 0;
@@ -274,7 +283,7 @@ impl<V> Dopri5<V>
         let dim = na::dimension::<V>();
         let mut iter_non_stiff = 1..7;
         let mut iter_iasti = 1..16;
-        let posneg = sign(1.0, self.x_end-self.x);
+        let posneg = sign(1.0, self.x_end - self.x);
 
         if self.h == 0.0 {
             self.h = self.hinit();
@@ -284,34 +293,30 @@ impl<V> Dopri5<V>
 
         // Save initial values
         if self.out_type == OutputType::Sparse {
-            let y_tmp = self.y.clone();
             self.x_out.push(self.x);
-            self.y_out.push(y_tmp);    
+            self.y_out.push(self.y);
         }
 
         let mut k: Vec<V> = vec![V::zero(); 7];
-        (self.f)(self.x , &self.y, &mut k[0]);
+        (self.f)(self.x, &self.y, &mut k[0]);
         self.stats.num_eval += 1;
 
         // Main loop
         while !last {
-            
             // Check if step number is within allowed range
             if n_step > self.n_max {
-                println!("Stopped at x = {}. Need more than {} steps.", self.x, n_step);
                 self.h_old = self.h;
-                return Err(IntegrationError::MaxNumStepReached);
+                return Err(IntegrationError::MaxNumStepReached { x: self.x, n_step });
             }
 
             // Check for step size underflow
-            if 0.1*self.h.abs() <= self.uround*self.x.abs() {
-                println!("Stopped at x = {}. Step size underflow.", self.x);
+            if 0.1 * self.h.abs() <= self.uround * self.x.abs() {
                 self.h_old = self.h;
-                return Err(IntegrationError::StepSizeUnderflow);
+                return Err(IntegrationError::StepSizeUnderflow { x: self.x });
             }
 
             // Check if it's the last iteration
-            if (self.x + 1.01*self.h - self.x_end)*posneg > 0.0 {
+            if (self.x + 1.01 * self.h - self.x_end) * posneg > 0.0 {
                 self.h = self.x_end - self.x;
                 last = true;
             }
@@ -321,11 +326,11 @@ impl<V> Dopri5<V>
             let mut y_next = V::zero();
             let mut y_stiff = V::zero();
             for s in 1..7 {
-                y_next = self.y.clone();
+                y_next = self.y;
                 for j in 0..s {
-                    y_next += k[j]*na::convert( self.h * self.coeffs.a(s+1,j+1) );
-                } 
-                (self.f)(self.x + self.h*self.coeffs.c(s+1) , &y_next, &mut k[s]);
+                    y_next += k[j] * na::convert(self.h * self.coeffs.a(s + 1, j + 1));
+                }
+                (self.f)(self.x + self.h * self.coeffs.c(s + 1), &y_next, &mut k[s]);
                 if s == 5 {
                     y_stiff = y_next;
                 }
@@ -333,16 +338,26 @@ impl<V> Dopri5<V>
             k[1] = k[6];
             self.stats.num_eval += 6;
 
-
             // Prepare dense output
             if self.out_type == OutputType::Dense {
-                self.rcont[4] = (k[0]*na::convert(self.coeffs.d(1)) + k[2]*na::convert(self.coeffs.d(3)) + k[3]*na::convert(self.coeffs.d(4)) + k[4]*na::convert(self.coeffs.d(5)) + k[5]*na::convert(self.coeffs.d(6)) + k[1]*na::convert(self.coeffs.d(7)))*na::convert(self.h);
+                self.rcont[4] = (k[0] * na::convert(self.coeffs.d(1))
+                    + k[2] * na::convert(self.coeffs.d(3))
+                    + k[3] * na::convert(self.coeffs.d(4))
+                    + k[4] * na::convert(self.coeffs.d(5))
+                    + k[5] * na::convert(self.coeffs.d(6))
+                    + k[1] * na::convert(self.coeffs.d(7)))
+                    * na::convert(self.h);
             }
 
-
             // Compute error estimate
-            k[3] =  (k[0]*na::convert(self.coeffs.e(1)) + k[1]*na::convert(self.coeffs.e(2)) + k[2]*na::convert(self.coeffs.e(3)) + k[3]*na::convert(self.coeffs.e(4)) + k[4]*na::convert(self.coeffs.e(5)) + k[5]*na::convert(self.coeffs.e(6)) + k[1]*na::convert(self.coeffs.e(7))) * na::convert(self.h);
-
+            k[3] = (k[0] * na::convert(self.coeffs.e(1))
+                + k[1] * na::convert(self.coeffs.e(2))
+                + k[2] * na::convert(self.coeffs.e(3))
+                + k[3] * na::convert(self.coeffs.e(4))
+                + k[4] * na::convert(self.coeffs.e(5))
+                + k[5] * na::convert(self.coeffs.e(6))
+                + k[1] * na::convert(self.coeffs.e(7)))
+                * na::convert(self.h);
 
             // Compute error
             let mut err = 0.0;
@@ -351,43 +366,43 @@ impl<V> Dopri5<V>
                 let y_next_i: f64 = na::convert(y_next[i]);
                 let sc_i: f64 = self.atol + y_i.abs().max(y_next_i.abs()) * self.rtol;
                 let err_est_i: f64 = na::convert(k[3][i]);
-                err += (err_est_i /sc_i)*(err_est_i /sc_i);
+                err += (err_est_i / sc_i) * (err_est_i / sc_i);
             }
             err = (err / dim as f64).sqrt();
 
-
             // Step size control
-            if self.controller.accept(&err, &self.h, &mut h_new) {
+            if self.controller.accept(err, self.h, &mut h_new) {
                 self.stats.accepted_steps += 1;
-
 
                 // Stifness detection
                 if (self.stats.accepted_steps % self.n_stiff != 0) || dim > 0 {
-                    let num: f64 = na::convert( na::dot(&(k[1]-k[5]), &(k[1]-k[5])) );
-                    let den: f64 = na::convert( na::dot(&(y_next-y_stiff), &(y_next-y_stiff)) );
-                    let h_lamb = if den > 0.0 { self.h*(num/den).sqrt() } else { 0.0 };
-                    
+                    let num: f64 = na::convert((k[1] - k[5]).dot(&(k[1] - k[5])));
+                    let den: f64 = na::convert((y_next - y_stiff).dot(&(y_next - y_stiff)));
+                    let h_lamb = if den > 0.0 {
+                        self.h * (num / den).sqrt()
+                    } else {
+                        0.0
+                    };
+
                     if h_lamb > 3.25 {
                         iter_non_stiff = 1..7;
                         if iter_iasti.next() == Some(15) {
                             self.h_old = self.h;
-                            println!("The problem seems to become stiff at x = {:?}.", self.x);
-                            return Err(IntegrationError::StiffnessDetected);
+                            return Err(IntegrationError::StiffnessDetected { x: self.x });
                         }
-                    } else {
-                        if iter_non_stiff.next() == Some(6) { iter_iasti = 1..16; }
+                    } else if iter_non_stiff.next() == Some(6) {
+                        iter_iasti = 1..16;
                     }
-                } 
-
+                }
 
                 // Prepare dense output
                 if self.out_type == OutputType::Dense {
                     let ydiff = y_next - self.y;
-                    let bspl = k[0]*na::convert(self.h) - ydiff;
+                    let bspl = k[0] * na::convert(self.h) - ydiff;
                     self.rcont[0] = self.y;
                     self.rcont[1] = ydiff;
                     self.rcont[2] = bspl;
-                    self.rcont[3] = -k[1]*na::convert(self.h) + ydiff - bspl;
+                    self.rcont[3] = -k[1] * na::convert(self.h) + ydiff - bspl;
                 }
 
                 k[0] = k[1];
@@ -403,12 +418,10 @@ impl<V> Dopri5<V>
                     self.h_old = posneg * h_new;
                     return Ok(self.stats);
                 }
-            } else {
-                if self.stats.accepted_steps >= 1 {
-                    self.stats.rejected_steps += 1;
-                }
-            }     
-            self.h =  h_new;
+            } else if self.stats.accepted_steps >= 1 {
+                self.stats.rejected_steps += 1;
+            }
+            self.h = h_new;
         }
         Ok(self.stats)
     }
@@ -417,10 +430,18 @@ impl<V> Dopri5<V>
         if self.out_type == OutputType::Dense {
             while self.xd.abs() <= self.x.abs() {
                 if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
-                    let theta = (self.xd - self.x_old)/self.h_old;
+                    let theta = (self.xd - self.x_old) / self.h_old;
                     let theta1 = 1.0 - theta;
                     self.x_out.push(self.xd);
-                    self.y_out.push(self.rcont[0] + (self.rcont[1] + (self.rcont[2] + (self.rcont[3] + self.rcont[4]*na::convert(theta1))*na::convert(theta))*na::convert(theta1))*na::convert(theta));
+                    self.y_out.push(
+                        self.rcont[0]
+                            + (self.rcont[1]
+                                + (self.rcont[2]
+                                    + (self.rcont[3] + self.rcont[4] * na::convert(theta1))
+                                        * na::convert(theta))
+                                    * na::convert(theta1))
+                                * na::convert(theta),
+                    );
                     self.xd += self.dx;
                 }
             }
