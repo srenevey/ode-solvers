@@ -30,7 +30,7 @@ fn main() {
     );
 
     let mut stepper = Dopri5::new(system, 0.0, 5.0 * period, 60.0, y0, 1.0e-10, 1.0e-10);
-    stepper.set_solout(|_,y| { y[0] > 25500. });
+    stepper.set_solout(|_t,y,_dy| { y[0] > 25500. });
     let res = stepper.integrate();
 
     // Handle result

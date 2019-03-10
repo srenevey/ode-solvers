@@ -101,7 +101,7 @@ where
     out_type: OutputType,
     rcont: [V; 5],
     stats: Stats,
-    solout: fn(f64, &V) -> bool,
+    solout: fn(f64, &V, &V) -> bool,
 }
 
 impl<V> Dopri5<V>
@@ -152,7 +152,7 @@ where
             out_type: OutputType::Dense,
             rcont: [V::zero(); 5],
             stats: Stats::new(),
-            solout: |_, _| { false },
+            solout: |_, _, _| { false },
         }
     }
 
@@ -227,7 +227,7 @@ where
             out_type,
             rcont: [V::zero(); 5],
             stats: Stats::new(),
-            solout: |_, _| { false },
+            solout: |_, _, _| { false },
         }
     }
 
@@ -287,7 +287,7 @@ where
     }
 
     /// Set stop function will be called at every successful integration step.
-    pub fn set_solout(&mut self, solout: fn(f64, &V) -> bool) {
+    pub fn set_solout(&mut self, solout: fn(f64, &V, &V) -> bool) {
         self.solout = solout;
     }
 
@@ -431,7 +431,7 @@ where
 
                 self.solution_output(y_next);
 
-                if (self.solout)(self.x, &self.y) {
+                if (self.solout)(self.x, &self.y, &k[0]) {
                     last = true;
                 }
 
