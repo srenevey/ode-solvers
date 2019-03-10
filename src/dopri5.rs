@@ -429,9 +429,9 @@ where
                 self.x += self.h;
                 self.h_old = self.h;
 
-                self.solution_output(y_next);
+                self.solution_output(y_next, &k);
 
-                if (self.solout)(self.x, &self.y, &k[0]) {
+                if (self.solout)(self.x, &self.y_out.last().unwrap(), &k[0]) {
                     last = true;
                 }
 
@@ -448,7 +448,7 @@ where
         Ok(self.stats)
     }
 
-    fn solution_output(&mut self, y_next: V) {
+    fn solution_output(&mut self, y_next: V, k: &Vec<V>) {
         if self.out_type == OutputType::Dense {
             while self.xd.abs() <= self.x.abs() {
                 if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
@@ -465,6 +465,9 @@ where
                                 * na::convert(theta),
                     );
                     self.xd += self.dx;
+                    if (self.solout)(self.x, &self.y_out.last().unwrap(), &k[0]) {
+                        break;
+                    }
                 }
             }
         } else {
