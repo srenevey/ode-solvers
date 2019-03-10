@@ -56,6 +56,25 @@ use dop_shared::*;
 use na;
 use std::f64;
 
+trait DefaultController {
+    fn default(x: f64, x_end: f64) -> Self;
+}
+
+impl DefaultController for Controller {
+    fn default(x: f64, x_end: f64) -> Self {
+        let alpha = 0.2 - 0.04 * 0.75;
+        Controller::new(
+            alpha,
+            0.04,
+            10.0,
+            0.2,
+            x_end - x,
+            0.9,
+            sign(1.0, x_end - x),
+        )
+    }
+}
+
 /// Structure containing the parameters for the numerical integration.
 pub struct Dopri5<V>
 where
@@ -82,6 +101,7 @@ where
     out_type: OutputType,
     rcont: [V; 5],
     stats: Stats,
+    solout: fn(f64, &V) -> bool,
 }
 
 impl<V> Dopri5<V>
@@ -110,7 +130,6 @@ where
         rtol: f64,
         atol: f64,
     ) -> Dopri5<V> {
-        let alpha = 0.2 - 0.04 * 0.75;
         Dopri5 {
             f,
             x,
@@ -129,18 +148,11 @@ where
             n_max: 100000,
             n_stiff: 1000,
             coeffs: Dopri54::new(),
-            controller: Controller::new(
-                alpha,
-                0.04,
-                10.0,
-                0.2,
-                x_end - x,
-                0.9,
-                sign(1.0, x_end - x),
-            ),
+            controller: Controller::default(x, x_end),
             out_type: OutputType::Dense,
             rcont: [V::zero(); 5],
             stats: Stats::new(),
+            solout: |_, _| { false },
         }
     }
 
@@ -215,6 +227,7 @@ where
             out_type,
             rcont: [V::zero(); 5],
             stats: Stats::new(),
+            solout: |_, _| { false },
         }
     }
 
@@ -271,6 +284,11 @@ where
             (100.0 * h0.abs()).min(h1.min(self.controller.h_max())),
             posneg,
         )
+    }
+
+    /// Set stop function will be called at every successful integration step.
+    pub fn set_solout(&mut self, solout: fn(f64, &V) -> bool) {
+        self.solout = solout;
     }
 
     /// Core integration method.
@@ -412,6 +430,10 @@ where
                 self.h_old = self.h;
 
                 self.solution_output(y_next);
+
+                if (self.solout)(self.x, &self.y) {
+                    last = true;
+                }
 
                 // Normal exit
                 if last {

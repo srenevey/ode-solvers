@@ -54,6 +54,24 @@ use na;
 use std::f64;
 use std::f64::EPSILON;
 
+trait DefaultController {
+    fn default(x: f64, x_end: f64) -> Self;
+}
+
+impl DefaultController for Controller {
+    fn default(x: f64, x_end: f64) -> Self {
+        let alpha = 1.0 / 8.0;
+        Controller::new(
+            alpha,
+            0.0,
+            6.0,
+            0.333,
+            x_end - x,
+            0.9,
+            sign(1.0, x_end - x),
+        )
+    }
+}
 /// Structure containing the parameters for the numerical integration.
 pub struct Dop853<V>
 where
@@ -109,7 +127,6 @@ where
         rtol: f64,
         atol: f64,
     ) -> Dop853<V> {
-        let alpha = 1.0 / 8.0;
         Dop853 {
             f,
             x,
@@ -129,15 +146,7 @@ where
             n_max: 100000,
             n_stiff: 1000,
             coeffs: Dopri853::new(),
-            controller: Controller::new(
-                alpha,
-                0.0,
-                6.0,
-                0.333,
-                x_end - x,
-                0.9,
-                sign(1.0, x_end - x),
-            ),
+            controller: Controller::default(x, x_end),
             out_type: OutputType::Dense,
             rcont: [V::zero(); 8],
             stats: Stats::new(),
