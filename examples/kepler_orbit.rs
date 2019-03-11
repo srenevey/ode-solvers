@@ -29,9 +29,8 @@ fn main() {
         0.748229399696,
     );
 
-    let mut stepper = Dopri5::new(system, 0.0, 5.0 * period, 60.0, y0, 1.0e-10, 1.0e-10);
-    // Stop the integration if x exceeds 25,500 km.
-    // stepper.set_solout(|_t,y,_dy| { y[0] > 25500. });
+    let solver = Solver;
+    let mut stepper = Dopri5::new(solver, 0.0, 5.0 * period, 60.0, y0, 1.0e-10, 1.0e-10);
     let res = stepper.integrate();
 
     // Handle result
@@ -46,16 +45,24 @@ fn main() {
     }
 }
 
-// Equations of motion of the system
-fn system(_t: Time, y: &State, dy: &mut State) {
-    let r = (y[0] * y[0] + y[1] * y[1] + y[2] * y[2]).sqrt();
+struct Solver;
 
-    dy[0] = y[3];
-    dy[1] = y[4];
-    dy[2] = y[5];
-    dy[3] = -MU * y[0] / r.powi(3);
-    dy[4] = -MU * y[1] / r.powi(3);
-    dy[5] = -MU * y[2] / r.powi(3);
+impl ode_solvers::System<State> for Solver {
+    // Equations of motion of the system
+    fn system(&self, _t: Time, y: &State, dy: &mut State) {
+        let r = (y[0] * y[0] + y[1] * y[1] + y[2] * y[2]).sqrt();
+
+        dy[0] = y[3];
+        dy[1] = y[4];
+        dy[2] = y[5];
+        dy[3] = -MU * y[0] / r.powi(3);
+        dy[4] = -MU * y[1] / r.powi(3);
+        dy[5] = -MU * y[2] / r.powi(3);
+    }
+    // Stop the integration if x exceeds 25,500 km. Optional
+    //fn solout(&self, _t: Time, y: &State, _dy: &State) -> bool {
+    //    y[0] > 25500.
+    //}
 }
 
 pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {

@@ -10,7 +10,8 @@ type Time = f64;
 
 fn main() {
     let y0 = State::new(1.0, 0.0, 0.0);
-    let mut stepper = Dop853::new(system, 0.0, 0.3, 0.3, y0, 1.0e-2, 1.0e-6);
+    let solver = Solver;
+    let mut stepper = Dop853::new(solver, 0., 0.3, 0.3, y0, 1_e-2, 1_e-6);
     let res = stepper.integrate();
 
     // Handle result
@@ -20,8 +21,12 @@ fn main() {
     }
 }
 
-fn system(_: Time, y: &State, dy: &mut State) {
-    dy[0] = -0.04 * y[0] + 10000.0 * y[1] * y[2];
-    dy[1] = 0.04 * y[0] - 10000.0 * y[1] * y[2] - 3.0 * (10.0 as f64).powi(7) * y[1] * y[1];
-    dy[2] = 3.0 * (10.0 as f64).powi(7) * y[1] * y[1];
+struct Solver;
+
+impl ode_solvers::System<State> for Solver {
+    fn system(&self, _: Time, y: &State, dy: &mut State) {
+        dy[0] = -0.04 * y[0] + 10000. * y[1] * y[2];
+        dy[1] = 0.04 * y[0] - 10000. * y[1] * y[2] - 3. * (10. as f64).powi(7) * y[1] * y[1];
+        dy[2] = 3. * (10. as f64).powi(7) * y[1] * y[1];
+    }
 }

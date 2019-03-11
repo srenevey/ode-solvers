@@ -11,17 +11,14 @@ use std::path::Path;
 type State = Vector3<f64>;
 type Time = f64;
 
-// Define problem specific constants
-const SIG: f64 = 10.0;
-const BETA: f64 = 8.0 / 3.0;
-const RHO: f64 = 28.0;
-
 fn main() {
     // Initial state
     let y0 = State::new(1.0, 1.0, 1.0);
 
+    // Define problem specific constants
+    let solver = Solver {sig: 10., beta: 8./3., rho: 28.};
     // Create stepper and integrate
-    let mut stepper = Dop853::new(system, 0.0, 100.0, 1e-3, y0, 1e-4, 1e-4);
+    let mut stepper = Dop853::new(solver, 0.0, 100.0, 1e-3, y0, 1e-4, 1e-4);
     let res = stepper.integrate();
 
     // Handle result
@@ -36,10 +33,18 @@ fn main() {
     }
 }
 
-fn system(_t: Time, y: &State, dy: &mut State) {
-    dy[0] = SIG * (y[1] - y[0]);
-    dy[1] = y[0] * (RHO - y[2]) - y[1];
-    dy[2] = y[0] * y[1] - BETA * y[2];
+struct Solver {
+    sig: f64,
+    beta: f64,
+    rho: f64,
+}
+
+impl ode_solvers::System<State> for Solver {
+    fn system(&self, _t: Time, y: &State, dy: &mut State) {
+        dy[0] = self.sig * (y[1] - y[0]);
+        dy[1] = y[0] * (self.rho - y[2]) - y[1];
+        dy[2] = y[0] * y[1] - self.beta * y[2];
+    }
 }
 
 pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {

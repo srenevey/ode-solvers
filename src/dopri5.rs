@@ -76,11 +76,12 @@ impl DefaultController for Controller {
 }
 
 /// Structure containing the parameters for the numerical integration.
-pub struct Dopri5<V>
+pub struct Dopri5<V, F>
 where
     V: FiniteDimInnerSpace + Copy,
+    F: System<V>,
 {
-    f: fn(f64, &V, &mut V),
+    f: F,
     x: f64,
     x_old: f64,
     x_end: f64,
@@ -101,13 +102,13 @@ where
     out_type: OutputType,
     rcont: [V; 5],
     stats: Stats,
-    solout: fn(f64, &V, &V) -> bool,
 }
 
-impl<V> Dopri5<V>
+impl<V, F> Dopri5<V, F>
 where
     V: FiniteDimInnerSpace + Copy,
     <V as InnerSpace>::Real: SubsetOf<f64>,
+    F: System<V>,
 {
     /// Default initializer for the structure
     ///
@@ -122,14 +123,14 @@ where
     /// * `atol`    - Absolute tolerance used in the computation of the adaptive step size
     ///
     pub fn new(
-        f: fn(f64, &V, &mut V),
+        f: F,
         x: f64,
         x_end: f64,
         dx: f64,
         y: V,
         rtol: f64,
         atol: f64,
-    ) -> Dopri5<V> {
+    ) -> Dopri5<V, F> {
         Dopri5 {
             f,
             x,
@@ -152,7 +153,6 @@ where
             out_type: OutputType::Dense,
             rcont: [V::zero(); 5],
             stats: Stats::new(),
-            solout: |_, _, _| { false },
         }
     }
 
@@ -179,7 +179,7 @@ where
     ///
     #[allow(clippy::too_many_arguments)]
     pub fn from_param(
-        f: fn(f64, &V, &mut V),
+        f: F,
         x: f64,
         x_end: f64,
         dx: f64,
@@ -195,7 +195,7 @@ where
         n_max: u32,
         n_stiff: u32,
         out_type: OutputType,
-    ) -> Dopri5<V> {
+    ) -> Dopri5<V, F> {
         let alpha = 0.2 - beta * 0.75;
         Dopri5 {
             f,
@@ -227,14 +227,13 @@ where
             out_type,
             rcont: [V::zero(); 5],
             stats: Stats::new(),
-            solout: |_, _, _| { false },
         }
     }
 
     /// Compute the initial stepsize
     fn hinit(&self) -> f64 {
         let mut f0 = V::zero();
-        (self.f)(self.x, &self.y, &mut f0);
+        self.f.system(self.x, &self.y, &mut f0);
         let posneg = sign(1.0, self.x_end - self.x);
 
         // Compute the norm of y0 and f0
@@ -261,7 +260,7 @@ where
 
         let y1 = self.y + f0 * na::convert(h0);
         let mut f1 = V::zero();
-        (self.f)(self.x + h0, &y1, &mut f1);
+        self.f.system(self.x + h0, &y1, &mut f1);
 
         // Compute the norm of f1-f0 divided by h0
         let mut d2: f64 = 0.0;
@@ -284,11 +283,6 @@ where
             (100.0 * h0.abs()).min(h1.min(self.controller.h_max())),
             posneg,
         )
-    }
-
-    /// Set stop function will be called at every successful integration step.
-    pub fn set_solout(&mut self, solout: fn(f64, &V, &V) -> bool) {
-        self.solout = solout;
     }
 
     /// Core integration method.
@@ -316,7 +310,7 @@ where
         }
 
         let mut k: Vec<V> = vec![V::zero(); 7];
-        (self.f)(self.x, &self.y, &mut k[0]);
+        self.f.system(self.x, &self.y, &mut k[0]);
         self.stats.num_eval += 1;
 
         // Main loop
@@ -348,7 +342,7 @@ where
                 for j in 0..s {
                     y_next += k[j] * na::convert(self.h * self.coeffs.a(s + 1, j + 1));
                 }
-                (self.f)(self.x + self.h * self.coeffs.c(s + 1), &y_next, &mut k[s]);
+                self.f.system(self.x + self.h * self.coeffs.c(s + 1), &y_next, &mut k[s]);
                 if s == 5 {
                     y_stiff = y_next;
                 }
@@ -431,7 +425,7 @@ where
 
                 self.solution_output(y_next, &k);
 
-                if (self.solout)(self.x, &self.y_out.last().unwrap(), &k[0]) {
+                if self.f.solout(self.x, &self.y_out.last().unwrap(), &k[0]) {
                     last = true;
                 }
 
@@ -465,7 +459,7 @@ where
                                 * na::convert(theta),
                     );
                     self.xd += self.dx;
-                    if (self.solout)(self.x, &self.y_out.last().unwrap(), &k[0]) {
+                    if self.f.solout(self.x, &self.y_out.last().unwrap(), &k[0]) {
                         break;
                     }
                 }

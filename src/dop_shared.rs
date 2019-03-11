@@ -1,6 +1,16 @@
 use std::error::Error;
 use std::fmt;
 
+/// Trait needed to be implemented by user
+pub trait System<V> {
+    /// System of Ordinary differential equations
+    fn system(&self, x: f64, y: &V, dy: &mut V);
+    /// Stop function will be called at every successful integration step.
+    fn solout(&self, _x: f64, _y: &V, _dy: &V) -> bool {
+        false
+    }
+}
+
 /// Enumeration of the types of the integration output.
 #[derive(PartialEq, Eq)]
 pub enum OutputType {
