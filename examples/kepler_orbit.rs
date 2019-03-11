@@ -60,7 +60,7 @@ impl ode_solvers::System<State> for Solver {
         dy[5] = -MU * y[2] / r.powi(3);
     }
     // Stop the integration if x exceeds 25,500 km. Optional
-    //fn solout(&self, _t: Time, y: &State, _dy: &State) -> bool {
+    //fn solout(&mut self, _t: Time, y: &State, _dy: &State) -> bool {
     //    y[0] > 25500.
     //}
 }
