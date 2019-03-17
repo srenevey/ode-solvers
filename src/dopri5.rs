@@ -299,8 +299,8 @@ where
         let mut last = false;
         let mut h_new = 0.0;
         let dim = na::dimension::<V>();
-        let mut iter_non_stiff = 1..7;
-        let mut iter_iasti = 1..16;
+        let mut non_stiff = 0;
+        let mut iasti = 0;
         let posneg = sign(1.0, self.x_end - self.x);
 
         if self.h == 0.0 {
@@ -369,7 +369,6 @@ where
 
             // Compute error estimate
             k[3] = (k[0] * na::convert(self.coeffs.e(1))
-                + k[1] * na::convert(self.coeffs.e(2))
                 + k[2] * na::convert(self.coeffs.e(3))
                 + k[3] * na::convert(self.coeffs.e(4))
                 + k[4] * na::convert(self.coeffs.e(5))
@@ -393,7 +392,7 @@ where
                 self.stats.accepted_steps += 1;
 
                 // Stifness detection
-                if (self.stats.accepted_steps % self.n_stiff != 0) || dim > 0 {
+                if self.stats.accepted_steps % self.n_stiff != 0 || iasti > 0 {
                     let num: f64 = na::convert((k[1] - k[5]).dot(&(k[1] - k[5])));
                     let den: f64 = na::convert((y_next - y_stiff).dot(&(y_next - y_stiff)));
                     let h_lamb = if den > 0.0 {
@@ -403,13 +402,17 @@ where
                     };
 
                     if h_lamb > 3.25 {
-                        iter_non_stiff = 1..7;
-                        if iter_iasti.next() == Some(15) {
+                        iasti += 1;
+                        non_stiff = 0;
+                        if iasti == 15 {
                             self.h_old = self.h;
                             return Err(IntegrationError::StiffnessDetected { x: self.x });
                         }
-                    } else if iter_non_stiff.next() == Some(6) {
-                        iter_iasti = 1..16;
+                    } else {
+                        non_stiff += 1;
+                        if non_stiff == 6 {
+                            iasti = 0;                            
+                        }
                     }
                 }
 
