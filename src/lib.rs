@@ -11,3 +11,8 @@ pub mod controller;
 pub mod dop853;
 pub mod dopri5;
 pub mod dop_shared;
+
+pub use dopri5::Dopri5;
+pub use dop853::Dop853;
+
+pub use dop_shared::System;
