@@ -47,10 +47,10 @@
 
 use alga::general::SubsetOf;
 use alga::linear::{FiniteDimInnerSpace, InnerSpace};
-use butcher_tableau::Dopri853;
-use controller::Controller;
-use dop_shared::*;
-use na;
+use crate::butcher_tableau::Dopri853;
+use crate::controller::Controller;
+use crate::dop_shared::*;
+use nalgebra as na;
 use std::f64;
 use std::f64::EPSILON;
 

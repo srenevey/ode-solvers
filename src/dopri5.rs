@@ -50,10 +50,10 @@
 
 use alga::general::SubsetOf;
 use alga::linear::{FiniteDimInnerSpace, InnerSpace};
-use butcher_tableau::Dopri54;
-use controller::Controller;
-use dop_shared::*;
-use na;
+use crate::butcher_tableau::Dopri54;
+use crate::controller::Controller;
+use crate::dop_shared::*;
+use nalgebra as na;
 use std::f64;
 
 trait DefaultController {

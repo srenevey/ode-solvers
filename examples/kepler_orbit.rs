@@ -1,7 +1,6 @@
 // The equations of motion describing the motion of a spacecraft on a Kepler
 // orbit are integrated using Dopri5.
 
-extern crate ode_solvers;
 use ode_solvers::dopri5::*;
 use ode_solvers::*;
 

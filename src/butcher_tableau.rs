@@ -427,7 +427,7 @@ impl Dopri853 {
 
 #[cfg(test)]
 mod tests {
-    use butcher_tableau;
+    use crate::butcher_tableau;
     // use test::Bencher;
     // use butcher_tableau;
     // #[bench]

@@ -1,7 +1,6 @@
 // Chemical reaction of Robertson.
 // This ode is stiff and is used to test the automatic stiffness detection in dopri5 and/or dop853.
 
-extern crate ode_solvers;
 use ode_solvers::dop853::*;
 use ode_solvers::*;
 

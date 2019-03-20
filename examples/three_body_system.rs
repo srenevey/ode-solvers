@@ -1,4 +1,3 @@
-extern crate ode_solvers;
 use ode_solvers::dop853::*;
 use ode_solvers::*;
 
