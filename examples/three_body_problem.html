@@ -65,6 +65,9 @@
                             <li >
                                 <a href="https://docs.rs/ode_solvers/">API documentation</a>
                             </li>
+                            <li >
+                                <a href="../changelog.html">Changelog</a>
+                            </li>
                         </ul>
 
                     <ul class="nav navbar-nav navbar-right">
@@ -78,8 +81,8 @@
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
-                            <li class="disabled">
-                                <a rel="prev" >
+                            <li >
+                                <a rel="prev" href="../changelog.html">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -143,9 +146,8 @@
 </p>
 <h2 id="implementation">Implementation</h2>
 <p>The problem is solved using Dop853. The crate is first imported and the modules are brought into scope:</p>
-<pre><code class="Rust">extern crate ode_solvers;
+<pre><code class="Rust">use ode_solvers::dop853::*;
 use ode_solvers::*;
-use ode_solvers::dop853::*;
 </code></pre>
 
 <p>Type aliases are then defined for the state vector and the time:</p>
@@ -153,27 +155,36 @@ use ode_solvers::dop853::*;
 type Time = f64;
 </code></pre>
 
-<p>Next, we define the problem specific <script type="math/tex">\mu</script> constant</p>
-<pre><code class="Rust">const MU: f64 = 0.012300118882173;
-</code></pre>
-
-<p>and finally the ODEs to be solved:</p>
-<pre><code class="Rust">fn system(_t: Time, y: &amp;State, dy: &amp;mut State) {
-    let d = ((y[0]+MU).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
-    let r = ((y[0]-1.0+MU).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
-
-    dy[0] = y[3];
-    dy[1] = y[4];
-    dy[2] = y[5];
-    dy[3] = y[0] + 2.0*y[4] - (1.0-MU)*(y[0]+MU)/d.powi(3) - MU*(y[0]-1.0+MU)/r.powi(3);
-    dy[4] = -2.0*y[3] + y[1] - (1.0-MU)*y[1]/d.powi(3) - MU*y[1]/r.powi(3);
-    dy[5] = -(1.0-MU)*y[2]/d.powi(3) - MU*y[2]/r.powi(3);
+<p>Next, we define the problem specific structure which will contain a single parameter:</p>
+<pre><code class="rust">struct ThreeBodyProblem {
+  mu: f64,
 }
 </code></pre>
 
-<p>The intial state vector of the spacecraft is defined in the <em>main</em> function. A Dop853 structure is created and the <em>integrate()</em> function is called. The result is handled with a <em>match</em> statement.</p>
+<p>for which we implement the <code>System&lt;V&gt;</code> trait:</p>
+<pre><code class="Rust">impl ode_solvers::System&lt;State&gt; for ThreeBodyProblem {
+    fn system(&amp;self, _t: Time, y: &amp;State, dy: &amp;mut State) {
+        let d = ((y[0] + self.mu).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
+        let r = ((y[0] - 1.0 + self.mu).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
+
+        dy[0] = y[3];
+        dy[1] = y[4];
+        dy[2] = y[5];
+        dy[3] = y[0] + 2.0 * y[4]
+            - (1.0 - self.mu) * (y[0] + self.mu) / d.powi(3)
+            - self.mu * (y[0] - 1.0 + self.mu) / r.powi(3);
+        dy[4] = -2.0 * y[3] + y[1] - (1.0 - self.mu) * y[1] / d.powi(3) - self.mu * y[1] / r.powi(3);
+        dy[5] = -(1.0 - self.mu) * y[2] / d.powi(3) - self.mu * y[2] / r.powi(3);
+    }
+}
+</code></pre>
+
+<p>The system is created together with the intial state vector of the spacecraft in the <em>main</em> function. A Dop853 structure is created and the <em>integrate()</em> function is called. The result is handled with a <em>match</em> statement.</p>
 <pre><code class="Rust">fn main() {
+    let system = ThreeBodyProblem {mu: 0.012300118882173};
+
     let y0 = State::new(-0.271, -0.42, 0.0, 0.3, -1.0, 0.0);
+
     let mut stepper = Dop853::new(system, 0.0, 150.0, 0.001, y0, 1.0e-14, 1.0e-14);
     let res = stepper.integrate();
 

@@ -65,6 +65,9 @@
                             <li >
                                 <a href="https://docs.rs/ode_solvers/">API documentation</a>
                             </li>
+                            <li >
+                                <a href="changelog.html">Changelog</a>
+                            </li>
                         </ul>
 
                     <ul class="nav navbar-nav navbar-right">
@@ -97,7 +100,7 @@
         <li class="main active"><a href="#odes-solving-in-rust">ODEs Solving in Rust</a></li>
             <li><a href="#installation">Installation</a></li>
             <li><a href="#type-alias-definition">Type alias definition</a></li>
-            <li><a href="#function-definition">Function definition</a></li>
+            <li><a href="#system-definition">System definition</a></li>
             <li><a href="#method-selection">Method selection</a></li>
             <li><a href="#adaptive-step-size">Adaptive Step Size</a></li>
             <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -111,12 +114,11 @@
 <h2 id="installation">Installation</h2>
 <p>To start using the crate in your project, add the following dependency in your project's Cargo.toml file:</p>
 <pre><code class="rust">[dependencies]
-ode-solvers = &quot;0.2.0&quot;
+ode-solvers = &quot;0.3.0&quot;
 </code></pre>
 
 <p>Then, in your main file, add</p>
-<pre><code class="rust">extern crate ode-solvers;
-use ode-solvers::*;
+<pre><code class="rust">use ode-solvers::*;
 </code></pre>
 
 <h2 id="type-alias-definition">Type alias definition</h2>
@@ -125,16 +127,20 @@ use ode-solvers::*;
 </code></pre>
 
 <p>The state representation of the system is based on the VectorN&lt;T,D&gt; structure defined in the <a href="http://nalgebra.org/">nalgebra</a> crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a VectorN&lt;T,D&gt;  where the second type parameter of VectorN is a dimension name defined in nalgebra. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:</p>
-<pre><code class="rust">extern crate nalgebra as na;
-type State = VectorN&lt;f64, na::U9&gt;;
+<pre><code class="rust">type State = VectorN&lt;f64, nalgebra::U9&gt;;
 </code></pre>
 
-<h2 id="function-definition">Function definition</h2>
-<p>The first order ODE(s) must be defined in a function with the following signature</p>
-<pre><code class="rust">fn f(x: f64, y: &amp;State, dy: &amp;mut State)
+<h2 id="system-definition">System definition</h2>
+<p>The system of first order ODEs must be defined in the <code>system</code> method of the <code>System&lt;V&gt;</code> trait. Typically, this trait is defined for a structure containing some parameters of the model. The signature of the <code>System&lt;V&gt;</code> trait is:</p>
+<pre><code class="rust">pub trait System&lt;V&gt; {
+    fn system(&amp;self, x: f64, y: &amp;V, dy: &amp;mut V);
+    fn solout(&amp;self, _x: f64, _y: &amp;V, _dy: &amp;V) -&gt; bool {
+        false
+    }
+}
 </code></pre>
 
-<p>where the first argument is the independent variable (usually time), the second one is a vector containing the dependent variable(s), and the third one will contain the output of the function (namely the derivative(s) of y with respect to x).</p>
+<p>where <code>system</code> must contain the ODEs: the second argument is the independent variable (usually time), the third one is a vector containing the dependent variable(s), and the fourth one contains the derivative(s) of y with respect to x. The method <code>solout</code> is called after each successful integration step and stops the integration whenever it is evaluated as true. The implementation of that method is optional. See the examples for implementation details.</p>
 <h2 id="method-selection">Method selection</h2>
 <p>The following explicit Runge-Kutta methods are implemented in the current version of the crate:</p>
 <table>
@@ -159,7 +165,7 @@ type State = VectorN&lt;f64, na::U9&gt;;
 <td>Dormand-Prince</td>
 <td>Dop853</td>
 <td>8</td>
-<td>(5,3)</td>
+<td>(5, 3)</td>
 <td>7</td>
 </tr>
 </tbody>
@@ -343,5 +349,5 @@ let y_out = stepper.y_out();
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2019-02-21 01:23:10
+Build Date UTC : 2019-03-22 00:52:14
 -->

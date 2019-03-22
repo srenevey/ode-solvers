@@ -7,11 +7,11 @@
         
         <meta name="author" content="Sylvain Renevey">
         
-        <link rel="shortcut icon" href="/img/favicon.ico">
-        <title>Ode-solvers Docs</title>
-        <link href="/css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="/css/font-awesome.min.css" rel="stylesheet">
-        <link href="/css/base.css" rel="stylesheet">
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Changelog - Ode-solvers Docs</title>
+        <link href="css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/docco.min.css">
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -19,8 +19,8 @@
             <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
         <![endif]-->
 
-        <script src="/js/jquery-1.10.2.min.js" defer></script>
-        <script src="/js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="js/jquery-1.10.2.min.js" defer></script>
+        <script src="js/bootstrap-3.0.3.min.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
@@ -39,7 +39,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="/index.html">Ode-solvers Docs</a>
+                    <a class="navbar-brand" href="index.html">Ode-solvers Docs</a>
                 </div>
 
                 <!-- Expanded navigation -->
@@ -47,26 +47,26 @@
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
                             <li >
-                                <a href="/index.html">Quick reference</a>
+                                <a href="index.html">Quick reference</a>
                             </li>
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="/examples/kepler_orbit.html">Kepler Orbit</a>
+    <a href="examples/kepler_orbit.html">Kepler Orbit</a>
 </li>
                                     
 <li >
-    <a href="/examples/three_body_problem.html">Three-body Problem</a>
+    <a href="examples/three_body_problem.html">Three-body Problem</a>
 </li>
                                 </ul>
                             </li>
                             <li >
                                 <a href="https://docs.rs/ode_solvers/">API documentation</a>
                             </li>
-                            <li >
-                                <a href="/changelog.html">Changelog</a>
+                            <li class="active">
+                                <a href="changelog.html">Changelog</a>
                             </li>
                         </ul>
 
@@ -76,6 +76,16 @@
                                 <i class="fa fa-search"></i> Search
                             </a>
                         </li>
+                            <li >
+                                <a rel="next" href="examples/three_body_problem.html">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="disabled">
+                                <a rel="prev" >
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
                             <li>
                                 <a href="https://github.com/srenevey/ode-solvers"><i class="fa fa-github"></i> GitHub</a>
                             </li>
@@ -85,15 +95,38 @@
         </div>
 
         <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#changelog">Changelog</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
 
-    <div class="row-fluid">
-      <div id="main-content" class="span12">
-        <h1 id="404-page-not-found" style="text-align: center">404</h1>
-        <p style="text-align: center"><strong>Page not found</strong></p>
-      </div>
-    </div>
-
-
+<h2 id="changelog">Changelog</h2>
+<ul>
+<li>0.3.0<ul>
+<li>Transition to Rust 2018 edition.</li>
+<li>Implementation of the System trait.</li>
+<li>Implementation of a method to stop the integration when a condition is true.</li>
+</ul>
+</li>
+<li>0.2.0<ul>
+<li>Update of the dependencies.</li>
+<li>Use of slightly more idiomatic Rust.</li>
+</ul>
+</li>
+<li>0.1.2<ul>
+<li>Change of the signature of the function defining the ODE(s) to reduce the number of allocations.</li>
+</ul>
+</li>
+<li>0.1.1<ul>
+<li>Implementation of automatic stiffness detection.</li>
+<li>Implementation of "backward" integration by allowing <script type="math/tex">x_{end}</script> - <script type="math/tex">x_0</script> to be positive or negative.</li>
+<li>Fix a bug in sparse output of dopri5.</li>
+<li>Addition of the Lorenz attractor example.</li>
+</ul>
+</li>
+</ul></div>
         </div>
 
         <footer class="col-md-12">
@@ -101,12 +134,12 @@
             <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>
-            var base_url = "/",
+            var base_url = ".",
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
-        <script src="/js/base.js" defer></script>
+        <script src="js/base.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" defer></script>
-        <script src="/search/main.js" defer></script>
+        <script src="search/main.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">

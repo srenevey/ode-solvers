@@ -65,6 +65,9 @@
                             <li >
                                 <a href="https://docs.rs/ode_solvers/">API documentation</a>
                             </li>
+                            <li >
+                                <a href="../changelog.html">Changelog</a>
+                            </li>
                         </ul>
 
                     <ul class="nav navbar-nav navbar-right">
@@ -141,9 +144,8 @@
 <p>which can be numerically integrated.</p>
 <h3 id="implementation">Implementation</h3>
 <p>The problem is solved using the Dopri5 method. We first import the crate and bring the required modules into scope:</p>
-<pre><code class="rust">extern crate ode_solvers;
+<pre><code class="rust">use ode_solvers::dopri5::*;
 use ode_solvers::*;
-use ode_solvers::dopri5::*;
 </code></pre>
 
 <p>Next, two type aliases are defined:</p>
@@ -151,30 +153,37 @@ use ode_solvers::dopri5::*;
 type Time = f64;
 </code></pre>
 
-<p>and the standard gravitational parameter is defined as a global constant:</p>
-<pre><code class="rust">const MU: f64 = 398600.435436;
-</code></pre>
-
-<p>The equations of motion are defined in the method <em>system</em>:</p>
-<pre><code class="rust">fn system(_t: Time, y: &amp;State, dy: &amp;mut State) {
-    let r = (y[0]*y[0] + y[1]*y[1] + y[2]*y[2]).sqrt() ;
-
-    dy[0] = y[3];
-    dy[1] = y[4];
-    dy[2] = y[5];
-    dy[3] = -MU*y[0]/r.powi(3);
-    dy[4] = -MU*y[1]/r.powi(3);
-    dy[5] = -MU*y[2]/r.powi(3);
+<p>and a structure containing the parameters of the model is created:</p>
+<pre><code class="rust">struct KeplerOrbit {
+  mu: f64,
 }
 </code></pre>
 
-<p>We now implement the main function. The orbital period is first calculated and the initial state is initialized. Then, a stepper is created using the Dopri5 structure. We pass in a handle to the function describing the system, the initial time, the final time, the time increment between two outputs, the initial state vector, the relative tolerance, and the absolute tolerance. The integration is launched by calling the method <em>integrate()</em> and the result is stored in <em>res</em>. Finally, a check on the outcome of the integration is performed and the outputs can be extracted.</p>
+<p>The <code>System&lt;V&gt;</code> trait is then implemented for <code>KeplerOrbit</code>:</p>
+<pre><code class="rust">impl ode_solvers::System&lt;State&gt; for KeplerOrbit {
+    // Equations of motion of the system
+    fn system(&amp;self, _t: Time, y: &amp;State, dy: &amp;mut State) {
+        let r = (y[0] * y[0] + y[1] * y[1] + y[2] * y[2]).sqrt();
+
+        dy[0] = y[3];
+        dy[1] = y[4];
+        dy[2] = y[5];
+        dy[3] = - self.mu * y[0] / r.powi(3);
+        dy[4] = - self.mu * y[1] / r.powi(3);
+        dy[5] = - self.mu * y[2] / r.powi(3);
+    }
+}
+</code></pre>
+
+<p>We now implement the main function. The system of ODEs is first created with the corresponding <script type="math/tex">\mu</script> parameter. The orbital period is then computed and the initial state is initialized. The integration will be carried out using the 5th order Dormand-Prince method. Hence, a Dopri5 structure is created with the <code>system</code> structure, the initial time, the final time, the time increment between two outputs, the initial state vector, the relative tolerance, and the absolute tolerance as arguments. The integration is launched by calling the method <em>integrate()</em> and the result is stored in <em>res</em>. Finally, a check on the outcome of the integration is performed and the outputs can be extracted.</p>
 <pre><code class="rust">fn main() {
+    let system = KeplerOrbit {mu: 398600.435436}
+
     let a: f64 = 20000.0;
-    let period = 2.0*PI*(a.powi(3)/MU).sqrt();
+    let period = 2.0 * PI * (a.powi(3) / system.mu).sqrt();
     let y0 = State::new(-5007.248417988539, -1444.918140151374, 3628.534606178356, 0.717716656891, -10.224093784269, 0.748229399696);
 
-    let mut stepper = Dopri5::new(system, 0.0, 5.0*period, 60.0, y0, 1.0e-10, 1.0e-10);
+    let mut stepper = Dopri5::new(system, 0.0, 5.0 * period, 60.0, y0, 1.0e-10, 1.0e-10);
     let res = stepper.integrate();
 
     // Handle result
