@@ -10,17 +10,16 @@ Numerical methods to solve ordinary differential equations (ODEs) in Rust.
 
 ## Installation
 
-To start using the crate in your project, add the following dependency in your project's Cargo.toml file:
+To start using the crate in a project, the following dependency must be added in the project's Cargo.toml file:
 
 ```rust
 [dependencies]
-ode-solvers = "0.2.0"
+ode-solvers = "0.3.0"
 ```
 
-Then, in your main file, add
+Then, in the main file, add
 
 ```rust
-extern crate ode-solvers;
 use ode-solvers::*;
 ```
 
@@ -37,21 +36,25 @@ type State = Vector3<f64>;
 The state representation of the system is based on the VectorN&lt;T,D&gt; structure defined in the [nalgebra](http://nalgebra.org/) crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a VectorN&lt;T,D&gt;  where the second type parameter of VectorN is a dimension name defined in nalgebra. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:
 
 ```rust
-extern crate nalgebra as na;
-type State = VectorN<f64, na::U9>;
+type State = VectorN<f64, nalgebra::U9>;
 ```
 
 
 
-## Function definition
+## System definition
 
-The first order ODE(s) must be defined in a function with the following signature
+The system of first order ODEs must be defined in the `system` method of the `System<V>` trait. Typically, this trait is defined for a structure containing some parameters of the model. The signature of the `System<V>` trait is:
 
 ```rust
-fn f(x: f64, y: &State, dy: &mut State)
+pub trait System<V> {
+    fn system(&self, x: f64, y: &V, dy: &mut V);
+    fn solout(&self, _x: f64, _y: &V, _dy: &V) -> bool {
+        false
+    }
+}
 ```
 
-where the first argument is the independent variable (usually time), the second one is a vector containing the dependent variable(s), and the third one will contain the output of the function (namely the derivative(s) of y with respect to x).
+where `system` must contain the ODEs: the second argument is the independent variable (usually time), the third one is a vector containing the dependent variable(s), and the fourth one contains the derivative(s) of y with respect to x. The method `solout` is called after each successful integration step and stops the integration whenever it is evaluated as true. The implementation of that method is optional. See the examples for implementation details.
 
 
 
@@ -62,7 +65,7 @@ The following explicit Runge-Kutta methods are implemented in the current versio
 | Method         | Name   | Order | Error estimate order | Dense output order |
 | -------------- | ------ | ----- | -------------------- | ------------------ |
 | Dormand-Prince | Dopri5 | 5     | 4                    | 4                  |
-| Dormand-Prince | Dop853 | 8     | (5,3)                | 7                  |
+| Dormand-Prince | Dop853 | 8     | (5, 3)               | 7                  |
 
 These methods are defined in the modules dopri5 and dop853. The first step is to bring the desired module into scope:
 
@@ -90,20 +93,6 @@ let y_out = stepper.y_out();
 ```
 
 See the [homepage](https://srenevey.github.io/ode-solvers/) for more details.
-
-## Changelog
-
-- [0.2.0]
-  - Updated dependencies, use slightly more idiomatic Rust.
-- [0.1.2]
-  - Changed the signature of the function defining the ODE(s) to reduce the number of allocations.
-- [0.1.1]
-  - Added automatic stiffness detection
-  - x_end - x0 can be positive or negative
-  - Fixed bug in sparse output of dopri5
-  - Added Lorenz attractor example
-
-
 
 ## Acknowledgments
 

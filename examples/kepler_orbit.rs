@@ -7,18 +7,16 @@ use ode_solvers::*;
 type State = Vector6<f64>;
 type Time = f64;
 
-use std::f64::consts::PI;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-
-const MU: f64 = 398600.435436;
+use std::{f64::consts::PI, fs::File, io::Write, path::Path};
 
 fn main() {
+    // Create the structure containing the ODEs.
+    let system = KeplerOrbit {mu: 398600.435436};
+    
     let a: f64 = 20000.0;
-    let period = 2.0 * PI * (a.powi(3) / MU).sqrt();
+    let period = 2.0 * PI * (a.powi(3) / system.mu).sqrt();
 
-    // Orbit with: a = 20000km, e = 0.7, i = 35 deg, raan = 100 deg, arg_per = 65 deg, true_an = 30 deg
+    // Orbit with: a = 20000km, e = 0.7, i = 35 deg, raan = 100 deg, arg_per = 65 deg, true_an = 30 deg.
     let y0 = State::new(
         -5007.248417988539,
         -1444.918140151374,
@@ -28,11 +26,11 @@ fn main() {
         0.748229399696,
     );
 
-    let system = KeplerOrbit {mu: MU};
+    // Create a stepper and run the integration.
     let mut stepper = Dopri5::new(system, 0.0, 5.0 * period, 60.0, y0, 1.0e-10, 1.0e-10);
     let res = stepper.integrate();
 
-    // Handle result
+    // Handle result.
     match res {
         Ok(stats) => {
             println!("{}", stats);
@@ -60,6 +58,7 @@ impl ode_solvers::System<State> for KeplerOrbit {
         dy[4] = - self.mu * y[1] / r.powi(3);
         dy[5] = - self.mu * y[2] / r.powi(3);
     }
+
     // Stop the integration if x exceeds 25,500 km. Optional
     // fn solout(&mut self, _t: Time, y: &State, _dy: &State) -> bool {
         // y[0] > 25500.

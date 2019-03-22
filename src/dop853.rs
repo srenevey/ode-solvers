@@ -112,7 +112,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `f`       - Pointer to the function to integrate
+    /// * `f`       - Structure implementing the System<V> trait
     /// * `x`       - Initial value of the independent variable (usually time)
     /// * `x_end`   - Final value of the independent variable
     /// * `dx`      - Increment in the dense output. This argument has no effect if the output type is Sparse
@@ -159,7 +159,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `f`       - Pointer to the function to integrate
+    /// * `f`       - Structure implementing the System<V> trait
     /// * `x`       - Initial value of the independent variable (usually time)
     /// * `x_end`   - Final value of the independent variable
     /// * `dx`      - Increment in the dense output. This argument has no effect if the output type is Sparse

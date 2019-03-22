@@ -3,9 +3,7 @@
 use ode_solvers::dop853::*;
 use ode_solvers::*;
 
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
+use std::{fs::File, io::Write, path::Path};
 
 type State = Vector3<f64>;
 type Time = f64;

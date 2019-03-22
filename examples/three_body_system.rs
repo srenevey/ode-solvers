@@ -5,16 +5,14 @@ use ode_solvers::*;
 type State = Vector6<f64>;
 type Time = f64;
 
-use std::f64;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
+use std::{fs::File, io::Write, path::Path};
 
-fn main() {
-    let y0 = State::new(-0.271, -0.42, 0.0, 0.3, -1.0, 0.0);
-    
+fn main() {    
     // Create the structure containing the problem specific constant and equations.
     let system = ThreeBodyProblem {mu: 0.012300118882173};
+
+    // Initial state.
+    let y0 = State::new(-0.271, -0.42, 0.0, 0.3, -1.0, 0.0);
 
     // Create a stepper and run the integration.
     let mut stepper = Dop853::new(system, 0.0, 150.0, 0.002, y0, 1.0e-14, 1.0e-14);

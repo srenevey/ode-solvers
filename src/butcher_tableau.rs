@@ -3,9 +3,9 @@
 //! Butcher tableaux containing the coefficients of the Runge-Kutta methods.
 
 /// Structure containing the coefficients for the Dormand-Prince method of order 5(4) with dense output of order 4.
-pub struct Dopri54 {
-    num_stages: usize,
-    pub order: i32,
+pub(crate) struct Dopri54 {
+    // num_stages: usize,
+    // pub order: i32,
     a: Box<[Box<[f64]>]>,
     c: Box<[f64]>,
     d: Box<[f64]>,
@@ -16,8 +16,8 @@ impl Dopri54 {
     /// Initialize the structure with the coefficients of the method.
     pub fn new() -> Dopri54 {
         Dopri54 {
-            num_stages: 7,
-            order: 5,
+            // num_stages: 7,
+            // order: 5,
             a: Box::new([
                 Box::new([1.0 / 5.0]),
                 Box::new([3.0 / 40.0, 9.0 / 40.0]),
@@ -86,19 +86,19 @@ impl Dopri54 {
         self.e[i - 1]
     }
 
-    /// Returns the number of stages of the Butcher tableau.
-    pub fn num_stages(&self) -> usize {
-        self.num_stages
-    }
+    // Returns the number of stages of the Butcher tableau.
+    // pub fn num_stages(&self) -> usize {
+    //     self.num_stages
+    // }
 
-    /// Returns the order of the Butcher tableau.
-    pub fn order(&self) -> i32 {
-        self.order
-    }
+    // Returns the order of the Butcher tableau.
+    // pub fn order(&self) -> i32 {
+    //     self.order
+    // }
 }
 
 /// Structure containing the coefficients for the Dormand-Prince method of order 8(5,3) with dense output of order 7.
-pub struct Dopri853 {
+pub(crate) struct Dopri853 {
     num_stages: usize,
     pub order: i32,
     a: Box<[Box<[f64]>]>,

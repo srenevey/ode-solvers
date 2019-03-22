@@ -1,11 +1,13 @@
+//! Shared traits and structures for dopri5 and dop853.
+
 use std::error::Error;
 use std::fmt;
 
-/// Trait needed to be implemented by user
+/// Trait needed to be implemented by the user.
 pub trait System<V> {
-    /// System of Ordinary differential equations
+    /// System of ordinary differential equations.
     fn system(&self, x: f64, y: &V, dy: &mut V);
-    /// Stop function will be called at every successful integration step.
+    /// Stop function called at every successful integration step. The integration is stopped when this function returns true.
     fn solout(&mut self, _x: f64, _y: &V, _dy: &V) -> bool {
         false
     }
