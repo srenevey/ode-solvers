@@ -64,7 +64,7 @@ impl Stats {
     }
 
     /// Prints some statistics related to the integration process.
-    #[deprecated(since = "0.2", note = "Use std::fmt::Display instead")]
+    #[deprecated(since = "0.2.0", note = "Use std::fmt::Display instead")]
     pub fn print(&self) {
         println!("{}", self);
     }
