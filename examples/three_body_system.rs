@@ -7,9 +7,11 @@ type Time = f64;
 
 use std::{fs::File, io::Write, path::Path};
 
-fn main() {    
+fn main() {
     // Create the structure containing the problem specific constant and equations.
-    let system = ThreeBodyProblem {mu: 0.012300118882173};
+    let system = ThreeBodyProblem {
+        mu: 0.012300118882173,
+    };
 
     // Initial state.
     let y0 = State::new(-0.271, -0.42, 0.0, 0.3, -1.0, 0.0);
@@ -45,7 +47,8 @@ impl ode_solvers::System<State> for ThreeBodyProblem {
         dy[3] = y[0] + 2.0 * y[4]
             - (1.0 - self.mu) * (y[0] + self.mu) / d.powi(3)
             - self.mu * (y[0] - 1.0 + self.mu) / r.powi(3);
-        dy[4] = -2.0 * y[3] + y[1] - (1.0 - self.mu) * y[1] / d.powi(3) - self.mu * y[1] / r.powi(3);
+        dy[4] =
+            -2.0 * y[3] + y[1] - (1.0 - self.mu) * y[1] / d.powi(3) - self.mu * y[1] / r.powi(3);
         dy[5] = -(1.0 - self.mu) * y[2] / d.powi(3) - self.mu * y[2] / r.powi(3);
     }
 }

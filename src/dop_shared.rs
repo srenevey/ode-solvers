@@ -1,7 +1,7 @@
 //! Shared traits and structures for dopri5 and dop853.
 
+use core::fmt;
 use std::error::Error;
-use std::fmt;
 
 /// Trait needed to be implemented by the user.
 pub trait System<V> {

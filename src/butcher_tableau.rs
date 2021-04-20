@@ -2,6 +2,8 @@
 
 //! Butcher tableaux containing the coefficients of the Runge-Kutta methods.
 
+use simba::scalar::{SubsetOf, SupersetOf};
+
 /// Structure containing the coefficients for the Dormand-Prince method of order 5(4) with dense output of order 4.
 pub(crate) struct Dopri54 {
     // num_stages: usize,
@@ -67,23 +69,23 @@ impl Dopri54 {
     }
 
     /// Returns the _a<sub>ij</sub>_ coefficient of the Runge-Kutta matrix.
-    pub fn a(&self, i: usize, j: usize) -> f64 {
-        self.a[i - 2][j - 1]
+    pub fn a<T: SubsetOf<f64>>(&self, i: usize, j: usize) -> T {
+        self.a[i - 2][j - 1].to_subset().unwrap()
     }
 
     /// Returns the _c<sub>i</sub>_ coefficient.
-    pub fn c(&self, i: usize) -> f64 {
-        self.c[i - 1]
+    pub fn c<T: SubsetOf<f64>>(&self, i: usize) -> T {
+        self.c[i - 1].to_subset().unwrap()
     }
 
     /// Returns the _d<sub>i</sub>_ coefficient.
-    pub fn d(&self, i: usize) -> f64 {
-        self.d[i - 1]
+    pub fn d<T: SubsetOf<f64>>(&self, i: usize) -> T {
+        self.d[i - 1].to_subset().unwrap()
     }
 
     /// Returns the _e<sub>i</sub>_ coefficient.
-    pub fn e(&self, i: usize) -> f64 {
-        self.e[i - 1]
+    pub fn e<T: SubsetOf<f64>>(&self, i: usize) -> T {
+        self.e[i - 1].to_subset().unwrap()
     }
 
     // Returns the number of stages of the Butcher tableau.
@@ -385,33 +387,33 @@ impl Dopri853 {
     }
 
     /// Returns the _a<sub>ij</sub>_ coefficient.
-    pub fn a(&self, i: usize, j: usize) -> f64 {
-        self.a[i - 2][j - 1]
+    pub fn a<T: SubsetOf<f64>>(&self, i: usize, j: usize) -> T {
+        self.a[i - 2][j - 1].to_subset().unwrap()
     }
 
     /// Returns the _b<sub>i</sub>_ coefficient.
-    pub fn b(&self, i: usize) -> f64 {
-        self.b[i - 1]
+    pub fn b<T: SubsetOf<f64>>(&self, i: usize) -> T {
+        self.b[i - 1].to_subset().unwrap()
     }
 
     /// Returns the _bhh<sub>i</sub>_ coefficient.
-    pub fn bhh(&self, i: usize) -> f64 {
-        self.bhh[i - 1]
+    pub fn bhh<T: SubsetOf<f64>>(&self, i: usize) -> T {
+        self.bhh[i - 1].to_subset().unwrap()
     }
 
     /// Returns the _c<sub>i</sub>_ coefficient.
-    pub fn c(&self, i: usize) -> f64 {
-        self.c[i - 1]
+    pub fn c<T: SubsetOf<f64>>(&self, i: usize) -> T {
+        self.c[i - 1].to_subset().unwrap()
     }
 
     /// Returns the _d<sub>i</sub>_ coefficient.
-    pub fn d(&self, i: usize, j: usize) -> f64 {
-        self.d[i - 4][j - 1]
+    pub fn d<T: SubsetOf<f64>>(&self, i: usize, j: usize) -> T {
+        self.d[i - 4][j - 1].to_subset().unwrap()
     }
 
     /// Retunrns the _e<sub>i</sub>_ coefficient.
-    pub fn e(&self, i: usize) -> f64 {
-        self.e[i - 1]
+    pub fn e<T: SubsetOf<f64>>(&self, i: usize) -> T {
+        self.e[i - 1].to_subset().unwrap()
     }
 
     /// Returns the number of stages of the Butcher tableau.
