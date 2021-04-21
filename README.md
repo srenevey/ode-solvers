@@ -33,10 +33,10 @@ The numerical integration methods implemented in the crate support multi-dimensi
 type State = Vector3<f64>;
 ```
 
-The state representation of the system is based on the VectorN&lt;T,D&gt; structure defined in the [nalgebra](http://nalgebra.org/) crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a VectorN&lt;T,D&gt;  where the second type parameter of VectorN is a dimension name defined in nalgebra. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:
+The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the [nalgebra](http://nalgebra.org/) crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:
 
 ```rust
-type State = VectorN<f64, nalgebra::U9>;
+type State = SVector<f64, 9>;
 ```
 
 

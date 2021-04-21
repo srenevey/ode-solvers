@@ -13,7 +13,11 @@ fn main() {
     let y0 = State::new(1.0, 1.0, 1.0);
 
     // Define problem specific constants
-    let system = LorenzAttractor {sigma: 10., beta: 8./3., rho: 28.};
+    let system = LorenzAttractor {
+        sigma: 10.,
+        beta: 8. / 3.,
+        rho: 28.,
+    };
     // Create stepper and integrate
     let mut stepper = Dop853::new(system, 0.0, 100.0, 1e-3, y0, 1e-4, 1e-4);
     let res = stepper.integrate();

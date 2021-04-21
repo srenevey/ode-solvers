@@ -45,14 +45,14 @@
 
 //! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 8(5,3) and dense output of order 7.
 
-use alga::general::SubsetOf;
-use alga::linear::{FiniteDimInnerSpace, InnerSpace};
 use crate::butcher_tableau::Dopri853;
 use crate::controller::Controller;
 use crate::dop_shared::*;
-use nalgebra as na;
-use std::f64;
-use std::f64::EPSILON;
+use core::f64;
+use core::f64::EPSILON;
+use nalgebra::{SVector, Scalar};
+use num_traits::Zero;
+use simba::scalar::{ClosedAdd, ClosedMul, ClosedSub, SubsetOf, SupersetOf};
 
 trait DefaultController {
     fn default(x: f64, x_end: f64) -> Self;
@@ -61,21 +61,12 @@ trait DefaultController {
 impl DefaultController for Controller {
     fn default(x: f64, x_end: f64) -> Self {
         let alpha = 1.0 / 8.0;
-        Controller::new(
-            alpha,
-            0.0,
-            6.0,
-            0.333,
-            x_end - x,
-            0.9,
-            sign(1.0, x_end - x),
-        )
+        Controller::new(alpha, 0.0, 6.0, 0.333, x_end - x, 0.9, sign(1.0, x_end - x))
     }
 }
 /// Structure containing the parameters for the numerical integration.
 pub struct Dop853<V, F>
 where
-    V: FiniteDimInnerSpace + Copy,
     F: System<V>,
 {
     f: F,
@@ -102,11 +93,11 @@ where
     stats: Stats,
 }
 
-impl<V, F> Dop853<V, F>
+impl<T, F, const N: usize> Dop853<SVector<T, N>, F>
 where
-    V: FiniteDimInnerSpace + Copy,
-    <V as InnerSpace>::Real: SubsetOf<f64>,
-    F: System<V>,
+    f64: From<T>,
+    T: Copy + SubsetOf<f64> + Scalar + ClosedAdd + ClosedMul + ClosedSub + Zero,
+    F: System<SVector<T, N>>,
 {
     /// Default initializer for the structure.
     ///
@@ -120,16 +111,8 @@ where
     /// * `rtol`    - Relative tolerance used in the computation of the adaptive step size
     /// * `atol`    - Absolute tolerance used in the computation of the adaptive step size
     ///
-    pub fn new(
-        f: F,
-        x: f64,
-        x_end: f64,
-        dx: f64,
-        y: V,
-        rtol: f64,
-        atol: f64,
-    ) -> Dop853<V, F> {
-        Dop853 {
+    pub fn new(f: F, x: f64, x_end: f64, dx: f64, y: SVector<T, N>, rtol: f64, atol: f64) -> Self {
+        Self {
             f,
             x,
             x0: x,
@@ -140,8 +123,8 @@ where
             y,
             rtol,
             atol,
-            x_out: Vec::<f64>::new(),
-            y_out: Vec::<V>::new(),
+            x_out: Vec::new(),
+            y_out: Vec::new(),
             uround: f64::EPSILON,
             h: 0.0,
             h_old: 0.0,
@@ -150,7 +133,7 @@ where
             coeffs: Dopri853::new(),
             controller: Controller::default(x, x_end),
             out_type: OutputType::Dense,
-            rcont: [V::zero(); 8],
+            rcont: [SVector::zero(); 8],
             stats: Stats::new(),
         }
     }
@@ -182,7 +165,7 @@ where
         x: f64,
         x_end: f64,
         dx: f64,
-        y: V,
+        y: SVector<T, N>,
         rtol: f64,
         atol: f64,
         safety_factor: f64,
@@ -194,9 +177,9 @@ where
         n_max: u32,
         n_stiff: u32,
         out_type: OutputType,
-    ) -> Dop853<V, F> {
+    ) -> Self {
         let alpha = 1.0 / 8.0 - beta * 0.2;
-        Dop853 {
+        Self {
             f,
             x,
             x0: x,
@@ -207,8 +190,8 @@ where
             y,
             rtol,
             atol,
-            x_out: Vec::<f64>::new(),
-            y_out: Vec::<V>::new(),
+            x_out: Vec::new(),
+            y_out: Vec::new(),
             uround: f64::EPSILON,
             h,
             h_old: h,
@@ -225,26 +208,26 @@ where
                 sign(1.0, x_end - x),
             ),
             out_type,
-            rcont: [V::zero(); 8],
+            rcont: [SVector::zero(); 8],
             stats: Stats::new(),
         }
     }
 
     /// Compute the initial stepsize
     fn hinit(&self) -> f64 {
-        let mut f0 = V::zero();
+        let mut f0 = SVector::zero();
         self.f.system(self.x, &self.y, &mut f0);
         let posneg = sign(1.0, self.x_end - self.x);
 
         // Compute the norm of y0 and f0
-        let dim = na::dimension::<V>();
+        let dim = N;
         let mut d0 = 0.0;
         let mut d1 = 0.0;
         for i in 0..dim {
-            let y_i: f64 = na::convert(self.y[i]);
-            let sci: f64 = self.atol + y_i.abs() * self.rtol;
+            let y_i = f64::from(self.y[i]);
+            let sci = self.atol + y_i.abs() * self.rtol;
             d0 += (y_i / sci) * (y_i / sci);
-            let f0_i: f64 = na::convert(f0[i]);
+            let f0_i = f64::from(f0[i]);
             d1 += (f0_i / sci) * (f0_i / sci);
         }
 
@@ -258,16 +241,16 @@ where
         h0 = h0.min(self.controller.h_max());
         h0 = sign(h0, posneg);
 
-        let y1 = self.y + f0 * na::convert(h0);
-        let mut f1 = V::zero();
+        let y1 = self.y + f0 * h0.to_subset().unwrap();
+        let mut f1 = SVector::zero();
         self.f.system(self.x + h0, &y1, &mut f1);
 
         // Compute the norm of f1-f0 divided by h0
         let mut d2: f64 = 0.0;
         for i in 0..dim {
-            let f0_i: f64 = na::convert(f0[i]);
-            let f1_i: f64 = na::convert(f1[i]);
-            let y_i: f64 = na::convert(self.y[i]);
+            let f0_i = f64::from(f0[i]);
+            let f1_i = f64::from(f1[i]);
+            let y_i = f64::from(self.y[i]);
             let sci: f64 = self.atol + y_i.abs() * self.rtol;
             d2 += ((f1_i - f0_i) / sci) * ((f1_i - f0_i) / sci);
         }
@@ -292,7 +275,7 @@ where
         let mut n_step = 0;
         let mut last = false;
         let mut h_new = 0.0;
-        let dim = na::dimension::<V>();
+        let dim = N;
         let mut iasti = 0;
         let mut non_stiff = 0;
         let posneg = sign(1.0, self.x_end - self.x);
@@ -307,7 +290,7 @@ where
         let y_tmp = self.y;
         self.solution_output(y_tmp);
 
-        let mut k: Vec<V> = vec![V::zero(); 12];
+        let mut k = vec![SVector::<T, N>::zero(); 12];
         self.f.system(self.x, &self.y, &mut k[0]);
         self.stats.num_eval += 1;
 
@@ -333,50 +316,57 @@ where
             n_step += 1;
 
             // 12 Stages
-            let mut y_next = V::zero();
+            let mut y_next = SVector::zero();
             for s in 1..12 {
                 y_next = self.y;
                 for j in 0..s {
-                    y_next += k[j] * na::convert(self.h * self.coeffs.a(s + 1, j + 1));
+                    y_next += k[j]
+                        * (self.h * self.coeffs.a::<f64>(s + 1, j + 1))
+                            .to_subset()
+                            .unwrap();
                 }
-                self.f.system(self.x + self.h * self.coeffs.c(s + 1), &y_next, &mut k[s]);
+                self.f.system(
+                    self.x + (self.h * self.coeffs.c::<f64>(s + 1)),
+                    &y_next,
+                    &mut k[s],
+                );
             }
             k[1] = k[10];
             k[2] = k[11];
             self.stats.num_eval += 11;
 
-            k[3] = k[0] * na::convert(self.coeffs.b(1))
-                + k[5] * na::convert(self.coeffs.b(6))
-                + k[6] * na::convert(self.coeffs.b(7))
-                + k[7] * na::convert(self.coeffs.b(8))
-                + k[8] * na::convert(self.coeffs.b(9))
-                + k[9] * na::convert(self.coeffs.b(10))
-                + k[1] * na::convert(self.coeffs.b(11))
-                + k[2] * na::convert(self.coeffs.b(12));
-            k[4] = self.y + k[3] * na::convert(self.h);
+            k[3] = k[0] * self.coeffs.b(1)
+                + k[5] * self.coeffs.b(6)
+                + k[6] * self.coeffs.b(7)
+                + k[7] * self.coeffs.b(8)
+                + k[8] * self.coeffs.b(9)
+                + k[9] * self.coeffs.b(10)
+                + k[1] * self.coeffs.b(11)
+                + k[2] * self.coeffs.b(12);
+            k[4] = self.y + k[3] * self.h.to_subset().unwrap();
 
             // Error estimate
-            let mut err_est = V::zero();
+            let mut err_est = SVector::<T, N>::zero();
             for i in 0..12 {
-                err_est += k[i] * na::convert(self.coeffs.e(i + 1));
+                err_est += k[i] * self.coeffs.e(i + 1);
             }
 
             // Compute error
             let mut err = 0.0;
             let mut err2 = 0.0;
             let err_bhh = k[3]
-                - k[0] * na::convert(self.coeffs.bhh(1))
-                - k[8] * na::convert(self.coeffs.bhh(2))
-                - k[2] * na::convert(self.coeffs.bhh(3));
+                - k[0] * self.coeffs.bhh(1)
+                - k[8] * self.coeffs.bhh(2)
+                - k[2] * self.coeffs.bhh(3);
             for i in 0..dim {
-                let y_i: f64 = na::convert(self.y[i]);
-                let k5_i: f64 = na::convert(k[4][i]);
-                let sc_i: f64 = self.atol + y_i.abs().max(k5_i.abs()) * self.rtol;
+                let y_i = f64::from(self.y[i]);
+                let k5_i = f64::from(k[4][i]);
+                let sc_i = self.atol + y_i.abs().max(k5_i.abs()) * self.rtol;
 
-                let err_est_i: f64 = na::convert(err_est[i]);
+                let err_est_i = f64::from(err_est[i]);
                 err += (err_est_i / sc_i) * (err_est_i / sc_i);
 
-                let erri: f64 = na::convert(err_bhh[i]);
+                let erri = f64::from(err_bhh[i]);
                 err2 += (erri / sc_i) * (erri / sc_i);
             }
             let mut deno = err + 0.01 * err2;
@@ -395,8 +385,8 @@ where
 
                 // Stifness detection
                 if (self.stats.accepted_steps % self.n_stiff != 0) || iasti > 0 {
-                    let num: f64 = na::convert((k[3] - k[2]).dot(&(k[3] - k[2])));
-                    let den: f64 = na::convert((k[4] - y_next).dot(&(k[4] - y_next)));
+                    let num = f64::from((k[3] - k[2]).dot(&(k[3] - k[2])));
+                    let den = f64::from((k[4] - y_next).dot(&(k[4] - y_next)));
                     let h_lamb = if den > 0.0 {
                         self.h * (num / den).sqrt()
                     } else {
@@ -419,82 +409,96 @@ where
                 }
 
                 if self.out_type == OutputType::Dense {
+                    let h = self.h.to_subset().unwrap();
+
                     self.rcont[0] = self.y;
                     let y_diff = k[4] - self.y;
                     self.rcont[1] = y_diff;
-                    let bspl = k[0] * na::convert(self.h) - y_diff;
+                    let bspl = k[0] * h - y_diff;
                     self.rcont[2] = bspl;
-                    self.rcont[3] = y_diff - k[3] * na::convert(self.h) - bspl;
+                    self.rcont[3] = y_diff - k[3] * h - bspl;
                     for i in 4..8 {
-                        self.rcont[i] = V::zero();
+                        self.rcont[i] = SVector::zero();
                         for j in 1..13 {
-                            self.rcont[i] += k[j - 1] * na::convert(self.coeffs.d(i, j));
+                            self.rcont[i] += k[j - 1] * self.coeffs.d(i, j);
                         }
                     }
 
                     // Next three function evaluations
                     let mut y_next = self.y
-                        + (k[0] * na::convert(self.coeffs.a(14, 1))
-                            + k[6] * na::convert(self.coeffs.a(14, 7))
-                            + k[7] * na::convert(self.coeffs.a(14, 8))
-                            + k[8] * na::convert(self.coeffs.a(14, 9))
-                            + k[9] * na::convert(self.coeffs.a(14, 10))
-                            + k[1] * na::convert(self.coeffs.a(14, 11))
-                            + k[2] * na::convert(self.coeffs.a(14, 12))
-                            + k[3] * na::convert(self.coeffs.a(14, 13)))
-                            * na::convert(self.h);
-                    self.f.system(self.x + self.h * self.coeffs.c(14), &y_next, &mut k[9]);
+                        + (k[0] * self.coeffs.a(14, 1)
+                            + k[6] * self.coeffs.a(14, 7)
+                            + k[7] * self.coeffs.a(14, 8)
+                            + k[8] * self.coeffs.a(14, 9)
+                            + k[9] * self.coeffs.a(14, 10)
+                            + k[1] * self.coeffs.a(14, 11)
+                            + k[2] * self.coeffs.a(14, 12)
+                            + k[3] * self.coeffs.a(14, 13))
+                            * h;
+                    self.f.system(
+                        self.x + self.h * self.coeffs.c::<f64>(14),
+                        &y_next,
+                        &mut k[9],
+                    );
 
                     y_next = self.y
-                        + (k[0] * na::convert(self.coeffs.a(15, 1))
-                            + k[5] * na::convert(self.coeffs.a(15, 6))
-                            + k[6] * na::convert(self.coeffs.a(15, 7))
-                            + k[7] * na::convert(self.coeffs.a(15, 8))
-                            + k[1] * na::convert(self.coeffs.a(15, 11))
-                            + k[2] * na::convert(self.coeffs.a(15, 12))
-                            + k[3] * na::convert(self.coeffs.a(15, 13))
-                            + k[9] * na::convert(self.coeffs.a(15, 14)))
-                            * na::convert(self.h);
-                    self.f.system(self.x + self.h * self.coeffs.c(15), &y_next, &mut k[1]);
+                        + (k[0] * self.coeffs.a(15, 1)
+                            + k[5] * self.coeffs.a(15, 6)
+                            + k[6] * self.coeffs.a(15, 7)
+                            + k[7] * self.coeffs.a(15, 8)
+                            + k[1] * self.coeffs.a(15, 11)
+                            + k[2] * self.coeffs.a(15, 12)
+                            + k[3] * self.coeffs.a(15, 13)
+                            + k[9] * self.coeffs.a(15, 14))
+                            * h;
+                    self.f.system(
+                        self.x + self.h * self.coeffs.c::<f64>(15),
+                        &y_next,
+                        &mut k[1],
+                    );
 
                     y_next = self.y
-                        + (k[0] * na::convert(self.coeffs.a(16, 1))
-                            + k[5] * na::convert(self.coeffs.a(16, 6))
-                            + k[6] * na::convert(self.coeffs.a(16, 7))
-                            + k[7] * na::convert(self.coeffs.a(16, 8))
-                            + k[8] * na::convert(self.coeffs.a(16, 9))
-                            + k[3] * na::convert(self.coeffs.a(16, 13))
-                            + k[9] * na::convert(self.coeffs.a(16, 14))
-                            + k[1] * na::convert(self.coeffs.a(16, 15)))
-                            * na::convert(self.h);
-                    self.f.system(self.x + self.h * self.coeffs.c(16), &y_next, &mut k[2]);
+                        + (k[0] * self.coeffs.a(16, 1)
+                            + k[5] * self.coeffs.a(16, 6)
+                            + k[6] * self.coeffs.a(16, 7)
+                            + k[7] * self.coeffs.a(16, 8)
+                            + k[8] * self.coeffs.a(16, 9)
+                            + k[3] * self.coeffs.a(16, 13)
+                            + k[9] * self.coeffs.a(16, 14)
+                            + k[1] * self.coeffs.a(16, 15))
+                            * h;
+                    self.f.system(
+                        self.x + self.h * self.coeffs.c::<f64>(16),
+                        &y_next,
+                        &mut k[2],
+                    );
 
                     self.stats.num_eval += 3;
 
                     self.rcont[4] = (self.rcont[4]
-                        + k[3] * na::convert(self.coeffs.d(4, 13))
-                        + k[9] * na::convert(self.coeffs.d(4, 14))
-                        + k[1] * na::convert(self.coeffs.d(4, 15))
-                        + k[2] * na::convert(self.coeffs.d(4, 16)))
-                        * na::convert(self.h);
+                        + k[3] * self.coeffs.d(4, 13)
+                        + k[9] * self.coeffs.d(4, 14)
+                        + k[1] * self.coeffs.d(4, 15)
+                        + k[2] * self.coeffs.d(4, 16))
+                        * h;
                     self.rcont[5] = (self.rcont[5]
-                        + k[3] * na::convert(self.coeffs.d(5, 13))
-                        + k[9] * na::convert(self.coeffs.d(5, 14))
-                        + k[1] * na::convert(self.coeffs.d(5, 15))
-                        + k[2] * na::convert(self.coeffs.d(5, 16)))
-                        * na::convert(self.h);
+                        + k[3] * self.coeffs.d(5, 13)
+                        + k[9] * self.coeffs.d(5, 14)
+                        + k[1] * self.coeffs.d(5, 15)
+                        + k[2] * self.coeffs.d(5, 16))
+                        * h;
                     self.rcont[6] = (self.rcont[6]
-                        + k[3] * na::convert(self.coeffs.d(6, 13))
-                        + k[9] * na::convert(self.coeffs.d(6, 14))
-                        + k[1] * na::convert(self.coeffs.d(6, 15))
-                        + k[2] * na::convert(self.coeffs.d(6, 16)))
-                        * na::convert(self.h);
+                        + k[3] * self.coeffs.d(6, 13)
+                        + k[9] * self.coeffs.d(6, 14)
+                        + k[1] * self.coeffs.d(6, 15)
+                        + k[2] * self.coeffs.d(6, 16))
+                        * h;
                     self.rcont[7] = (self.rcont[7]
-                        + k[3] * na::convert(self.coeffs.d(7, 13))
-                        + k[9] * na::convert(self.coeffs.d(7, 14))
-                        + k[1] * na::convert(self.coeffs.d(7, 15))
-                        + k[2] * na::convert(self.coeffs.d(7, 16)))
-                        * na::convert(self.h);
+                        + k[3] * self.coeffs.d(7, 13)
+                        + k[9] * self.coeffs.d(7, 14)
+                        + k[1] * self.coeffs.d(7, 15)
+                        + k[2] * self.coeffs.d(7, 16))
+                        * h;
                 }
 
                 k[0] = k[3];
@@ -519,7 +523,7 @@ where
     }
 
     /// If a dense output is required, computes the solution and pushes it into the output vector. Else, pushes the solution into the output vector.
-    fn solution_output(&mut self, y_next: V) {
+    fn solution_output(&mut self, y_next: SVector<T, N>) {
         if self.out_type == OutputType::Dense {
             if (self.xd - self.x0).abs() < EPSILON {
                 self.x_out.push(self.x0);
@@ -529,7 +533,8 @@ where
                 while self.xd.abs() <= self.x.abs() {
                     if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
                         let theta = (self.xd - self.x_old) / self.h_old;
-                        let theta1 = 1.0 - theta;
+                        let theta1 = (1.0 - theta).to_subset().unwrap();
+                        let theta = theta.to_subset().unwrap();
                         self.x_out.push(self.xd);
                         self.y_out.push(
                             self.rcont[0]
@@ -538,14 +543,13 @@ where
                                         + (self.rcont[3]
                                             + (self.rcont[4]
                                                 + (self.rcont[5]
-                                                    + (self.rcont[6]
-                                                        + self.rcont[7] * na::convert(theta))
-                                                        * na::convert(theta1))
-                                                    * na::convert(theta))
-                                                * na::convert(theta1))
-                                            * na::convert(theta))
-                                        * na::convert(theta1))
-                                    * na::convert(theta),
+                                                    + (self.rcont[6] + self.rcont[7] * theta)
+                                                        * theta1)
+                                                    * theta)
+                                                * theta1)
+                                            * theta)
+                                        * theta1)
+                                    * theta,
                         );
                         self.xd += self.dx;
                     }
@@ -563,7 +567,7 @@ where
     }
 
     /// Getter for the dependent variables' output.
-    pub fn y_out(&self) -> &Vec<V> {
+    pub fn y_out(&self) -> &Vec<SVector<T, N>> {
         &self.y_out
     }
 }
