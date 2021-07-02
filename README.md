@@ -14,7 +14,7 @@ To start using the crate in a project, the following dependency must be added in
 
 ```rust
 [dependencies]
-ode-solvers = "0.3.0"
+ode-solvers = "0.3.1"
 ```
 
 Then, in the main file, add
@@ -64,16 +64,17 @@ The following explicit Runge-Kutta methods are implemented in the current versio
 
 | Method         | Name   | Order | Error estimate order | Dense output order |
 | -------------- | ------ | ----- | -------------------- | ------------------ |
+| Runge-Kutta 4  | Rk4    | 4     | N/A                  | N/A                |
 | Dormand-Prince | Dopri5 | 5     | 4                    | 4                  |
 | Dormand-Prince | Dop853 | 8     | (5, 3)               | 7                  |
 
-These methods are defined in the modules dopri5 and dop853. The first step is to bring the desired module into scope:
+These methods are defined in the modules rk4, dopri5, and dop853. The first step is to bring the desired module into scope:
 
 ```rust
 use ode_solvers::dopri5::*;
 ```
 
-Then, a structure is created using the *new* or the *from_param* method of the corresponding struct. Refer to the [API documentation](https://docs.rs/ode_solvers) for a description of the input arguments.
+Then, a structure is created using the `new` or the `from_param` method of the corresponding struct. Refer to the [API documentation](https://docs.rs/ode_solvers) for a description of the input arguments.
 
 ```rust
 let mut stepper = Dopri5::new(system, x0, x_end, dx, y0, rtol, atol);
@@ -96,4 +97,4 @@ See the [homepage](https://srenevey.github.io/ode-solvers/) for more details.
 
 ## Acknowledgments
 
-The algorithms implemented in this crate were originally implemented in FORTRAN by E. Hairer and G. Wanner, Université de Genève, Switzerland. This Rust implementation has been adapted from the C version written by J. Colinge, Université de Genève, Switzerland and the C++ version written by Blake Ashby, Stanford University, USA.
+The Dopri5 and Dop853 algorithms implemented in this crate were originally implemented in FORTRAN by E. Hairer and G. Wanner, Université de Genève, Switzerland. This Rust implementation has been adapted from the C version written by J. Colinge, Université de Genève, Switzerland and the C++ version written by Blake Ashby, Stanford University, USA.
