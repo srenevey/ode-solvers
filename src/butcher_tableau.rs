@@ -1,4 +1,4 @@
-#![allow(clippy::excessive_precision, clippy::unreadable_literal)]
+#![allow(clippy::excessive_precision)]
 
 //! Butcher tableaux containing the coefficients of the Runge-Kutta methods.
 
@@ -101,7 +101,7 @@ impl Dopri54 {
 
 /// Structure containing the coefficients for the Dormand-Prince method of order 8(5,3) with dense output of order 7.
 pub(crate) struct Dopri853 {
-    num_stages: usize,
+    // num_stages: usize,
     pub order: i32,
     a: Box<[Box<[f64]>]>,
     b: Box<[f64]>,
@@ -115,7 +115,7 @@ impl Dopri853 {
     /// Initialize the structure with the coefficients of the method.
     pub fn new() -> Dopri853 {
         Dopri853 {
-            num_stages: 16,
+            // num_stages: 16,
             order: 7,
             a: Box::new([
                 Box::new([5.26001519587677318785587544488E-2]),
@@ -416,41 +416,35 @@ impl Dopri853 {
         self.e[i - 1].to_subset().unwrap()
     }
 
-    /// Returns the number of stages of the Butcher tableau.
-    pub fn num_stages(&self) -> usize {
-        self.num_stages
-    }
+    // Returns the number of stages of the Butcher tableau.
+    // pub fn num_stages(&self) -> usize {
+    //     self.num_stages
+    // }
 
-    /// Returns the order of the Butcher tableau.
-    pub fn order(&self) -> i32 {
-        self.order
-    }
+    // Returns the order of the Butcher tableau.
+    // pub fn order(&self) -> i32 {
+    //     self.order
+    // }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::butcher_tableau;
-    // use test::Bencher;
-    // use butcher_tableau;
-    // #[bench]
-    // fn bench_dopri5(b: &mut Bencher) {
-    //     b.iter(|| butcher_tableau::ButcherTableau::DOPRI5());
-    // }
 
     #[test]
     fn dopri5_e() {
         let tab = butcher_tableau::Dopri54::new();
-        assert_eq!(tab.e(1), 71.0 / 57600.0);
-        assert_eq!(tab.e(7), -1.0 / 40.0);
+        assert_eq!(tab.e::<f64>(1), 71.0 / 57600.0);
+        assert_eq!(tab.e::<f64>(7), -1.0 / 40.0);
     }
 
     #[test]
     fn dopri853_a() {
         let tab = butcher_tableau::Dopri853::new();
-        assert_eq!(tab.a(2, 1), 5.26001519587677318785587544488E-2);
-        assert_eq!(tab.a(7, 4), 1.70252211019544039314978060272E-1);
-        assert_eq!(tab.a(12, 9), -8.87285693353062954433549289258E0);
-        assert_eq!(tab.a(15, 3), 0.0);
-        assert_eq!(tab.a(4, 3), 8.87627564304205475450678981324E-2);
+        assert_eq!(tab.a::<f64>(2, 1), 5.26001519587677318785587544488E-2);
+        assert_eq!(tab.a::<f64>(7, 4), 1.70252211019544039314978060272E-1);
+        assert_eq!(tab.a::<f64>(12, 9), -8.87285693353062954433549289258E0);
+        assert_eq!(tab.a::<f64>(15, 3), 0.0);
+        assert_eq!(tab.a::<f64>(4, 3), 8.87627564304205475450678981324E-2);
     }
 }

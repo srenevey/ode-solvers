@@ -1,57 +1,9 @@
-//===================================================================//
-// Copyright (c) 2018, Sylvain Renevey
-// Copyright (c) 2004, Ernst Hairer
-
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-
-// - Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-
-// - Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS
-// IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-// Written by:
-//      Sylvain Renevey (syl.renevey@gmail.com)
-//
-// This code is a Rust adaptation of the code written originally
-// in Fortran by:
-//
-//      E. Hairer & G. Wanner
-//      Université de Genève, dept. de Mathématiques
-//      CH-1211 Genève 4, Swizerland
-//      E-mail : hairer@divsun.unige.ch, wanner@divsun.unige.ch
-//
-// and adapted for C by:
-//      J.Colinge (colinge@divsun.unige.ch).
-//
-// and C++ by:
-//      Blake Ashby (bmashby@stanford.edu)
-//
-//===================================================================//
-
-#![allow(clippy::needless_range_loop, clippy::unreadable_literal)]
-
 //! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 5(4) and dense output of order 4.
 
 use crate::butcher_tableau::Dopri54;
 use crate::controller::Controller;
 use crate::dop_shared::*;
-use core::f64;
+
 use nalgebra::{SVector, Scalar};
 use num_traits::Zero;
 use simba::scalar::{ClosedAdd, ClosedMul, ClosedNeg, ClosedSub, SubsetOf, SupersetOf};
@@ -257,7 +209,7 @@ where
         d2 = d2.sqrt() / h0;
 
         let h1 = if d1.sqrt().max(d2.abs()) <= 1.0E-15 {
-            (1.0E-6 as f64).max(h0.abs() * 1.0E-3)
+            (1.0E-6_f64).max(h0.abs() * 1.0E-3)
         } else {
             (0.01 / (d1.sqrt().max(d2))).powf(1.0 / 5.0)
         };
@@ -323,8 +275,8 @@ where
             let mut y_stiff = SVector::zero();
             for s in 1..7 {
                 y_next = self.y;
-                for j in 0..s {
-                    y_next += k[j] * h * self.coeffs.a(s + 1, j + 1);
+                for (j, k_value) in k.iter().enumerate().take(s) {
+                    y_next += k_value * h * self.coeffs.a(s + 1, j + 1);
                 }
                 self.f.system(
                     self.x + self.h * self.coeffs.c::<f64>(s + 1),
@@ -435,7 +387,7 @@ where
         Ok(self.stats)
     }
 
-    fn solution_output(&mut self, y_next: SVector<T, N>, k: &Vec<SVector<T, N>>) {
+    fn solution_output(&mut self, y_next: SVector<T, N>, k: &[SVector<T, N>]) {
         if self.out_type == OutputType::Dense {
             while self.xd.abs() <= self.x.abs() {
                 if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {

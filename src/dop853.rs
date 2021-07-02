@@ -1,55 +1,9 @@
-//===================================================================//
-// Copyright (c) 2018, Sylvain Renevey
-// Copyright (c) 2004, Ernst Hairer
-
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-
-// - Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-
-// - Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS
-// IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-// Written by:
-//      Sylvain Renevey (syl.renevey@gmail.com)
-//
-// This code is a Rust adaptation of the code written originally
-// in Fortran by:
-//
-//      E. Hairer & G. Wanner
-//      Université de Genève, dept. de Mathématiques
-//      CH-1211 Genève 4, Swizerland
-//      E-mail : hairer@divsun.unige.ch, wanner@divsun.unige.ch
-//
-// and adapted for C by:
-//      J.Colinge (colinge@divsun.unige.ch).
-//
-//===================================================================//
-
-#![allow(clippy::needless_range_loop, clippy::unreadable_literal)]
-
 //! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 8(5,3) and dense output of order 7.
 
 use crate::butcher_tableau::Dopri853;
 use crate::controller::Controller;
 use crate::dop_shared::*;
-use core::f64;
-use core::f64::EPSILON;
+
 use nalgebra::{SVector, Scalar};
 use num_traits::Zero;
 use simba::scalar::{ClosedAdd, ClosedMul, ClosedSub, SubsetOf, SupersetOf};
@@ -257,7 +211,7 @@ where
         d2 = d2.sqrt() / h0;
 
         let h1 = if d1.sqrt().max(d2.abs()) <= 1.0E-15 {
-            (1.0E-6 as f64).max(h0.abs() * 1.0E-3)
+            (1.0E-6_f64).max(h0.abs() * 1.0E-3)
         } else {
             (0.01 / (d1.sqrt().max(d2))).powf(1.0 / 8.0)
         };
@@ -319,8 +273,8 @@ where
             let mut y_next = SVector::zero();
             for s in 1..12 {
                 y_next = self.y;
-                for j in 0..s {
-                    y_next += k[j]
+                for (j, k_value) in k.iter().enumerate().take(s) {
+                    y_next += k_value
                         * (self.h * self.coeffs.a::<f64>(s + 1, j + 1))
                             .to_subset()
                             .unwrap();
@@ -347,8 +301,8 @@ where
 
             // Error estimate
             let mut err_est = SVector::<T, N>::zero();
-            for i in 0..12 {
-                err_est += k[i] * self.coeffs.e(i + 1);
+            for (i, k_value) in k.iter().enumerate().take(12) {
+                err_est += k_value * self.coeffs.e(i + 1);
             }
 
             // Compute error
@@ -525,7 +479,7 @@ where
     /// If a dense output is required, computes the solution and pushes it into the output vector. Else, pushes the solution into the output vector.
     fn solution_output(&mut self, y_next: SVector<T, N>) {
         if self.out_type == OutputType::Dense {
-            if (self.xd - self.x0).abs() < EPSILON {
+            if (self.xd - self.x0).abs() < f64::EPSILON {
                 self.x_out.push(self.x0);
                 self.y_out.push(self.y);
                 self.xd += self.dx;

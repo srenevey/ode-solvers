@@ -1,7 +1,7 @@
 //! Shared traits and structures for dopri5 and dop853.
 
-use core::fmt;
-use std::error::Error;
+use std::fmt;
+use thiserror::Error;
 
 /// Trait needed to be implemented by the user.
 pub trait System<V> {
@@ -21,30 +21,16 @@ pub enum OutputType {
 }
 
 /// Enumeration of the errors that may arise during integration.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum IntegrationError {
+    #[error("Stopped at x = {x}. Need more than {n_step} steps.")]
     MaxNumStepReached { x: f64, n_step: u32 },
+    #[error("Stopped at x = {x}. Step size underflow.")]
     StepSizeUnderflow { x: f64 },
+    #[error("The problem seems to become stiff at x = {x}.")]
     StiffnessDetected { x: f64 },
 }
 
-impl Error for IntegrationError {}
-
-impl fmt::Display for IntegrationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            IntegrationError::MaxNumStepReached { x, n_step } => {
-                write!(f, "Stopped at x = {}. Need more than {} steps", x, n_step)
-            }
-            IntegrationError::StepSizeUnderflow { x } => {
-                write!(f, "Stopped at x = {}. Step size underflow", x)
-            }
-            IntegrationError::StiffnessDetected { x } => {
-                write!(f, "The problem seems to become stiff at x = {}", x)
-            }
-        }
-    }
-}
 
 /// Contains some statistics of the integration.
 #[derive(Clone, Copy, Debug)]
