@@ -1,28 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-     <loc>None</loc>
-     <lastmod>2019-03-21</lastmod>
-     <changefreq>daily</changefreq>
+         <loc>https://srenevey.github.io/ode-solvers/index.html</loc>
+         <lastmod>2021-07-02</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>None</loc>
-     <lastmod>2019-03-21</lastmod>
-     <changefreq>daily</changefreq>
+         <loc>https://srenevey.github.io/ode-solvers/changelog.html</loc>
+         <lastmod>2021-07-02</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>None</loc>
-     <lastmod>2019-03-21</lastmod>
-     <changefreq>daily</changefreq>
+         <loc>https://srenevey.github.io/ode-solvers/examples/kepler_orbit.html</loc>
+         <lastmod>2021-07-02</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc></loc>
-     
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
-     <loc>None</loc>
-     <lastmod>2019-03-21</lastmod>
-     <changefreq>daily</changefreq>
+         <loc>https://srenevey.github.io/ode-solvers/examples/three_body_problem.html</loc>
+         <lastmod>2021-07-02</lastmod>
+         <changefreq>daily</changefreq>
     </url>
 </urlset>

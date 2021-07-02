@@ -6,88 +6,75 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="None">
         <meta name="author" content="Sylvain Renevey">
-        
+        <link rel="canonical" href="https://srenevey.github.io/ode-solvers/index.html">
         <link rel="shortcut icon" href="img/favicon.ico">
         <title>Ode-solvers Docs</title>
-        <link href="css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="css/bootstrap.min.css" rel="stylesheet">
         <link href="css/font-awesome.min.css" rel="stylesheet">
         <link href="css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/docco.min.css">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/docco.min.css">
 
         <script src="js/jquery-1.10.2.min.js" defer></script>
-        <script src="js/bootstrap-3.0.3.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script src="js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
     <body class="homepage">
-
-        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-
-                <!-- Collapsed navigation -->
-                <div class="navbar-header">
-                    <!-- Expander button -->
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="index.html">Ode-solvers Docs</a>
-                </div>
+                <a class="navbar-brand" href="index.html">Ode-solvers Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
                 <!-- Expanded navigation -->
-                <div class="navbar-collapse collapse">
+                <div id="navbar-collapse" class="navbar-collapse collapse">
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
-                            <li class="active">
-                                <a href="index.html">Quick reference</a>
+                            <li class="navitem active">
+                                <a href="index.html" class="nav-link">Quick reference</a>
                             </li>
                             <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
-<li >
-    <a href="examples/kepler_orbit.html">Kepler Orbit</a>
+<li>
+    <a href="examples/kepler_orbit.html" class="dropdown-item">Kepler Orbit</a>
 </li>
                                     
-<li >
-    <a href="examples/three_body_problem.html">Three-body Problem</a>
+<li>
+    <a href="examples/three_body_problem.html" class="dropdown-item">Three-body Problem</a>
 </li>
                                 </ul>
                             </li>
-                            <li >
-                                <a href="https://docs.rs/ode_solvers/">API documentation</a>
+                            <li class="navitem">
+                                <a href="https://docs.rs/ode_solvers/" class="nav-link">API documentation</a>
                             </li>
-                            <li >
-                                <a href="changelog.html">Changelog</a>
+                            <li class="navitem">
+                                <a href="changelog.html" class="nav-link">Changelog</a>
                             </li>
                         </ul>
 
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
                                 <i class="fa fa-search"></i> Search
                             </a>
                         </li>
-                            <li class="disabled">
-                                <a rel="next" >
+                            <li class="nav-item">
+                                <a rel="prev" class="nav-link disabled">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
-                            <li >
-                                <a rel="prev" href="examples/kepler_orbit.html">
+                            <li class="nav-item">
+                                <a rel="next" href="examples/kepler_orbit.html" class="nav-link">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
-                            <li>
-                                <a href="https://github.com/srenevey/ode-solvers"><i class="fa fa-github"></i> GitHub</a>
+                            <li class="nav-item">
+                                <a href="https://github.com/srenevey/ode-solvers" class="nav-link"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -95,51 +82,81 @@
         </div>
 
         <div class="container">
-                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
-    <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#odes-solving-in-rust">ODEs Solving in Rust</a></li>
-            <li><a href="#installation">Installation</a></li>
-            <li><a href="#type-alias-definition">Type alias definition</a></li>
-            <li><a href="#system-definition">System definition</a></li>
-            <li><a href="#method-selection">Method selection</a></li>
-            <li><a href="#adaptive-step-size">Adaptive Step Size</a></li>
-            <li><a href="#acknowledgments">Acknowledgments</a></li>
-            <li><a href="#references">References</a></li>
-    </ul>
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#odes-solving-in-rust" class="nav-link">ODEs Solving in Rust</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#installation" class="nav-link">Installation</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#type-alias-definition" class="nav-link">Type alias definition</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#system-definition" class="nav-link">System definition</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#method-selection" class="nav-link">Method selection</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#adaptive-step-size" class="nav-link">Adaptive Step Size</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#acknowledgments" class="nav-link">Acknowledgments</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#references" class="nav-link">References</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
 </div></div>
-                <div class="col-md-9" role="main">
+                    <div class="col-md-9" role="main">
 
 <h1 id="odes-solving-in-rust">ODEs Solving in Rust</h1>
 <p>Ode-solvers is a collection of numerical methods to solve ordinary differential equations (ODEs) in Rust. The following instructions should get you up and running in no time. See the examples and the API documentation for more details.</p>
 <h2 id="installation">Installation</h2>
 <p>To start using the crate in your project, add the following dependency in your project's Cargo.toml file:</p>
-<pre><code class="rust">[dependencies]
-ode-solvers = &quot;0.3.0&quot;
+<pre><code class="language-rust">[dependencies]
+ode-solvers = &quot;0.3.1&quot;
 </code></pre>
-
 <p>Then, in your main file, add</p>
-<pre><code class="rust">use ode-solvers::*;
+<pre><code class="language-rust">use ode-solvers::*;
 </code></pre>
-
 <h2 id="type-alias-definition">Type alias definition</h2>
 <p>The numerical integration methods implemented in the crate support multi-dimensional systems. In order to define the dimension of the system, declare a type alias for the state vector. For instance</p>
-<pre><code class="rust">type State = Vector3&lt;f64&gt;;
+<pre><code class="language-rust">type State = Vector3&lt;f64&gt;;
 </code></pre>
-
-<p>The state representation of the system is based on the VectorN&lt;T,D&gt; structure defined in the <a href="http://nalgebra.org/">nalgebra</a> crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a VectorN&lt;T,D&gt;  where the second type parameter of VectorN is a dimension name defined in nalgebra. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:</p>
-<pre><code class="rust">type State = VectorN&lt;f64, nalgebra::U9&gt;;
+<p>The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the <a href="http://nalgebra.org/">nalgebra</a> crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:</p>
+<pre><code class="language-rust">type State = SVector&lt;f64, 9&gt;;
 </code></pre>
-
 <h2 id="system-definition">System definition</h2>
 <p>The system of first order ODEs must be defined in the <code>system</code> method of the <code>System&lt;V&gt;</code> trait. Typically, this trait is defined for a structure containing some parameters of the model. The signature of the <code>System&lt;V&gt;</code> trait is:</p>
-<pre><code class="rust">pub trait System&lt;V&gt; {
+<pre><code class="language-rust">pub trait System&lt;V&gt; {
     fn system(&amp;self, x: f64, y: &amp;V, dy: &amp;mut V);
     fn solout(&amp;self, _x: f64, _y: &amp;V, _dy: &amp;V) -&gt; bool {
         false
     }
 }
 </code></pre>
-
 <p>where <code>system</code> must contain the ODEs: the second argument is the independent variable (usually time), the third one is a vector containing the dependent variable(s), and the fourth one contains the derivative(s) of y with respect to x. The method <code>solout</code> is called after each successful integration step and stops the integration whenever it is evaluated as true. The implementation of that method is optional. See the examples for implementation details.</p>
 <h2 id="method-selection">Method selection</h2>
 <p>The following explicit Runge-Kutta methods are implemented in the current version of the crate:</p>
@@ -154,6 +171,13 @@ ode-solvers = &quot;0.3.0&quot;
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>Runge-Kutta 4</td>
+<td>Rk4</td>
+<td>4</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
 <tr>
 <td>Dormand-Prince</td>
 <td>Dopri5</td>
@@ -170,7 +194,7 @@ ode-solvers = &quot;0.3.0&quot;
 </tr>
 </tbody>
 </table>
-<p>These methods are defined in the modules dopri5 and dop853 and feature: </p>
+<p>These methods are defined in the modules rk4, dopri5, and dop853. The Dormand-Prince methods feature: </p>
 <ul>
 <li>Adaptive step size control</li>
 <li>Automatic initial step size selection</li>
@@ -178,24 +202,20 @@ ode-solvers = &quot;0.3.0&quot;
 <li>Sparse or dense output</li>
 </ul>
 <p>The first step is to bring the desired module into scope:</p>
-<pre><code class="rust">use ode_solvers::dopri5::*;
+<pre><code class="language-rust">use ode_solvers::dopri5::*;
 </code></pre>
-
-<p>Then, a structure is created using the <em>new</em> or the <em>from_param</em> method of the corresponding struct. Refer to the <a href="https://docs.rs/ode_solvers">API documentation</a> for a description of the input arguments.</p>
-<pre><code class="rust">let mut stepper = Dopri5::new(system, x0, x_end, dx, y0, rtol, atol);
+<p>Then, a structure is created using the <code>new</code> or the <code>from_param</code> method of the corresponding struct. Refer to the <a href="https://docs.rs/ode_solvers">API documentation</a> for a description of the input arguments.</p>
+<pre><code class="language-rust">let mut stepper = Dopri5::new(system, x0, x_end, dx, y0, rtol, atol);
 </code></pre>
-
 <p>The system is integrated using</p>
-<pre><code class="rust">let res = stepper.integrate();
+<pre><code class="language-rust">let res = stepper.integrate();
 </code></pre>
-
 <p>which returns Result&lt;Stats, IntegrationError&gt;. Upon successful completion, res = Ok(Stats) where Stats is a structure containing some information on the integration process (such as number of function evaluations). If an error occurs, res = Err(IntegrationError). Finally, the results can be retrieved with</p>
-<pre><code class="rust">let x_out = stepper.x_out();
+<pre><code class="language-rust">let x_out = stepper.x_out();
 let y_out = stepper.y_out();
 </code></pre>
-
 <h2 id="adaptive-step-size">Adaptive Step Size</h2>
-<p>The adaptive step size is computed using a PI controller</p>
+<p>The adaptive step size used in Dopri5 and Dop853 is computed using a PI controller</p>
 <p><center><script type="math/tex; mode=display">h_{n+1} = h_ns|err_n|^{-\alpha}|err_{n-1}|^\beta</script></center></p>
 <p>where <script type="math/tex">s​</script> is a safety factor, <script type="math/tex">|err_n|</script> is the current error , and <script type="math/tex">|err_{n-1}|</script> is the previous error. The coefficients <script type="math/tex">\alpha</script> and <script type="math/tex">\beta</script> determine the behavior of the controller. In order to make sure that <script type="math/tex">h</script> doesn't change too abruptly, bounds on the factor of <script type="math/tex">h_n</script> are enforced:</p>
 <p><center><script type="math/tex; mode=display">f_{min} \leq s|err_n|^{-\alpha}|err_{n-1}|^\beta \leq f_{max}</script></center></p>
@@ -247,7 +267,7 @@ let y_out = stepper.y_out();
 </tr>
 </tbody>
 </table>
-<p>These default values can be overridden by using the method <em>from_param</em>.</p>
+<p>These default values can be overridden by using the method <code>from_param</code>.</p>
 <p>For Dopri5, a 5th order approximation <script type="math/tex">y_1</script> ​and a 4th order approximation <script type="math/tex">\hat{y}_1</script> are constructed using the coefficients of the method. The error estimator is then</p>
 <p><center><script type="math/tex; mode=display">err=\sqrt{\frac{1}{n}\sum_{i=1}^n\frac{y_{1i}-\hat{y}_{1i}}{sc_i}}</script></center></p>
 <p>where <script type="math/tex">n​</script> is the dimension of the system and <script type="math/tex">sc_i</script> is a scale factor given by</p>
@@ -258,7 +278,7 @@ let y_out = stepper.y_out();
 <p><center><script type="math/tex; mode=display">err=err_5\frac{err_5}{\sqrt{err_5^2+0.01err_3^2}}</script></center></p>
 <p>For a thorough discussion, see Hairer et al. [1].</p>
 <h2 id="acknowledgments">Acknowledgments</h2>
-<p>The algorithms implemented in this crate are described in references [1] and [2]. They were originally implemented in FORTRAN by E. Hairer and G. Wanner, Université de Genève, Switzerland. This Rust implementation has been adapted from the C version written by J. Colinge, Université de Genève, Switzerland and the C++ version written by Blake Ashby, Stanford University, USA.</p>
+<p>The Dopri5 and Dop853 algorithms implemented in this crate are described in references [1] and [2]. They were originally implemented in FORTRAN by E. Hairer and G. Wanner, Université de Genève, Switzerland. This Rust implementation has been adapted from the C version written by J. Colinge, Université de Genève, Switzerland and the C++ version written by Blake Ashby, Stanford University, USA.</p>
 <h2 id="references">References</h2>
 <p>[1] Hairer, E., Nørsett, S.P., Wanner, G., <em>Solving Ordinary Differential Equations I, Nonstiff Problems</em>, Second Revised Edition, Springer, 2008</p>
 <p>[2] Hairer, E., Wanner, G., <em>Solving Ordinary Differential Equations II, Stiff and Differential-Algebraic Problems</em>, Second Revised Edition, Springer, 2002</p>
@@ -266,6 +286,7 @@ let y_out = stepper.y_out();
 <p>[4] Gustafsson, K., Control-Theoretic Techniques for Stepsize Selection in Explicit Runge-Kutta Methods. <em>ACM Transactions on Mathematical Software</em>, 17, 4 (December 1991), 533-554.</p>
 <p>[5] Gustafsson, K., Control-Theoretic Techniques for Stepsize Selection in Implicit Runge-Kutta Methods. <em>ACM Transactions on Mathematical Software</em>, 20, 4 (December 1994), 496-517. </p>
 <p>[6] Söderlind, G., Automatic Control and Adaptive Time-Stepping, <em>Numerical Algorithms</em> (2002) 31: 281-310.</p></div>
+            </div>
         </div>
 
         <footer class="col-md-12">
@@ -280,35 +301,32 @@ let y_out = stepper.y_out();
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" defer></script>
         <script src="search/main.js" defer></script>
 
-        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
-    <div class="modal-dialog">
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
             </div>
             <div class="modal-body">
-                <p>
-                    From here you can search these documents. Enter
-                    your search terms below.
-                </p>
-                <form role="form">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
                     </div>
                 </form>
-                <div id="mkdocs-search-results"></div>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
             </div>
             <div class="modal-footer">
             </div>
         </div>
     </div>
-</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
             </div>
             <div class="modal-body">
               <table class="table">
@@ -348,6 +366,6 @@ let y_out = stepper.y_out();
 </html>
 
 <!--
-MkDocs version : 1.0.4
-Build Date UTC : 2019-03-22 00:52:14
+MkDocs version : 1.2.1
+Build Date UTC : 2021-07-02 13:42:52.854216+00:00
 -->

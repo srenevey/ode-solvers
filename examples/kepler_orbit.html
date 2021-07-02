@@ -6,88 +6,75 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         <meta name="author" content="Sylvain Renevey">
-        
+        <link rel="canonical" href="https://srenevey.github.io/ode-solvers/examples/kepler_orbit.html">
         <link rel="shortcut icon" href="../img/favicon.ico">
         <title>Kepler Orbit - Ode-solvers Docs</title>
-        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
         <link href="../css/font-awesome.min.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/docco.min.css">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/docco.min.css">
 
         <script src="../js/jquery-1.10.2.min.js" defer></script>
-        <script src="../js/bootstrap-3.0.3.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
     <body>
-
-        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-
-                <!-- Collapsed navigation -->
-                <div class="navbar-header">
-                    <!-- Expander button -->
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="../index.html">Ode-solvers Docs</a>
-                </div>
+                <a class="navbar-brand" href="../index.html">Ode-solvers Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
                 <!-- Expanded navigation -->
-                <div class="navbar-collapse collapse">
+                <div id="navbar-collapse" class="navbar-collapse collapse">
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
-                            <li >
-                                <a href="../index.html">Quick reference</a>
+                            <li class="navitem">
+                                <a href="../index.html" class="nav-link">Quick reference</a>
                             </li>
                             <li class="dropdown active">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
-<li class="active">
-    <a href="kepler_orbit.html">Kepler Orbit</a>
+<li>
+    <a href="kepler_orbit.html" class="dropdown-item active">Kepler Orbit</a>
 </li>
                                     
-<li >
-    <a href="three_body_problem.html">Three-body Problem</a>
+<li>
+    <a href="three_body_problem.html" class="dropdown-item">Three-body Problem</a>
 </li>
                                 </ul>
                             </li>
-                            <li >
-                                <a href="https://docs.rs/ode_solvers/">API documentation</a>
+                            <li class="navitem">
+                                <a href="https://docs.rs/ode_solvers/" class="nav-link">API documentation</a>
                             </li>
-                            <li >
-                                <a href="../changelog.html">Changelog</a>
+                            <li class="navitem">
+                                <a href="../changelog.html" class="nav-link">Changelog</a>
                             </li>
                         </ul>
 
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
                                 <i class="fa fa-search"></i> Search
                             </a>
                         </li>
-                            <li >
-                                <a rel="next" href="../index.html">
+                            <li class="nav-item">
+                                <a rel="prev" href="../index.html" class="nav-link">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
-                            <li >
-                                <a rel="prev" href="three_body_problem.html">
+                            <li class="nav-item">
+                                <a rel="next" href="three_body_problem.html" class="nav-link">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
-                            <li>
-                                <a href="https://github.com/srenevey/ode-solvers"><i class="fa fa-github"></i> GitHub</a>
+                            <li class="nav-item">
+                                <a href="https://github.com/srenevey/ode-solvers" class="nav-link"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -95,15 +82,26 @@
         </div>
 
         <div class="container">
-                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
-    <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#kepler-orbit">Kepler Orbit</a></li>
-            <li><a href="#problem-definition">Problem Definition</a></li>
-            <li><a href="#implementation">Implementation</a></li>
-            <li><a href="#results">Results</a></li>
-    </ul>
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#kepler-orbit" class="nav-link">Kepler Orbit</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
 </div></div>
-                <div class="col-md-9" role="main">
+                    <div class="col-md-9" role="main">
 
 <h1 id="kepler-orbit">Kepler Orbit</h1>
 <h3 id="problem-definition">Problem Definition</h3>
@@ -144,23 +142,20 @@
 <p>which can be numerically integrated.</p>
 <h3 id="implementation">Implementation</h3>
 <p>The problem is solved using the Dopri5 method. We first import the crate and bring the required modules into scope:</p>
-<pre><code class="rust">use ode_solvers::dopri5::*;
+<pre><code class="language-rust">use ode_solvers::dopri5::*;
 use ode_solvers::*;
 </code></pre>
-
 <p>Next, two type aliases are defined:</p>
-<pre><code class="rust">type State = Vector6&lt;f64&gt;;
+<pre><code class="language-rust">type State = Vector6&lt;f64&gt;;
 type Time = f64;
 </code></pre>
-
 <p>and a structure containing the parameters of the model is created:</p>
-<pre><code class="rust">struct KeplerOrbit {
+<pre><code class="language-rust">struct KeplerOrbit {
   mu: f64,
 }
 </code></pre>
-
 <p>The <code>System&lt;V&gt;</code> trait is then implemented for <code>KeplerOrbit</code>:</p>
-<pre><code class="rust">impl ode_solvers::System&lt;State&gt; for KeplerOrbit {
+<pre><code class="language-rust">impl ode_solvers::System&lt;State&gt; for KeplerOrbit {
     // Equations of motion of the system
     fn system(&amp;self, _t: Time, y: &amp;State, dy: &amp;mut State) {
         let r = (y[0] * y[0] + y[1] * y[1] + y[2] * y[2]).sqrt();
@@ -174,9 +169,8 @@ type Time = f64;
     }
 }
 </code></pre>
-
 <p>We now implement the main function. The system of ODEs is first created with the corresponding <script type="math/tex">\mu</script> parameter. The orbital period is then computed and the initial state is initialized. The integration will be carried out using the 5th order Dormand-Prince method. Hence, a Dopri5 structure is created with the <code>system</code> structure, the initial time, the final time, the time increment between two outputs, the initial state vector, the relative tolerance, and the absolute tolerance as arguments. The integration is launched by calling the method <em>integrate()</em> and the result is stored in <em>res</em>. Finally, a check on the outcome of the integration is performed and the outputs can be extracted.</p>
-<pre><code class="rust">fn main() {
+<pre><code class="language-rust">fn main() {
     let system = KeplerOrbit {mu: 398600.435436}
 
     let a: f64 = 20000.0;
@@ -200,16 +194,16 @@ type Time = f64;
     }
 }
 </code></pre>
-
 <h3 id="results">Results</h3>
 <p>The following figure shows the trajectory resulting from the integration. As expected, the orbit is closed.</p>
 <p><center><img alt="Kepler orbit" src="images/kepler_orbit_dopri5.png" /></center></p>
-<p>Some information on the integration process is provided in the stats variable:
+<p>Some information on the integration process is provided in the stats variable:</p>
 <pre>
 Number of function evaluations: 62835
 Number of accepted steps: 10467
 Number of rejected steps: 5
-</pre></p>
+</pre>
+
 <p>In order to assess the accuracy of the integration, we look at the specific orbital energy which is a constant of the motion. This specific energy is given by
 <center><script type="math/tex; mode=display">\varepsilon = \frac{v^2}{2} - \frac{\mu}{r}</script></center>
 where <script type="math/tex">v</script> is the amplitude of the velocity and <script type="math/tex">r</script> is the distance from the Earth's center to the spacecraft. In theory, this value is constant as long as no external force acts on the system (which is the case here). From the intial conditions, the specific energy of this orbit is 
@@ -217,6 +211,7 @@ where <script type="math/tex">v</script> is the amplitude of the velocity and <s
 By computing <script type="math/tex">\varepsilon</script> for each time step and plotting the difference <script type="math/tex">\varepsilon_i - \varepsilon_0</script>, we obtain the following time evolution of the error:</p>
 <p><center><img alt="Time evolution of the error on the specific energy" src="images/err_specific_energy_dopri5.png" /></center></p>
 <p>As can be seen on this figure, the specific energy is constant up to the 9th digit after the decimal point which shows that the accuracy of the integration is quite good. A higher accuracy can be achieved by selecting smaller values for <em>rtol</em> and <em>atol</em>.</p></div>
+            </div>
         </div>
 
         <footer class="col-md-12">
@@ -231,35 +226,32 @@ By computing <script type="math/tex">\varepsilon</script> for each time step and
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" defer></script>
         <script src="../search/main.js" defer></script>
 
-        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
-    <div class="modal-dialog">
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
             </div>
             <div class="modal-body">
-                <p>
-                    From here you can search these documents. Enter
-                    your search terms below.
-                </p>
-                <form role="form">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
                     </div>
                 </form>
-                <div id="mkdocs-search-results"></div>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
             </div>
             <div class="modal-footer">
             </div>
         </div>
     </div>
-</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
             </div>
             <div class="modal-body">
               <table class="table">

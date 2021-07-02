@@ -6,88 +6,75 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         <meta name="author" content="Sylvain Renevey">
-        
+        <link rel="canonical" href="https://srenevey.github.io/ode-solvers/examples/three_body_problem.html">
         <link rel="shortcut icon" href="../img/favicon.ico">
         <title>Three-body Problem - Ode-solvers Docs</title>
-        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
         <link href="../css/font-awesome.min.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/docco.min.css">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/docco.min.css">
 
         <script src="../js/jquery-1.10.2.min.js" defer></script>
-        <script src="../js/bootstrap-3.0.3.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
     <body>
-
-        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-
-                <!-- Collapsed navigation -->
-                <div class="navbar-header">
-                    <!-- Expander button -->
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="../index.html">Ode-solvers Docs</a>
-                </div>
+                <a class="navbar-brand" href="../index.html">Ode-solvers Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
                 <!-- Expanded navigation -->
-                <div class="navbar-collapse collapse">
+                <div id="navbar-collapse" class="navbar-collapse collapse">
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
-                            <li >
-                                <a href="../index.html">Quick reference</a>
+                            <li class="navitem">
+                                <a href="../index.html" class="nav-link">Quick reference</a>
                             </li>
                             <li class="dropdown active">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
-<li >
-    <a href="kepler_orbit.html">Kepler Orbit</a>
+<li>
+    <a href="kepler_orbit.html" class="dropdown-item">Kepler Orbit</a>
 </li>
                                     
-<li class="active">
-    <a href="three_body_problem.html">Three-body Problem</a>
+<li>
+    <a href="three_body_problem.html" class="dropdown-item active">Three-body Problem</a>
 </li>
                                 </ul>
                             </li>
-                            <li >
-                                <a href="https://docs.rs/ode_solvers/">API documentation</a>
+                            <li class="navitem">
+                                <a href="https://docs.rs/ode_solvers/" class="nav-link">API documentation</a>
                             </li>
-                            <li >
-                                <a href="../changelog.html">Changelog</a>
+                            <li class="navitem">
+                                <a href="../changelog.html" class="nav-link">Changelog</a>
                             </li>
                         </ul>
 
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
                                 <i class="fa fa-search"></i> Search
                             </a>
                         </li>
-                            <li >
-                                <a rel="next" href="kepler_orbit.html">
+                            <li class="nav-item">
+                                <a rel="prev" href="kepler_orbit.html" class="nav-link">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
-                            <li >
-                                <a rel="prev" href="../changelog.html">
+                            <li class="nav-item">
+                                <a rel="next" href="../changelog.html" class="nav-link">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
-                            <li>
-                                <a href="https://github.com/srenevey/ode-solvers"><i class="fa fa-github"></i> GitHub</a>
+                            <li class="nav-item">
+                                <a href="https://github.com/srenevey/ode-solvers" class="nav-link"><i class="fa fa-github"></i> GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -95,15 +82,38 @@
         </div>
 
         <div class="container">
-                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
-    <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#three-body-problem">Three-Body Problem</a></li>
-            <li><a href="#problem-definition">Problem Definition</a></li>
-            <li><a href="#implementation">Implementation</a></li>
-            <li><a href="#results">Results</a></li>
-    </ul>
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#three-body-problem" class="nav-link">Three-Body Problem</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#problem-definition" class="nav-link">Problem Definition</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#implementation" class="nav-link">Implementation</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#results" class="nav-link">Results</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
 </div></div>
-                <div class="col-md-9" role="main">
+                    <div class="col-md-9" role="main">
 
 <h1 id="three-body-problem">Three-Body Problem</h1>
 <h2 id="problem-definition">Problem Definition</h2>
@@ -146,23 +156,20 @@
 </p>
 <h2 id="implementation">Implementation</h2>
 <p>The problem is solved using Dop853. The crate is first imported and the modules are brought into scope:</p>
-<pre><code class="Rust">use ode_solvers::dop853::*;
+<pre><code class="language-Rust">use ode_solvers::dop853::*;
 use ode_solvers::*;
 </code></pre>
-
 <p>Type aliases are then defined for the state vector and the time:</p>
-<pre><code class="Rust">type State = Vector6&lt;f64&gt;;
+<pre><code class="language-Rust">type State = Vector6&lt;f64&gt;;
 type Time = f64;
 </code></pre>
-
 <p>Next, we define the problem specific structure which will contain a single parameter:</p>
-<pre><code class="rust">struct ThreeBodyProblem {
+<pre><code class="language-rust">struct ThreeBodyProblem {
   mu: f64,
 }
 </code></pre>
-
 <p>for which we implement the <code>System&lt;V&gt;</code> trait:</p>
-<pre><code class="Rust">impl ode_solvers::System&lt;State&gt; for ThreeBodyProblem {
+<pre><code class="language-Rust">impl ode_solvers::System&lt;State&gt; for ThreeBodyProblem {
     fn system(&amp;self, _t: Time, y: &amp;State, dy: &amp;mut State) {
         let d = ((y[0] + self.mu).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
         let r = ((y[0] - 1.0 + self.mu).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
@@ -178,9 +185,8 @@ type Time = f64;
     }
 }
 </code></pre>
-
 <p>The system is created together with the intial state vector of the spacecraft in the <em>main</em> function. A Dop853 structure is created and the <em>integrate()</em> function is called. The result is handled with a <em>match</em> statement.</p>
-<pre><code class="Rust">fn main() {
+<pre><code class="language-Rust">fn main() {
     let system = ThreeBodyProblem {mu: 0.012300118882173};
 
     let y0 = State::new(-0.271, -0.42, 0.0, 0.3, -1.0, 0.0);
@@ -201,7 +207,6 @@ type Time = f64;
     }
 }
 </code></pre>
-
 <h2 id="results">Results</h2>
 <p>The trajectory of the spacecraft for a duration of 150 (dimensionless time) is shown on the following figure:</p>
 <p><center><img alt="Three body problem" src="images/three_body_dop853.png" /></center></p>
@@ -212,6 +217,7 @@ type Time = f64;
 <p>By computing the Jacobi constant at each time step and plotting the difference <script type="math/tex">C-C_0</script>, we get the figure below:</p>
 <p><center><img alt="Error on the Jacobi constant" src="images/err_jacobi_dop853.png" /></center></p>
 <p>As can be seen on that figure, the Jacobi constant is constant up to the 11th digit after the decimal point. This accuracy is quite reasonable for that kind of problem but if a higher accuracy is required, the relative tolerance and/or the absolute tolerance could be reduced.</p></div>
+            </div>
         </div>
 
         <footer class="col-md-12">
@@ -226,35 +232,32 @@ type Time = f64;
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" defer></script>
         <script src="../search/main.js" defer></script>
 
-        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
-    <div class="modal-dialog">
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
             </div>
             <div class="modal-body">
-                <p>
-                    From here you can search these documents. Enter
-                    your search terms below.
-                </p>
-                <form role="form">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
                     </div>
                 </form>
-                <div id="mkdocs-search-results"></div>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
             </div>
             <div class="modal-footer">
             </div>
         </div>
     </div>
-</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
             </div>
             <div class="modal-body">
               <table class="table">
