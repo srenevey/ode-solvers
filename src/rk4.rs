@@ -59,7 +59,7 @@ impl<T, F, const N: usize> Rk4<SVector<T, N>, F>
 
 
         let num_steps = ((self.x_end - self.x) / self.step_size).ceil() as usize;
-        for _ in 0..num_steps {
+        for _ in 0..=num_steps {
             let (x_new, y_new) = self.step();
 
             self.x_out.push(x_new);
