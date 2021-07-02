@@ -59,7 +59,7 @@ impl<T, F, const N: usize> Rk4<SVector<T, N>, F>
 
 
         let num_steps = ((self.x_end - self.x) / self.step_size).ceil() as usize;
-        for _ in 0..=num_steps {
+        for _ in 0..num_steps {
             let (x_new, y_new) = self.step();
 
             self.x_out.push(x_new);
@@ -131,9 +131,11 @@ mod tests {
         let system = Test1 {};
         let mut stepper = Rk4::new(system, 0., Vector1::new(1.), 0.2, 0.1);
         let _ = stepper.integrate();
-        let out = stepper.y_out();
-        assert!((&out[1][0] - 0.95369).abs() < 1.0E-5);
-        assert!((&out[2][0] - 0.91451).abs() < 1.0E-5);
+        let x_out = stepper.x_out();
+        let y_out = stepper.y_out();
+        assert!((*x_out.last().unwrap() - 0.2).abs() < 1.0E-8);
+        assert!((&y_out[1][0] - 0.95369).abs() < 1.0E-5);
+        assert!((&y_out[2][0] - 0.91451).abs() < 1.0E-5);
     }
 
 
@@ -142,9 +144,11 @@ mod tests {
         let system = Test2 {};
         let mut stepper = Rk4::new(system, 0., Vector1::new(-1.), 0.5, 0.1);
         let _ = stepper.integrate();
-        let out = stepper.y_out();
-        assert!((&out[3][0] + 0.82246).abs() < 1.0E-5);
-        assert!((&out[5][0] + 0.81959).abs() < 1.0E-5);
+        let x_out = stepper.x_out();
+        let y_out = stepper.y_out();
+        assert!((*x_out.last().unwrap() - 0.5).abs() < 1.0E-8);
+        assert!((&y_out[3][0] + 0.82246).abs() < 1.0E-5);
+        assert!((&y_out[5][0] + 0.81959).abs() < 1.0E-5);
     }
 
     #[test]
