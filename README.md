@@ -14,13 +14,13 @@ To start using the crate in a project, the following dependency must be added in
 
 ```rust
 [dependencies]
-ode-solvers = "0.3.1"
+ode_solvers = "0.3.1"
 ```
 
 Then, in the main file, add
 
 ```rust
-use ode-solvers::*;
+use ode_solvers::*;
 ```
 
 
