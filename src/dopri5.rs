@@ -4,7 +4,7 @@ use crate::butcher_tableau::Dopri54;
 use crate::controller::Controller;
 use crate::dop_shared::*;
 
-use nalgebra::{SVector, Scalar};
+use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector, Scalar};
 use num_traits::Zero;
 use simba::scalar::{ClosedAdd, ClosedMul, ClosedNeg, ClosedSub, SubsetOf, SupersetOf};
 
@@ -47,11 +47,12 @@ where
     stats: Stats,
 }
 
-impl<T, F, const N: usize> Dopri5<SVector<T, N>, F>
+impl<T, D: Dim, F> Dopri5<OVector<T, D>, F>
 where
     f64: From<T>,
     T: Copy + SubsetOf<f64> + Scalar + ClosedAdd + ClosedMul + ClosedSub + ClosedNeg + Zero,
-    F: System<SVector<T, N>>,
+    F: System<OVector<T, D>>,
+    DefaultAllocator: Allocator<T, D>,
 {
     /// Default initializer for the structure
     ///
@@ -65,7 +66,8 @@ where
     /// * `rtol`    - Relative tolerance used in the computation of the adaptive step size
     /// * `atol`    - Absolute tolerance used in the computation of the adaptive step size
     ///
-    pub fn new(f: F, x: f64, x_end: f64, dx: f64, y: SVector<T, N>, rtol: f64, atol: f64) -> Self {
+    pub fn new(f: F, x: f64, x_end: f64, dx: f64, y: OVector<T, D>, rtol: f64, atol: f64) -> Self {
+        let (rows, cols) = y.shape_generic();
         Self {
             f,
             x,
@@ -86,7 +88,13 @@ where
             coeffs: Dopri54::new(),
             controller: Controller::default(x, x_end),
             out_type: OutputType::Dense,
-            rcont: [SVector::zero(); 5],
+            rcont: [
+                OVector::zeros_generic(rows, cols),
+                OVector::zeros_generic(rows, cols),
+                OVector::zeros_generic(rows, cols),
+                OVector::zeros_generic(rows, cols),
+                OVector::zeros_generic(rows, cols),
+            ],
             stats: Stats::new(),
         }
     }
@@ -118,7 +126,7 @@ where
         x: f64,
         x_end: f64,
         dx: f64,
-        y: SVector<T, N>,
+        y: OVector<T, D>,
         rtol: f64,
         atol: f64,
         safety_factor: f64,
@@ -132,6 +140,7 @@ where
         out_type: OutputType,
     ) -> Self {
         let alpha = 0.2 - beta * 0.75;
+        let (rows, cols) = y.shape_generic();
         Self {
             f,
             x,
@@ -160,19 +169,26 @@ where
                 sign(1.0, x_end - x),
             ),
             out_type,
-            rcont: [SVector::zero(); 5],
+            rcont: [
+                OVector::zeros_generic(rows, cols),
+                OVector::zeros_generic(rows, cols),
+                OVector::zeros_generic(rows, cols),
+                OVector::zeros_generic(rows, cols),
+                OVector::zeros_generic(rows, cols),
+            ],
             stats: Stats::new(),
         }
     }
 
     /// Compute the initial stepsize
     fn hinit(&self) -> f64 {
-        let mut f0 = SVector::zero();
+        let (rows, cols) = self.y.shape_generic();
+        let mut f0 = OVector::zeros_generic(rows, cols);
         self.f.system(self.x, &self.y, &mut f0);
         let posneg = sign(1.0, self.x_end - self.x);
 
         // Compute the norm of y0 and f0
-        let dim = N;
+        let dim = rows.value();
         let mut d0 = 0.0;
         let mut d1 = 0.0;
         for i in 0..dim {
@@ -193,8 +209,8 @@ where
         h0 = h0.min(self.controller.h_max());
         h0 = sign(h0, posneg);
 
-        let y1 = self.y + f0 * h0.to_subset().unwrap();
-        let mut f1 = SVector::<T, N>::zero();
+        let y1 = &self.y + &f0 * h0.to_subset().unwrap();
+        let mut f1 = OVector::zeros_generic(rows, cols);
         self.f.system(self.x + h0, &y1, &mut f1);
 
         // Compute the norm of f1-f0 divided by h0
@@ -223,11 +239,12 @@ where
     /// Core integration method.
     pub fn integrate(&mut self) -> Result<Stats, IntegrationError> {
         // Initilization
+        let (rows, cols) = self.y.shape_generic();
         self.x_old = self.x;
         let mut n_step = 0;
         let mut last = false;
         let mut h_new = 0.0;
-        let dim = N;
+        let dim = rows.value();
         let mut non_stiff = 0;
         let mut iasti = 0;
         let posneg = sign(1.0, self.x_end - self.x);
@@ -241,10 +258,10 @@ where
         // Save initial values
         if self.out_type == OutputType::Sparse {
             self.x_out.push(self.x);
-            self.y_out.push(self.y);
+            self.y_out.push(self.y.clone());
         }
 
-        let mut k = vec![SVector::zero(); 7];
+        let mut k = vec![OVector::zeros_generic(rows, cols); 7];
         self.f.system(self.x, &self.y, &mut k[0]);
         self.stats.num_eval += 1;
 
@@ -271,10 +288,10 @@ where
 
             let h = self.h.to_subset().unwrap();
             // 6 Stages
-            let mut y_next = SVector::zero();
-            let mut y_stiff = SVector::zero();
+            let mut y_next = OVector::zeros_generic(rows, cols);
+            let mut y_stiff = OVector::zeros_generic(rows, cols);
             for s in 1..7 {
-                y_next = self.y;
+                y_next = self.y.clone();
                 for (j, k_value) in k.iter().enumerate().take(s) {
                     y_next += k_value * h * self.coeffs.a(s + 1, j + 1);
                 }
@@ -284,30 +301,30 @@ where
                     &mut k[s],
                 );
                 if s == 5 {
-                    y_stiff = y_next;
+                    y_stiff = y_next.clone();
                 }
             }
-            k[1] = k[6];
+            k[1] = k[6].clone();
             self.stats.num_eval += 6;
 
             // Prepare dense output
             if self.out_type == OutputType::Dense {
-                self.rcont[4] = (k[0] * self.coeffs.d(1)
-                    + k[2] * self.coeffs.d(3)
-                    + k[3] * self.coeffs.d(4)
-                    + k[4] * self.coeffs.d(5)
-                    + k[5] * self.coeffs.d(6)
-                    + k[1] * self.coeffs.d(7))
+                self.rcont[4] = (&k[0] * self.coeffs.d(1)
+                    + &k[2] * self.coeffs.d(3)
+                    + &k[3] * self.coeffs.d(4)
+                    + &k[4] * self.coeffs.d(5)
+                    + &k[5] * self.coeffs.d(6)
+                    + &k[1] * self.coeffs.d(7))
                     * h;
             }
 
             // Compute error estimate
-            k[3] = (k[0] * self.coeffs.e(1)
-                + k[2] * self.coeffs.e(3)
-                + k[3] * self.coeffs.e(4)
-                + k[4] * self.coeffs.e(5)
-                + k[5] * self.coeffs.e(6)
-                + k[1] * self.coeffs.e(7))
+            k[3] = (&k[0] * self.coeffs.e(1)
+                + &k[2] * self.coeffs.e(3)
+                + &k[3] * self.coeffs.e(4)
+                + &k[4] * self.coeffs.e(5)
+                + &k[5] * self.coeffs.e(6)
+                + &k[1] * self.coeffs.e(7))
                 * h;
 
             // Compute error
@@ -327,8 +344,8 @@ where
 
                 // Stifness detection
                 if self.stats.accepted_steps % self.n_stiff != 0 || iasti > 0 {
-                    let num = f64::from((k[1] - k[5]).dot(&(k[1] - k[5])));
-                    let den = f64::from((y_next - y_stiff).dot(&(y_next - y_stiff)));
+                    let num = f64::from((&k[1] - &k[5]).dot(&(&k[1] - &k[5])));
+                    let den = f64::from((&y_next - &y_stiff).dot(&(&y_next - &y_stiff)));
                     let h_lamb = if den > 0.0 {
                         self.h * (num / den).sqrt()
                     } else {
@@ -354,16 +371,16 @@ where
                 if self.out_type == OutputType::Dense {
                     let h = self.h.to_subset().unwrap();
 
-                    let ydiff = y_next - self.y;
-                    let bspl = k[0] * h - ydiff;
-                    self.rcont[0] = self.y;
-                    self.rcont[1] = ydiff;
-                    self.rcont[2] = bspl;
-                    self.rcont[3] = -k[1] * h + ydiff - bspl;
+                    let ydiff = &y_next - &self.y;
+                    let bspl = &k[0] * h - &ydiff;
+                    self.rcont[0] = self.y.clone();
+                    self.rcont[1] = ydiff.clone();
+                    self.rcont[2] = bspl.clone();
+                    self.rcont[3] = -&k[1] * h + ydiff - bspl;
                 }
 
-                k[0] = k[1];
-                self.y = y_next;
+                k[0] = k[1].clone();
+                self.y = y_next.clone();
                 self.x_old = self.x;
                 self.x += self.h;
                 self.h_old = self.h;
@@ -387,7 +404,7 @@ where
         Ok(self.stats)
     }
 
-    fn solution_output(&mut self, y_next: SVector<T, N>, k: &[SVector<T, N>]) {
+    fn solution_output(&mut self, y_next: OVector<T, D>, k: &[OVector<T, D>]) {
         if self.out_type == OutputType::Dense {
             while self.xd.abs() <= self.x.abs() {
                 if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
@@ -396,10 +413,10 @@ where
                     let theta = theta.to_subset().unwrap();
                     self.x_out.push(self.xd);
                     self.y_out.push(
-                        self.rcont[0]
-                            + (self.rcont[1]
-                                + (self.rcont[2]
-                                    + (self.rcont[3] + self.rcont[4] * theta1) * theta)
+                        &self.rcont[0]
+                            + (&self.rcont[1]
+                                + (&self.rcont[2]
+                                    + (&self.rcont[3] + &self.rcont[4] * theta1) * theta)
                                     * theta1)
                                 * theta,
                     );
@@ -421,7 +438,7 @@ where
     }
 
     /// Getter for the dependent variables' output.
-    pub fn y_out(&self) -> &Vec<SVector<T, N>> {
+    pub fn y_out(&self) -> &Vec<OVector<T, D>> {
         &self.y_out
     }
 }

@@ -39,6 +39,11 @@ The state representation of the system is based on the SVector&lt;T,D&gt; struct
 type State = SVector<f64, 9>;
 ```
 
+Alternativly, one can also use the DVector structure from the [nalgebra](http://nalgebra.org/) as the state representation. When using a DVector, the number of rows in the DVector defines the dimension of the system.
+
+```rust
+type State = DVector<f64>;
+```
 
 
 ## System definition
