@@ -33,13 +33,13 @@ The numerical integration methods implemented in the crate support multi-dimensi
 type State = Vector3<f64>;
 ```
 
-The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the [nalgebra](http://nalgebra.org/) crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:
+The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the [nalgebra](https://nalgebra.org/) crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:
 
 ```rust
 type State = SVector<f64, 9>;
 ```
 
-Alternativly, one can also use the DVector structure from the [nalgebra](http://nalgebra.org/) as the state representation. When using a DVector, the number of rows in the DVector defines the dimension of the system.
+Alternativly, one can also use the DVector&lt;T&gt; structure from the [nalgebra](https://nalgebra.org/) crate as the state representation. When using a DVector&lt;T&gt;, the number of rows in the DVector&lt;T&gt; defines the dimension of the system.
 
 ```rust
 type State = DVector<f64>;
