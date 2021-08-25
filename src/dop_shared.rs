@@ -31,7 +31,6 @@ pub enum IntegrationError {
     StiffnessDetected { x: f64 },
 }
 
-
 /// Contains some statistics of the integration.
 #[derive(Clone, Copy, Debug)]
 pub struct Stats {
