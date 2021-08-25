@@ -136,7 +136,7 @@
 <h2 id="installation">Installation</h2>
 <p>To start using the crate in your project, add the following dependency in your project's Cargo.toml file:</p>
 <pre><code class="language-rust">[dependencies]
-ode_solvers = &quot;0.3.3&quot;
+ode_solvers = &quot;0.3.4&quot;
 </code></pre>
 <p>Then, in your main file, add</p>
 <pre><code class="language-rust">use ode_solvers::*;
@@ -145,8 +145,11 @@ ode_solvers = &quot;0.3.3&quot;
 <p>The numerical integration methods implemented in the crate support multi-dimensional systems. In order to define the dimension of the system, declare a type alias for the state vector. For instance</p>
 <pre><code class="language-rust">type State = Vector3&lt;f64&gt;;
 </code></pre>
-<p>The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the <a href="http://nalgebra.org/">nalgebra</a> crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:</p>
+<p>The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the <a href="https://nalgebra.org/">nalgebra</a> crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:</p>
 <pre><code class="language-rust">type State = SVector&lt;f64, 9&gt;;
+</code></pre>
+<p>Alternativly, one can also use the DVector&lt;T&gt; structure from the <a href="https://nalgebra.org/">nalgebra</a> crate as the state representation. When using a DVector&lt;T&gt;, the number of rows in the DVector&lt;T&gt; defines the dimension of the system.</p>
+<pre><code class="language-rust">type State = DVector&lt;f64&gt;;
 </code></pre>
 <h2 id="system-definition">System definition</h2>
 <p>The system of first order ODEs must be defined in the <code>system</code> method of the <code>System&lt;V&gt;</code> trait. Typically, this trait is defined for a structure containing some parameters of the model. The signature of the <code>System&lt;V&gt;</code> trait is:</p>
@@ -367,5 +370,5 @@ let y_out = stepper.y_out();
 
 <!--
 MkDocs version : 1.2.1
-Build Date UTC : 2021-07-02 14:53:57.334571+00:00
+Build Date UTC : 2021-08-25 07:12:04.192523+00:00
 -->
