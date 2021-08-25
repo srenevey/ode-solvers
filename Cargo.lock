@@ -100,7 +100,7 @@ dependencies = [
 
 [[package]]
 name = "ode_solvers"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "nalgebra",
  "num-traits",
