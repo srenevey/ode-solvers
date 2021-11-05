@@ -5,7 +5,7 @@ use ode_solvers::*;
 type State = Vector6<f64>;
 type Time = f64;
 
-use std::{fs::File, io::Write, path::Path};
+use std::{fs::File, io::BufWriter, io::Write, path::Path};
 
 fn main() {
     // Create the structure containing the problem specific constant and equations.
@@ -55,19 +55,24 @@ impl ode_solvers::System<State> for ThreeBodyProblem {
 
 pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {
     // Create or open file
-    let mut buf = match File::create(filename) {
+    let file = match File::create(filename) {
         Err(e) => {
             println!("Could not open file. Error: {:?}", e);
             return;
         }
         Ok(buf) => buf,
     };
-    // Write time and state in a csv format
+    let mut buf = BufWriter::new(file);
+
+    // Write time and state vector in a csv format
     for (i, state) in states.iter().enumerate() {
         buf.write_fmt(format_args!("{}", times[i])).unwrap();
         for val in state.iter() {
             buf.write_fmt(format_args!(", {}", val)).unwrap();
         }
         buf.write_fmt(format_args!("\n")).unwrap();
+    }
+    if let Err(e) = buf.flush() {
+        println!("Could not write to file. Error: {:?}", e);
     }
 }
