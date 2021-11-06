@@ -7,7 +7,7 @@ use ode_solvers::*;
 type State = DVector<f64>;
 type Time = f64;
 
-use std::{f64::consts::PI, fs::File, io::Write, path::Path};
+use std::{f64::consts::PI, fs::File, io::BufWriter, io::Write, path::Path};
 
 fn main() {
     // Create the structure containing the ODEs.
@@ -67,13 +67,14 @@ impl ode_solvers::System<State> for KeplerOrbit {
 
 pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {
     // Create or open file
-    let mut buf = match File::create(filename) {
+    let file = match File::create(filename) {
         Err(e) => {
             println!("Could not open file. Error: {:?}", e);
             return;
         }
         Ok(buf) => buf,
     };
+    let mut buf = BufWriter::new(file);
 
     // Write time and state vector in a csv format
     for (i, state) in states.iter().enumerate() {
@@ -82,5 +83,8 @@ pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {
             buf.write_fmt(format_args!(", {}", val)).unwrap();
         }
         buf.write_fmt(format_args!("\n")).unwrap();
+    }
+    if let Err(e) = buf.flush() {
+        println!("Could not write to file. Error: {:?}", e);
     }
 }
