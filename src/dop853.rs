@@ -361,7 +361,7 @@ where
                 self.stats.num_eval += 1;
 
                 // Stifness detection
-                if (self.stats.accepted_steps % self.n_stiff != 0) || iasti > 0 {
+                if self.stats.accepted_steps % self.n_stiff == 0 || iasti > 0 {
                     let num = f64::from((&k[3] - &k[2]).dot(&(&k[3] - &k[2])));
                     let den = f64::from((&k[4] - &y_next).dot(&(&k[4] - &y_next)));
                     let h_lamb = if den > 0.0 {
