@@ -7,7 +7,7 @@ use thiserror::Error;
 pub trait System<V> {
     /// System of ordinary differential equations.
     fn system(&self, x: f64, y: &V, dy: &mut V);
-    /// Stop function called at every successful integration step. The integration is stopped when this function returns true.
+    /// Stop function called at every successful integration step when using the dopri5 solver. The integration is stopped when this function returns true.
     fn solout(&mut self, _x: f64, _y: &V, _dy: &V) -> bool {
         false
     }
