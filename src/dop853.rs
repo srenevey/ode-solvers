@@ -491,8 +491,11 @@ where
                     self.h_old = posneg * h_new;
                     return Ok(self.stats);
                 }
-            } else if self.stats.accepted_steps >= 1 {
-                self.stats.rejected_steps += 1;
+            } else {
+                last = false;
+                if self.stats.accepted_steps >= 1 {
+                    self.stats.rejected_steps += 1;
+                }
             }
             self.h = h_new;
         }
