@@ -6,8 +6,6 @@ use simba::scalar::{SubsetOf, SupersetOf};
 
 /// Structure containing the coefficients for the Dormand-Prince method of order 5(4) with dense output of order 4.
 pub(crate) struct Dopri54 {
-    // num_stages: usize,
-    // pub order: i32,
     a: Box<[Box<[f64]>]>,
     c: Box<[f64]>,
     d: Box<[f64]>,
@@ -18,8 +16,6 @@ impl Dopri54 {
     /// Initialize the structure with the coefficients of the method.
     pub fn new() -> Dopri54 {
         Dopri54 {
-            // num_stages: 7,
-            // order: 5,
             a: Box::new([
                 Box::new([1.0 / 5.0]),
                 Box::new([3.0 / 40.0, 9.0 / 40.0]),
@@ -87,22 +83,10 @@ impl Dopri54 {
     pub fn e<T: SubsetOf<f64>>(&self, i: usize) -> T {
         self.e[i - 1].to_subset().unwrap()
     }
-
-    // Returns the number of stages of the Butcher tableau.
-    // pub fn num_stages(&self) -> usize {
-    //     self.num_stages
-    // }
-
-    // Returns the order of the Butcher tableau.
-    // pub fn order(&self) -> i32 {
-    //     self.order
-    // }
 }
 
 /// Structure containing the coefficients for the Dormand-Prince method of order 8(5,3) with dense output of order 7.
 pub(crate) struct Dopri853 {
-    // num_stages: usize,
-    pub order: i32,
     a: Box<[Box<[f64]>]>,
     b: Box<[f64]>,
     bhh: Box<[f64]>,
@@ -115,8 +99,6 @@ impl Dopri853 {
     /// Initialize the structure with the coefficients of the method.
     pub fn new() -> Dopri853 {
         Dopri853 {
-            // num_stages: 16,
-            order: 7,
             a: Box::new([
                 Box::new([5.26001519587677318785587544488E-2]),
                 Box::new([
@@ -411,25 +393,36 @@ impl Dopri853 {
         self.d[i - 4][j - 1].to_subset().unwrap()
     }
 
-    /// Retunrns the _e<sub>i</sub>_ coefficient.
+    /// Returns the _e<sub>i</sub>_ coefficient.
     pub fn e<T: SubsetOf<f64>>(&self, i: usize) -> T {
         self.e[i - 1].to_subset().unwrap()
     }
-
-    // Returns the number of stages of the Butcher tableau.
-    // pub fn num_stages(&self) -> usize {
-    //     self.num_stages
-    // }
-
-    // Returns the order of the Butcher tableau.
-    // pub fn order(&self) -> i32 {
-    //     self.order
-    // }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::butcher_tableau;
+
+    #[test]
+    fn dopri5_a() {
+        let tab = butcher_tableau::Dopri54::new();
+        assert_eq!(tab.a::<f64>(3, 2), 9.0 / 40.0);
+        assert_eq!(tab.a::<f64>(5, 3), 64448.0 / 6561.0);
+    }
+
+    #[test]
+    fn dopri5_c() {
+        let tab = butcher_tableau::Dopri54::new();
+        assert_eq!(tab.c::<f64>(1), 0.0);
+        assert_eq!(tab.c::<f64>(3), 3.0 / 10.0);
+    }
+
+    #[test]
+    fn dopri5_d() {
+        let tab = butcher_tableau::Dopri54::new();
+        assert_eq!(tab.d::<f64>(3), 87487479700.0 / 32700410799.0);
+        assert_eq!(tab.d::<f64>(7), 69997945.0 / 29380423.0);
+    }
 
     #[test]
     fn dopri5_e() {
@@ -446,5 +439,39 @@ mod tests {
         assert_eq!(tab.a::<f64>(12, 9), -8.87285693353062954433549289258E0);
         assert_eq!(tab.a::<f64>(15, 3), 0.0);
         assert_eq!(tab.a::<f64>(4, 3), 8.87627564304205475450678981324E-2);
+    }
+
+    #[test]
+    fn dopri853_b() {
+        let tab = butcher_tableau::Dopri853::new();
+        assert_eq!(tab.b::<f64>(6), 4.45031289275240888144113950566E0);
+        assert_eq!(tab.b::<f64>(10), -1.52160949662516078556178806805E-1);
+    }
+
+    #[test]
+    fn dopri853_c() {
+        let tab = butcher_tableau::Dopri853::new();
+        assert_eq!(tab.c::<f64>(3), 0.789002279381515978178381316732E-01);
+        assert_eq!(tab.c::<f64>(8), 0.307692307692307692307692307692E+00);
+    }
+
+    #[test]
+    fn dopri853_d() {
+        let tab = butcher_tableau::Dopri853::new();
+        assert_eq!(tab.d::<f64>(6, 4), 0.0);
+        assert_eq!(tab.d::<f64>(5, 9), -0.22113666853125306036270938578E+02);
+    }
+
+    #[test]
+    fn dopri853_e() {
+        let tab = butcher_tableau::Dopri853::new();
+        assert_eq!(tab.e::<f64>(1), 0.1312004499419488073250102996E-01);
+        assert_eq!(tab.e::<f64>(12), -0.2235530786388629525884427845E-01);
+    }
+
+    #[test]
+    fn dopri853_bhh() {
+        let tab = butcher_tableau::Dopri853::new();
+        assert_eq!(tab.bhh::<f64>(1), 0.244094488188976377952755905512E+00);
     }
 }
