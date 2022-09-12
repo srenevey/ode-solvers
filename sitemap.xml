@@ -2,22 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://srenevey.github.io/ode-solvers/index.html</loc>
-         <lastmod>2022-01-31</lastmod>
+         <lastmod>2022-09-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://srenevey.github.io/ode-solvers/changelog.html</loc>
-         <lastmod>2022-01-31</lastmod>
+         <lastmod>2022-09-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://srenevey.github.io/ode-solvers/examples/kepler_orbit.html</loc>
-         <lastmod>2022-01-31</lastmod>
+         <lastmod>2022-09-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://srenevey.github.io/ode-solvers/examples/three_body_problem.html</loc>
-         <lastmod>2022-01-31</lastmod>
+         <lastmod>2022-09-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
