@@ -409,11 +409,8 @@ where
                             + &k[2] * dopri853::a(14, 12)
                             + &k[3] * dopri853::a(14, 13))
                             * h;
-                    self.f.system(
-                        self.x + self.h * dopri853::c::<f64>(14),
-                        &y_next,
-                        &mut k[9],
-                    );
+                    self.f
+                        .system(self.x + self.h * dopri853::c::<f64>(14), &y_next, &mut k[9]);
 
                     y_next = &self.y
                         + (&k[0] * dopri853::a(15, 1)
@@ -425,11 +422,8 @@ where
                             + &k[3] * dopri853::a(15, 13)
                             + &k[9] * dopri853::a(15, 14))
                             * h;
-                    self.f.system(
-                        self.x + self.h * dopri853::c::<f64>(15),
-                        &y_next,
-                        &mut k[1],
-                    );
+                    self.f
+                        .system(self.x + self.h * dopri853::c::<f64>(15), &y_next, &mut k[1]);
 
                     y_next = &self.y
                         + (&k[0] * dopri853::a(16, 1)
@@ -441,11 +435,8 @@ where
                             + &k[9] * dopri853::a(16, 14)
                             + &k[1] * dopri853::a(16, 15))
                             * h;
-                    self.f.system(
-                        self.x + self.h * dopri853::c::<f64>(16),
-                        &y_next,
-                        &mut k[2],
-                    );
+                    self.f
+                        .system(self.x + self.h * dopri853::c::<f64>(16), &y_next, &mut k[2]);
 
                     self.stats.num_eval += 3;
 

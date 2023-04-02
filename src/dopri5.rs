@@ -384,7 +384,7 @@ where
 
                 self.solution_output(y_next, &k);
 
-                if self.f.solout(self.x, &self.y_out.last().unwrap(), &k[0]) {
+                if self.f.solout(self.x, self.y_out.last().unwrap(), &k[0]) {
                     last = true;
                 }
 
@@ -421,7 +421,7 @@ where
                                 * theta,
                     );
                     self.xd += self.dx;
-                    if self.f.solout(self.x, &self.y_out.last().unwrap(), &k[0]) {
+                    if self.f.solout(self.x, self.y_out.last().unwrap(), &k[0]) {
                         break;
                     }
                 }
