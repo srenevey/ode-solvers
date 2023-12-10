@@ -30,7 +30,7 @@ struct ChemicalReaction;
 impl ode_solvers::System<State> for ChemicalReaction {
     fn system(&self, _: Time, y: &State, dy: &mut State) {
         dy[0] = -0.04 * y[0] + 10000. * y[1] * y[2];
-        dy[1] = 0.04 * y[0] - 10000. * y[1] * y[2] - 3. * (10. as f64).powi(7) * y[1] * y[1];
-        dy[2] = 3. * (10. as f64).powi(7) * y[1] * y[1];
+        dy[1] = 0.04 * y[0] - 10000. * y[1] * y[2] - 3. * 10_f64.powi(7) * y[1] * y[1];
+        dy[2] = 3. * 10_f64.powi(7) * y[1] * y[1];
     }
 }

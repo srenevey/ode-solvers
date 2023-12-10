@@ -1,6 +1,6 @@
 //! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 5(4) and dense output of order 4.
 
-use crate::butcher_tableau::Dopri54;
+use crate::butcher_tableau::dopri54;
 use crate::controller::Controller;
 use crate::dop_shared::*;
 
@@ -40,7 +40,6 @@ where
     h_old: f64,
     n_max: u32,
     n_stiff: u32,
-    coeffs: Dopri54,
     controller: Controller,
     out_type: OutputType,
     rcont: [V; 5],
@@ -85,7 +84,6 @@ where
             h_old: 0.0,
             n_max: 100000,
             n_stiff: 1000,
-            coeffs: Dopri54::new(),
             controller: Controller::default(x, x_end),
             out_type: OutputType::Dense,
             rcont: [
@@ -158,7 +156,6 @@ where
             h_old: 0.0,
             n_max,
             n_stiff,
-            coeffs: Dopri54::new(),
             controller: Controller::new(
                 alpha,
                 beta,
@@ -293,10 +290,10 @@ where
             for s in 1..7 {
                 y_next = self.y.clone();
                 for (j, k_value) in k.iter().enumerate().take(s) {
-                    y_next += k_value * h * self.coeffs.a(s + 1, j + 1);
+                    y_next += k_value * h * dopri54::a(s + 1, j + 1);
                 }
                 self.f.system(
-                    self.x + self.h * self.coeffs.c::<f64>(s + 1),
+                    self.x + self.h * dopri54::c::<f64>(s + 1),
                     &y_next,
                     &mut k[s],
                 );
@@ -309,22 +306,22 @@ where
 
             // Prepare dense output
             if self.out_type == OutputType::Dense {
-                self.rcont[4] = (&k[0] * self.coeffs.d(1)
-                    + &k[2] * self.coeffs.d(3)
-                    + &k[3] * self.coeffs.d(4)
-                    + &k[4] * self.coeffs.d(5)
-                    + &k[5] * self.coeffs.d(6)
-                    + &k[1] * self.coeffs.d(7))
+                self.rcont[4] = (&k[0] * dopri54::d(1)
+                    + &k[2] * dopri54::d(3)
+                    + &k[3] * dopri54::d(4)
+                    + &k[4] * dopri54::d(5)
+                    + &k[5] * dopri54::d(6)
+                    + &k[1] * dopri54::d(7))
                     * h;
             }
 
             // Compute error estimate
-            k[3] = (&k[0] * self.coeffs.e(1)
-                + &k[2] * self.coeffs.e(3)
-                + &k[3] * self.coeffs.e(4)
-                + &k[4] * self.coeffs.e(5)
-                + &k[5] * self.coeffs.e(6)
-                + &k[1] * self.coeffs.e(7))
+            k[3] = (&k[0] * dopri54::e(1)
+                + &k[2] * dopri54::e(3)
+                + &k[3] * dopri54::e(4)
+                + &k[4] * dopri54::e(5)
+                + &k[5] * dopri54::e(6)
+                + &k[1] * dopri54::e(7))
                 * h;
 
             // Compute error
@@ -387,7 +384,7 @@ where
 
                 self.solution_output(y_next, &k);
 
-                if self.f.solout(self.x, &self.y_out.last().unwrap(), &k[0]) {
+                if self.f.solout(self.x, self.y_out.last().unwrap(), &k[0]) {
                     last = true;
                 }
 
@@ -396,8 +393,11 @@ where
                     self.h_old = posneg * h_new;
                     return Ok(self.stats);
                 }
-            } else if self.stats.accepted_steps >= 1 {
-                self.stats.rejected_steps += 1;
+            } else {
+                last = false;
+                if self.stats.accepted_steps >= 1 {
+                    self.stats.rejected_steps += 1;
+                }
             }
             self.h = h_new;
         }

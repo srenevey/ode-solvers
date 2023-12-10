@@ -1,6 +1,5 @@
 site
 target
-mkdocs.yml
 docs
 outputs
 .DS_Store

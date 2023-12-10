@@ -1,6 +1,6 @@
 //! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 8(5,3) and dense output of order 7.
 
-use crate::butcher_tableau::Dopri853;
+use crate::butcher_tableau::dopri853;
 use crate::controller::Controller;
 use crate::dop_shared::*;
 
@@ -40,7 +40,6 @@ where
     h_old: f64,
     n_max: u32,
     n_stiff: u32,
-    coeffs: Dopri853,
     controller: Controller,
     out_type: OutputType,
     rcont: [V; 8],
@@ -86,7 +85,6 @@ where
             h_old: 0.0,
             n_max: 100000,
             n_stiff: 1000,
-            coeffs: Dopri853::new(),
             controller: Controller::default(x, x_end),
             out_type: OutputType::Dense,
             rcont: [
@@ -163,7 +161,6 @@ where
             h_old: h,
             n_max,
             n_stiff,
-            coeffs: Dopri853::new(),
             controller: Controller::new(
                 alpha,
                 beta,
@@ -298,12 +295,12 @@ where
                 y_next = self.y.clone();
                 for (j, k_value) in k.iter().enumerate().take(s) {
                     y_next += k_value
-                        * (self.h * self.coeffs.a::<f64>(s + 1, j + 1))
+                        * (self.h * dopri853::a::<f64>(s + 1, j + 1))
                             .to_subset()
                             .unwrap();
                 }
                 self.f.system(
-                    self.x + (self.h * self.coeffs.c::<f64>(s + 1)),
+                    self.x + (self.h * dopri853::c::<f64>(s + 1)),
                     &y_next,
                     &mut k[s],
                 );
@@ -312,29 +309,29 @@ where
             k[2] = k[11].clone();
             self.stats.num_eval += 11;
 
-            k[3] = &k[0] * self.coeffs.b(1)
-                + &k[5] * self.coeffs.b(6)
-                + &k[6] * self.coeffs.b(7)
-                + &k[7] * self.coeffs.b(8)
-                + &k[8] * self.coeffs.b(9)
-                + &k[9] * self.coeffs.b(10)
-                + &k[1] * self.coeffs.b(11)
-                + &k[2] * self.coeffs.b(12);
+            k[3] = &k[0] * dopri853::b(1)
+                + &k[5] * dopri853::b(6)
+                + &k[6] * dopri853::b(7)
+                + &k[7] * dopri853::b(8)
+                + &k[8] * dopri853::b(9)
+                + &k[9] * dopri853::b(10)
+                + &k[1] * dopri853::b(11)
+                + &k[2] * dopri853::b(12);
             k[4] = &self.y + &k[3] * self.h.to_subset().unwrap();
 
             // Error estimate
             let mut err_est = OVector::zeros_generic(rows, cols);
             for (i, k_value) in k.iter().enumerate().take(12) {
-                err_est += k_value * self.coeffs.e(i + 1);
+                err_est += k_value * dopri853::e(i + 1);
             }
 
             // Compute error
             let mut err = 0.0;
             let mut err2 = 0.0;
             let err_bhh = &k[3]
-                - &k[0] * self.coeffs.bhh(1)
-                - &k[8] * self.coeffs.bhh(2)
-                - &k[2] * self.coeffs.bhh(3);
+                - &k[0] * dopri853::bhh(1)
+                - &k[8] * dopri853::bhh(2)
+                - &k[2] * dopri853::bhh(3);
             for i in 0..dim {
                 let y_i = f64::from(self.y[i]);
                 let k5_i = f64::from(k[4][i]);
@@ -397,84 +394,75 @@ where
                     for i in 4..8 {
                         self.rcont[i] = OVector::zeros_generic(rows, cols);
                         for j in 1..13 {
-                            self.rcont[i] += &k[j - 1] * self.coeffs.d(i, j);
+                            self.rcont[i] += &k[j - 1] * dopri853::d(i, j);
                         }
                     }
 
                     // Next three function evaluations
                     let mut y_next = &self.y
-                        + (&k[0] * self.coeffs.a(14, 1)
-                            + &k[6] * self.coeffs.a(14, 7)
-                            + &k[7] * self.coeffs.a(14, 8)
-                            + &k[8] * self.coeffs.a(14, 9)
-                            + &k[9] * self.coeffs.a(14, 10)
-                            + &k[1] * self.coeffs.a(14, 11)
-                            + &k[2] * self.coeffs.a(14, 12)
-                            + &k[3] * self.coeffs.a(14, 13))
+                        + (&k[0] * dopri853::a(14, 1)
+                            + &k[6] * dopri853::a(14, 7)
+                            + &k[7] * dopri853::a(14, 8)
+                            + &k[8] * dopri853::a(14, 9)
+                            + &k[9] * dopri853::a(14, 10)
+                            + &k[1] * dopri853::a(14, 11)
+                            + &k[2] * dopri853::a(14, 12)
+                            + &k[3] * dopri853::a(14, 13))
                             * h;
-                    self.f.system(
-                        self.x + self.h * self.coeffs.c::<f64>(14),
-                        &y_next,
-                        &mut k[9],
-                    );
+                    self.f
+                        .system(self.x + self.h * dopri853::c::<f64>(14), &y_next, &mut k[9]);
 
                     y_next = &self.y
-                        + (&k[0] * self.coeffs.a(15, 1)
-                            + &k[5] * self.coeffs.a(15, 6)
-                            + &k[6] * self.coeffs.a(15, 7)
-                            + &k[7] * self.coeffs.a(15, 8)
-                            + &k[1] * self.coeffs.a(15, 11)
-                            + &k[2] * self.coeffs.a(15, 12)
-                            + &k[3] * self.coeffs.a(15, 13)
-                            + &k[9] * self.coeffs.a(15, 14))
+                        + (&k[0] * dopri853::a(15, 1)
+                            + &k[5] * dopri853::a(15, 6)
+                            + &k[6] * dopri853::a(15, 7)
+                            + &k[7] * dopri853::a(15, 8)
+                            + &k[1] * dopri853::a(15, 11)
+                            + &k[2] * dopri853::a(15, 12)
+                            + &k[3] * dopri853::a(15, 13)
+                            + &k[9] * dopri853::a(15, 14))
                             * h;
-                    self.f.system(
-                        self.x + self.h * self.coeffs.c::<f64>(15),
-                        &y_next,
-                        &mut k[1],
-                    );
+                    self.f
+                        .system(self.x + self.h * dopri853::c::<f64>(15), &y_next, &mut k[1]);
 
                     y_next = &self.y
-                        + (&k[0] * self.coeffs.a(16, 1)
-                            + &k[5] * self.coeffs.a(16, 6)
-                            + &k[6] * self.coeffs.a(16, 7)
-                            + &k[7] * self.coeffs.a(16, 8)
-                            + &k[8] * self.coeffs.a(16, 9)
-                            + &k[3] * self.coeffs.a(16, 13)
-                            + &k[9] * self.coeffs.a(16, 14)
-                            + &k[1] * self.coeffs.a(16, 15))
+                        + (&k[0] * dopri853::a(16, 1)
+                            + &k[5] * dopri853::a(16, 6)
+                            + &k[6] * dopri853::a(16, 7)
+                            + &k[7] * dopri853::a(16, 8)
+                            + &k[8] * dopri853::a(16, 9)
+                            + &k[3] * dopri853::a(16, 13)
+                            + &k[9] * dopri853::a(16, 14)
+                            + &k[1] * dopri853::a(16, 15))
                             * h;
-                    self.f.system(
-                        self.x + self.h * self.coeffs.c::<f64>(16),
-                        &y_next,
-                        &mut k[2],
-                    );
+                    self.f
+                        .system(self.x + self.h * dopri853::c::<f64>(16), &y_next, &mut k[2]);
 
                     self.stats.num_eval += 3;
 
                     self.rcont[4] = (&self.rcont[4]
-                        + &k[3] * self.coeffs.d(4, 13)
-                        + &k[9] * self.coeffs.d(4, 14)
-                        + &k[1] * self.coeffs.d(4, 15)
-                        + &k[2] * self.coeffs.d(4, 16))
+                        + &k[3] * dopri853::d(4, 13)
+                        + &k[9] * dopri853::d(4, 14)
+                        + &k[1] * dopri853::d(4, 15)
+                        + &k[2] * dopri853::d(4, 16))
                         * h;
                     self.rcont[5] = (&self.rcont[5]
-                        + &k[3] * self.coeffs.d(5, 13)
-                        + &k[9] * self.coeffs.d(5, 14)
-                        + &k[1] * self.coeffs.d(5, 15)
-                        + &k[2] * self.coeffs.d(5, 16))
+                        + &k[3] * dopri853::d(5, 13)
+                        + &k[9] * dopri853::d(5, 14)
+                        + &k[1] * dopri853::d(5, 15)
+                        + &k[2] * dopri853::d(5, 16))
                         * h;
                     self.rcont[6] = (&self.rcont[6]
-                        + &k[3] * self.coeffs.d(6, 13)
-                        + &k[9] * self.coeffs.d(6, 14)
-                        + &k[1] * self.coeffs.d(6, 15)
-                        + &k[2] * self.coeffs.d(6, 16))
+                        + &k[3] * dopri853::d(6, 13)
+                        + &k[9] * dopri853::d(6, 14)
+                        + &k[1] * dopri853::d(6, 15)
+                        + &k[2] * dopri853::d(6, 16))
                         * h;
                     self.rcont[7] = (&self.rcont[7]
-                        + &k[3] * self.coeffs.d(7, 13)
-                        + &k[9] * self.coeffs.d(7, 14)
-                        + &k[1] * self.coeffs.d(7, 15)
-                        + &k[2] * self.coeffs.d(7, 16))
+                        + &k[3] * dopri853::d(7, 13)
+                        + &k[9] * dopri853::d(7, 14)
+                        + &k[1] * dopri853::d(7, 15)
+                        + &k[2] * dopri853::d(7, 16))
                         * h;
                 }
 
@@ -496,8 +484,11 @@ where
                     self.h_old = posneg * h_new;
                     return Ok(self.stats);
                 }
-            } else if self.stats.accepted_steps >= 1 {
-                self.stats.rejected_steps += 1;
+            } else {
+                last = false;
+                if self.stats.accepted_steps >= 1 {
+                    self.stats.rejected_steps += 1;
+                }
             }
             self.h = h_new;
         }
