@@ -134,13 +134,8 @@ where
 
         for (idx, y_elem) in y_new.iter_mut().enumerate() {
             *y_elem = *y_elem
-                + (self.k[0][idx]
-                    + self.k[1][idx]
-                    + self.k[1][idx]
-                    + self.k[2][idx]
-                    + self.k[2][idx]
-                    + self.k[3][idx])
-                    * (self.step_size / 6.0);
+                + (self.k[0][idx] + self.k[1][idx] * 2. + self.k[2][idx] * 2. + self.k[3][idx])
+                    * (self.step_size / 6.);
         }
 
         // Early abortion check
