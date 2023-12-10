@@ -404,7 +404,7 @@ where
         Ok(self.stats)
     }
 
-    fn solution_output(&mut self, y_next: OVector<T, D>, k: &[OVector<T, D>]) {
+    fn solution_output(&mut self, y_next: OVector<T, D>, _k: &[OVector<T, D>]) {
         if self.out_type == OutputType::Dense {
             while self.xd.abs() <= self.x.abs() {
                 if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
@@ -421,9 +421,6 @@ where
                                 * theta,
                     );
                     self.xd += self.dx;
-                    if self.f.solout(self.x, self.y_out.last().unwrap(), &k[0]) {
-                        break;
-                    }
                 }
             }
         } else {
@@ -448,5 +445,40 @@ fn sign(a: f64, b: f64) -> f64 {
         a.abs()
     } else {
         -a.abs()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{OVector, System, Vector1};
+    use nalgebra::{allocator::Allocator, DefaultAllocator, Dim};
+
+    // Same as Test3 from rk4.rs, but aborts after x is greater/equal than 0.5
+    struct Test1 {}
+    impl<D: Dim> System<OVector<f64, D>> for Test1
+    where
+        DefaultAllocator: Allocator<f64, D>,
+    {
+        fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
+            dy[0] = (5. * x * x - y[0]) / (x + y[0]).exp();
+        }
+
+        fn solout(&mut self, x: f64, _y: &OVector<f64, D>, _dy: &OVector<f64, D>) -> bool {
+            return x >= 0.5;
+        }
+    }
+
+    #[test]
+    fn test_integrate_test1_svector() {
+        let system = Test1 {};
+        let mut stepper = Dopri5::new(system, 0., 1., 0.1, Vector1::new(1.), 1e-12, 1e-6);
+        let _ = stepper.integrate();
+
+        let x = stepper.x_out();
+        assert!((*x.last().unwrap() - 0.5).abs() < 1.0E-9); //
+
+        let out = stepper.y_out();
+        assert!((&out[5][0] - 0.913059243).abs() < 1.0E-9);
     }
 }

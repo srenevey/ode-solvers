@@ -1,5 +1,7 @@
 //! Explicit Runge-Kutta method of order 4 with fixed step size.
 
+use std::ops::Mul;
+
 use crate::dop_shared::{IntegrationError, Stats, System};
 
 use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector, Scalar};
@@ -15,6 +17,8 @@ where
     x: f64,
     y: V,
     x_end: f64,
+    k: [V; 4],
+    buffer: V, // Used for temporary copies in step
     step_size: f64,
     half_step: f64,
     x_out: Vec<f64>,
@@ -25,7 +29,15 @@ where
 impl<T, D: Dim, F> Rk4<OVector<T, D>, F>
 where
     f64: From<T>,
-    T: Copy + SubsetOf<f64> + Scalar + ClosedAdd + ClosedMul + ClosedSub + ClosedNeg + Zero,
+    T: Copy
+        + SubsetOf<f64>
+        + Scalar
+        + ClosedAdd
+        + ClosedMul
+        + ClosedSub
+        + ClosedNeg
+        + Zero
+        + Mul<f64, Output = T>,
     F: System<OVector<T, D>>,
     OVector<T, D>: std::ops::Mul<f64, Output = OVector<T, D>>,
     DefaultAllocator: Allocator<T, D>,
@@ -41,15 +53,30 @@ where
     /// * `step_size`   - Step size used in the method
     ///
     pub fn new(f: F, x: f64, y: OVector<T, D>, x_end: f64, step_size: f64) -> Self {
+        // Cheaper push while solving due to usage of Vec::with_capacity
+        let num_steps = ((x_end - x) / step_size).ceil() as usize;
+
+        // Preallocate k
+        let (rows, cols) = y.shape_generic();
+        let k = [
+            OVector::zeros_generic(rows, cols),
+            OVector::zeros_generic(rows, cols),
+            OVector::zeros_generic(rows, cols),
+            OVector::zeros_generic(rows, cols),
+        ];
+
+        let buffer = y.clone();
         Rk4 {
             f,
             x,
             y,
             x_end,
+            k,
+            buffer,
             step_size,
             half_step: step_size / 2.,
-            x_out: Vec::new(),
-            y_out: Vec::new(),
+            x_out: Vec::with_capacity(num_steps),
+            y_out: Vec::with_capacity(num_steps),
             stats: Stats::new(),
         }
     }
@@ -62,47 +89,69 @@ where
 
         let num_steps = ((self.x_end - self.x) / self.step_size).ceil() as usize;
         for _ in 0..num_steps {
-            let (x_new, y_new) = self.step();
-
-            self.x_out.push(x_new);
-            self.y_out.push(y_new.clone());
+            let (x_new, y_new, abort) = self.step();
 
             self.x = x_new;
-            self.y = y_new;
+            self.y
+                .iter_mut()
+                .zip(y_new.iter())
+                .for_each(|(y_self, y_new_elem)| {
+                    *y_self = *y_new_elem;
+                });
+
+            self.x_out.push(x_new);
+            self.y_out.push(y_new);
 
             self.stats.num_eval += 4;
             self.stats.accepted_steps += 1;
+
+            if abort {
+                break;
+            }
         }
         Ok(self.stats)
     }
 
     /// Performs one step of the Runge-Kutta 4 method.
-    fn step(&self) -> (f64, OVector<T, D>) {
-        let (rows, cols) = self.y.shape_generic();
-        let mut k = vec![OVector::zeros_generic(rows, cols); 12];
+    fn step(&mut self) -> (f64, OVector<T, D>, bool) {
+        self.f.system(self.x, &self.y, &mut self.k[0]);
 
-        self.f.system(self.x, &self.y, &mut k[0]);
-        self.f.system(
-            self.x + self.half_step,
-            &(self.y.clone() + k[0].clone() * self.half_step),
-            &mut k[1],
-        );
-        self.f.system(
-            self.x + self.half_step,
-            &(self.y.clone() + k[1].clone() * self.half_step),
-            &mut k[2],
-        );
-        self.f.system(
-            self.x + self.step_size,
-            &(self.y.clone() + k[2].clone() * self.step_size),
-            &mut k[3],
-        );
+        self.populate_buffer(0, self.half_step);
+        self.f
+            .system(self.x + self.half_step, &self.buffer, &mut self.k[1]);
+
+        self.populate_buffer(1, self.half_step);
+        self.f
+            .system(self.x + self.half_step, &self.buffer, &mut self.k[2]);
+
+        self.populate_buffer(2, self.step_size);
+        self.f
+            .system(self.x + self.step_size, &self.buffer, &mut self.k[3]);
 
         let x_new = self.x + self.step_size;
-        let y_new = &self.y
-            + (k[0].clone() + k[1].clone() * 2.0 + k[2].clone() * 2.0 + k[3].clone())
-                * (self.step_size / 6.0);
-        (x_new, y_new)
+
+        let mut y_new = self.y.clone();
+
+        for (idx, y_elem) in y_new.iter_mut().enumerate() {
+            *y_elem = *y_elem
+                + (self.k[0][idx] + self.k[1][idx] * 2. + self.k[2][idx] * 2. + self.k[3][idx])
+                    * (self.step_size / 6.);
+        }
+
+        // Early abortion check
+        let abort = self.f.solout(x_new, &y_new, &self.k[0]);
+        (x_new, y_new, abort)
+    }
+
+    /// Populate the buffer with the sum of y and the previous k-value
+    fn populate_buffer(&mut self, idx: usize, step: f64) {
+        self.buffer
+            .iter_mut()
+            .zip(self.y.iter())
+            .zip(self.k[idx].iter())
+            .for_each(|((buffer_elem, y_elem), k_prev_elem)| {
+                *buffer_elem = *y_elem + *k_prev_elem * step
+            })
     }
 
     /// Getter for the independent variable's output.
@@ -152,6 +201,21 @@ mod tests {
         }
     }
 
+    // Same as Test3, but aborts after x is greater/equal than 0.5
+    struct Test4 {}
+    impl<D: Dim> System<OVector<f64, D>> for Test4
+    where
+        DefaultAllocator: Allocator<f64, D>,
+    {
+        fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
+            dy[0] = (5. * x * x - y[0]) / (x + y[0]).exp();
+        }
+
+        fn solout(&mut self, x: f64, _y: &OVector<f64, D>, _dy: &OVector<f64, D>) -> bool {
+            return x >= 0.5;
+        }
+    }
+
     #[test]
     fn test_integrate_test1_svector() {
         let system = Test1 {};
@@ -185,6 +249,21 @@ mod tests {
         assert!((&out[5][0] - 0.913059839).abs() < 1.0E-9);
         assert!((&out[8][0] - 0.9838057659).abs() < 1.0E-9);
         assert!((&out[10][0] - 1.0715783953).abs() < 1.0E-9);
+        assert_eq!(out.len(), 11);
+    }
+
+    #[test]
+    fn test_integrate_test4_svector() {
+        let system = Test4 {};
+        let mut stepper = Rk4::new(system, 0., Vector1::new(1.), 1., 0.1);
+        let _ = stepper.integrate();
+
+        let x = stepper.x_out();
+        assert!((*x.last().unwrap() - 0.5).abs() < 1.0E-9);
+
+        let out = stepper.y_out();
+        assert!((&out[5][0] - 0.913059839).abs() < 1.0E-9);
+        assert_eq!(out.len(), 6);
     }
 
     #[test]
