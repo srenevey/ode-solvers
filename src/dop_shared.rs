@@ -13,6 +13,47 @@ pub trait System<V> {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct SolverResult<V>(Vec<f64>, Vec<V>);
+
+impl<V> SolverResult<V> {
+    pub fn new(x: Vec<f64>, y: Vec<V>) -> Self {
+        SolverResult { 0: x, 1: y }
+    }
+
+    pub fn with_capacity(n: usize) -> Self {
+        SolverResult {
+            0: Vec::with_capacity(n),
+            1: Vec::with_capacity(n),
+        }
+    }
+
+    pub fn push(&mut self, x: f64, y: V) {
+        self.0.push(x);
+        self.1.push(y);
+    }
+
+    pub fn append(&mut self, mut other: SolverResult<V>) {
+        self.0.append(&mut other.0);
+        self.1.append(&mut other.1);
+    }
+
+    /// Returns a pair that contains references to the internal vectors
+    pub fn get(&self) -> (&Vec<f64>, &Vec<V>) {
+        (&self.0, &self.1)
+    }
+}
+
+/// default implementation starts with empty vectors for x and y
+impl<V> Default for SolverResult<V> {
+    fn default() -> Self {
+        Self {
+            0: Default::default(),
+            1: Default::default(),
+        }
+    }
+}
+
 /// Enumeration of the types of the integration output.
 #[derive(PartialEq, Eq)]
 pub enum OutputType {

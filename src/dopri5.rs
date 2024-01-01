@@ -33,8 +33,7 @@ where
     y: V,
     rtol: f64,
     atol: f64,
-    x_out: Vec<f64>,
-    y_out: Vec<V>,
+    results: SolverResult<V>,
     uround: f64,
     h: f64,
     h_old: f64,
@@ -77,8 +76,7 @@ where
             y,
             rtol,
             atol,
-            x_out: Vec::new(),
-            y_out: Vec::new(),
+            results: SolverResult::default(),
             uround: f64::EPSILON,
             h: 0.0,
             h_old: 0.0,
@@ -149,8 +147,7 @@ where
             y,
             rtol,
             atol,
-            x_out: Vec::new(),
-            y_out: Vec::new(),
+            results: SolverResult::default(),
             uround: f64::EPSILON,
             h,
             h_old: 0.0,
@@ -254,8 +251,7 @@ where
 
         // Save initial values
         if self.out_type == OutputType::Sparse {
-            self.x_out.push(self.x);
-            self.y_out.push(self.y.clone());
+            self.results.push(self.x, self.y.clone());
         }
 
         let mut k = vec![OVector::zeros_generic(rows, cols); 7];
@@ -384,7 +380,10 @@ where
 
                 self.solution_output(y_next, &k);
 
-                if self.f.solout(self.x, self.y_out.last().unwrap(), &k[0]) {
+                if self
+                    .f
+                    .solout(self.x, self.results.get().1.last().unwrap(), &k[0])
+                {
                     last = true;
                 }
 
@@ -411,32 +410,46 @@ where
                     let theta = (self.xd - self.x_old) / self.h_old;
                     let theta1 = (1.0 - theta).to_subset().unwrap();
                     let theta = theta.to_subset().unwrap();
-                    self.x_out.push(self.xd);
-                    self.y_out.push(
-                        &self.rcont[0]
-                            + (&self.rcont[1]
-                                + (&self.rcont[2]
-                                    + (&self.rcont[3] + &self.rcont[4] * theta1) * theta)
-                                    * theta1)
-                                * theta,
-                    );
+                    let y_out = &self.rcont[0]
+                        + (&self.rcont[1]
+                            + (&self.rcont[2]
+                                + (&self.rcont[3] + &self.rcont[4] * theta1) * theta)
+                                * theta1)
+                            * theta;
+                    self.results.push(self.xd, y_out);
                     self.xd += self.dx;
                 }
             }
         } else {
-            self.x_out.push(self.x);
-            self.y_out.push(y_next);
+            self.results.push(self.x, y_next)
         }
     }
 
     /// Getter for the independent variable's output.
     pub fn x_out(&self) -> &Vec<f64> {
-        &self.x_out
+        &self.results.get().0
     }
 
     /// Getter for the dependent variables' output.
     pub fn y_out(&self) -> &Vec<OVector<T, D>> {
-        &self.y_out
+        &self.results.get().1
+    }
+
+    /// Getter for the results type, a pair of independent and dependent variables
+    pub fn results(&self) -> &SolverResult<OVector<T, D>> {
+        &self.results
+    }
+}
+
+impl<T, D: Dim, F> Into<SolverResult<OVector<T, D>>> for Dopri5<OVector<T, D>, F>
+where
+    f64: From<T>,
+    T: Copy + SubsetOf<f64> + Scalar + ClosedAdd + ClosedMul + ClosedSub + Zero,
+    F: System<OVector<T, D>>,
+    DefaultAllocator: Allocator<T, D>,
+{
+    fn into(self) -> SolverResult<OVector<T, D>> {
+        self.results
     }
 }
 

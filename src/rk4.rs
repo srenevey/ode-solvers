@@ -2,7 +2,7 @@
 
 use std::ops::Mul;
 
-use crate::dop_shared::{IntegrationError, Stats, System};
+use crate::dop_shared::{IntegrationError, SolverResult, Stats, System};
 
 use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector, Scalar};
 use num_traits::Zero;
@@ -21,8 +21,7 @@ where
     buffer: V, // Used for temporary copies in step
     step_size: f64,
     half_step: f64,
-    x_out: Vec<f64>,
-    y_out: Vec<V>,
+    results: SolverResult<V>,
     stats: Stats,
 }
 
@@ -75,8 +74,7 @@ where
             buffer,
             step_size,
             half_step: step_size / 2.,
-            x_out: Vec::with_capacity(num_steps),
-            y_out: Vec::with_capacity(num_steps),
+            results: SolverResult::with_capacity(num_steps),
             stats: Stats::new(),
         }
     }
@@ -84,8 +82,7 @@ where
     /// Core integration method.
     pub fn integrate(&mut self) -> Result<Stats, IntegrationError> {
         // Save initial values
-        self.x_out.push(self.x);
-        self.y_out.push(self.y.clone());
+        self.results.push(self.x, self.y.clone());
 
         let num_steps = ((self.x_end - self.x) / self.step_size).ceil() as usize;
         for _ in 0..num_steps {
@@ -99,8 +96,7 @@ where
                     *y_self = *y_new_elem;
                 });
 
-            self.x_out.push(x_new);
-            self.y_out.push(y_new);
+            self.results.push(x_new, y_new);
 
             self.stats.num_eval += 4;
             self.stats.accepted_steps += 1;
@@ -156,12 +152,29 @@ where
 
     /// Getter for the independent variable's output.
     pub fn x_out(&self) -> &Vec<f64> {
-        &self.x_out
+        &self.results.get().0
     }
 
     /// Getter for the dependent variables' output.
     pub fn y_out(&self) -> &Vec<OVector<T, D>> {
-        &self.y_out
+        &self.results.get().1
+    }
+
+    /// Getter for the results type, a pair of independent and dependent variables
+    pub fn results(&self) -> &SolverResult<OVector<T, D>> {
+        &self.results
+    }
+}
+
+impl<T, D: Dim, F> Into<SolverResult<OVector<T, D>>> for Rk4<OVector<T, D>, F>
+where
+    f64: From<T>,
+    T: Copy + SubsetOf<f64> + Scalar + ClosedAdd + ClosedMul + ClosedSub + Zero,
+    F: System<OVector<T, D>>,
+    DefaultAllocator: Allocator<T, D>,
+{
+    fn into(self) -> SolverResult<OVector<T, D>> {
+        self.results
     }
 }
 
