@@ -6,10 +6,25 @@ use simba::scalar::{ClosedAdd, ClosedDiv, ClosedMul, ClosedNeg, ClosedSub, Subse
 use std::fmt;
 use thiserror::Error;
 
-/// Trait needed to be implemented by the user.
+/// Trait needed to be implemented by the user
+///
+/// The type parameter T should be either `f32` or `f64`, the trait [FloatNumber] is used
+/// internally to allow generic code.
+///
+/// The type parameter V is a state vector. To have an easy start we recommend to use [nalgebra] vectors.
+/// ```rust
+/// // A predefined type for a vector (works from 1..6)
+/// type Precision = f64
+/// type State = Vector3<Precision>;
+/// type MySystem = System<Precision, State>
+///
+/// // Definition of a higher dimensional vector using nalgebra
+/// type AltState = SVector<Precision, 9>
+/// type MyAltSystem = System<Precision, State>
+/// ```
 pub trait System<T, V>
 where
-    T: SubsetOf<f64>,
+    T: FloatNumber,
 {
     /// System of ordinary differential equations.
     fn system(&self, x: T, y: &V, dy: &mut V);

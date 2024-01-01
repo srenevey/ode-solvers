@@ -1,16 +1,14 @@
 //! Explicit Runge-Kutta method of order 4 with fixed step size.
 
-use crate::dop_shared::{IntegrationError, SolverResult, Stats, System};
+use crate::dop_shared::{FloatNumber, IntegrationError, SolverResult, Stats, System};
 
-use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector, Scalar};
-use num_traits::{Float, FromPrimitive, NumCast, Zero};
-use simba::scalar::{ClosedAdd, ClosedDiv, ClosedMul, ClosedNeg, ClosedSub, SubsetOf};
+use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector};
 
 /// Structure containing the parameters for the numerical integration.
 pub struct Rk4<T, V, F>
 where
     F: System<T, V>,
-    T: SubsetOf<f64>,
+    T: FloatNumber,
 {
     f: F,
     x: T,
@@ -26,17 +24,7 @@ where
 
 impl<T, D: Dim, F> Rk4<T, OVector<T, D>, F>
 where
-    T: Float
-        + NumCast
-        + FromPrimitive
-        + SubsetOf<f64>
-        + Scalar
-        + ClosedAdd
-        + ClosedMul
-        + ClosedSub
-        + ClosedNeg
-        + ClosedDiv
-        + Zero,
+    T: FloatNumber,
     F: System<T, OVector<T, D>>,
     OVector<T, D>: std::ops::Mul<T, Output = OVector<T, D>>,
     DefaultAllocator: Allocator<T, D>,
@@ -132,7 +120,7 @@ where
         let mut y_new = self.y.clone();
 
         for (idx, y_elem) in y_new.iter_mut().enumerate() {
-            let two = NumCast::from(2.).unwrap();
+            let two = T::from(2.).unwrap();
             *y_elem = *y_elem
                 + (self.k[0][idx] + self.k[1][idx] * two + self.k[2][idx] * two + self.k[3][idx])
                     * (self.step_size / T::from_f32(6.).unwrap());
@@ -172,7 +160,7 @@ where
 
 impl<T, D: Dim, F> Into<SolverResult<T, OVector<T, D>>> for Rk4<T, OVector<T, D>, F>
 where
-    T: Copy + SubsetOf<f64>,
+    T: FloatNumber,
     F: System<T, OVector<T, D>>,
     DefaultAllocator: Allocator<T, D>,
 {

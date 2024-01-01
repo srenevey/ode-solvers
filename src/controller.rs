@@ -1,9 +1,4 @@
 //! Adaptive step size control.
-
-use nalgebra::Scalar;
-use num_traits::{Float, FromPrimitive, NumCast, Zero};
-use simba::scalar::{ClosedAdd, ClosedDiv, ClosedMul, ClosedNeg, ClosedSub, SubsetOf};
-
 use crate::dop_shared::FloatNumber;
 
 /// Used for adaptive step size control
