@@ -7,12 +7,12 @@ use std::{fs::File, io::BufWriter, io::Write, path::Path};
 use ode_solvers::dop_shared::SolverResult;
 use ode_solvers::*;
 
-type State = Vector3<f64>; // stores location, velocity and time
-type Time = f64;
-type Result = SolverResult<State>;
+type State = Vector3<f32>; // stores location, velocity and time
+type Time = f32;
+type Result = SolverResult<Time, State>;
 
-const G: f64 = 9.81; // gravity constant on earth
-const BOUNCE: f64 = 0.75;
+const G: f32 = 9.81; // gravity constant on earth
+const BOUNCE: f32 = 0.75;
 const MAX_BOUNCES: u32 = 5;
 
 fn main() {
@@ -28,7 +28,7 @@ fn main() {
         // Create a stepper and run the integration.
         // Use comments to see differences with Dopri
         //let mut stepper = Dopri5::new(system, 0., 10.0, 0.01, y0, 1.0e-2, 1.0e-6);
-        let mut stepper = Rk4::new(system, 0.0, y0, 10.0, 0.01);
+        let mut stepper = Rk4::new(system, 0f32, y0, 10f32, 0.01f32);
         let res = stepper.integrate();
 
         // Handle result.
@@ -69,13 +69,13 @@ fn main() {
 
 struct BouncingBall;
 
-impl ode_solvers::System<State> for BouncingBall {
+impl ode_solvers::System<Time, State> for BouncingBall {
     fn system(&self, _t: Time, y: &State, dy: &mut State) {
         dy[0] = y[1]; // location is changed by v
-        dy[1] = -G; // v is changed by acc of gravity
+        dy[1] = -G as f32; // v is changed by acc of gravity
     }
 
-    fn solout(&mut self, _x: f64, y: &State, _dy: &State) -> bool {
+    fn solout(&mut self, _x: Time, y: &State, _dy: &State) -> bool {
         y[0] < 0.
     }
 }

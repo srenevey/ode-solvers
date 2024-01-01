@@ -4,52 +4,60 @@ use crate::butcher_tableau::dopri54;
 use crate::controller::Controller;
 use crate::dop_shared::*;
 
-use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector, Scalar};
-use num_traits::Zero;
-use simba::scalar::{ClosedAdd, ClosedMul, ClosedNeg, ClosedSub, SubsetOf, SupersetOf};
+use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector};
 
-trait DefaultController {
-    fn default(x: f64, x_end: f64) -> Self;
+trait DefaultController<T: FloatNumber> {
+    fn default(x: T, x_end: T) -> Self;
 }
 
-impl DefaultController for Controller {
-    fn default(x: f64, x_end: f64) -> Self {
-        let alpha = 0.2 - 0.04 * 0.75;
-        Controller::new(alpha, 0.04, 10.0, 0.2, x_end - x, 0.9, sign(1.0, x_end - x))
+impl<T: FloatNumber> DefaultController<T> for Controller<T> {
+    fn default(x: T, x_end: T) -> Self {
+        let alpha = T::from(0.2 - 0.04 * 0.75).unwrap();
+        Controller::new(
+            alpha,
+            T::from(0.04).unwrap(),
+            T::from(10.0).unwrap(),
+            T::from(0.2).unwrap(),
+            x_end - x,
+            T::from(0.9).unwrap(),
+            sign(T::one(), x_end - x),
+        )
     }
 }
 
 /// Structure containing the parameters for the numerical integration.
-pub struct Dopri5<V, F>
+pub struct Dopri5<T, V, F>
 where
-    F: System<V>,
+    T: FloatNumber,
+    F: System<T, V>,
 {
     f: F,
-    x: f64,
-    x_old: f64,
-    x_end: f64,
-    xd: f64,
-    dx: f64,
+    x: T,
+    x_old: T,
+    x_end: T,
+    xd: T,
+    dx: T,
     y: V,
-    rtol: f64,
-    atol: f64,
-    results: SolverResult<V>,
-    uround: f64,
-    h: f64,
-    h_old: f64,
+    rtol: T,
+    atol: T,
+    results: SolverResult<T, V>,
+    uround: T,
+    h: T,
+    h_old: T,
     n_max: u32,
     n_stiff: u32,
-    controller: Controller,
+    controller: Controller<T>,
     out_type: OutputType,
     rcont: [V; 5],
     stats: Stats,
 }
 
-impl<T, D: Dim, F> Dopri5<OVector<T, D>, F>
+impl<T, D: Dim, F> Dopri5<T, OVector<T, D>, F>
 where
     f64: From<T>,
-    T: Copy + SubsetOf<f64> + Scalar + ClosedAdd + ClosedMul + ClosedSub + ClosedNeg + Zero,
-    F: System<OVector<T, D>>,
+    T: FloatNumber,
+    F: System<T, OVector<T, D>>,
+    OVector<T, D>: std::ops::Mul<T, Output = OVector<T, D>>,
     DefaultAllocator: Allocator<T, D>,
 {
     /// Default initializer for the structure
@@ -64,7 +72,7 @@ where
     /// * `rtol`    - Relative tolerance used in the computation of the adaptive step size
     /// * `atol`    - Absolute tolerance used in the computation of the adaptive step size
     ///
-    pub fn new(f: F, x: f64, x_end: f64, dx: f64, y: OVector<T, D>, rtol: f64, atol: f64) -> Self {
+    pub fn new(f: F, x: T, x_end: T, dx: T, y: OVector<T, D>, rtol: T, atol: T) -> Self {
         let (rows, cols) = y.shape_generic();
         Self {
             f,
@@ -77,9 +85,9 @@ where
             rtol,
             atol,
             results: SolverResult::default(),
-            uround: f64::EPSILON,
-            h: 0.0,
-            h_old: 0.0,
+            uround: T::from(f64::EPSILON).unwrap(),
+            h: T::from(0.).unwrap(),
+            h_old: T::from(0.).unwrap(),
             n_max: 100000,
             n_stiff: 1000,
             controller: Controller::default(x, x_end),
@@ -119,38 +127,38 @@ where
     #[allow(clippy::too_many_arguments)]
     pub fn from_param(
         f: F,
-        x: f64,
-        x_end: f64,
-        dx: f64,
+        x: T,
+        x_end: T,
+        dx: T,
         y: OVector<T, D>,
-        rtol: f64,
-        atol: f64,
-        safety_factor: f64,
-        beta: f64,
-        fac_min: f64,
-        fac_max: f64,
-        h_max: f64,
-        h: f64,
+        rtol: T,
+        atol: T,
+        safety_factor: T,
+        beta: T,
+        fac_min: T,
+        fac_max: T,
+        h_max: T,
+        h: T,
         n_max: u32,
         n_stiff: u32,
         out_type: OutputType,
     ) -> Self {
-        let alpha = 0.2 - beta * 0.75;
+        let alpha = T::from(0.2).unwrap() - beta * T::from(0.75).unwrap();
         let (rows, cols) = y.shape_generic();
         Self {
             f,
             x,
             xd: x,
-            x_old: 0.0,
+            x_old: T::from(0.0).unwrap(),
             x_end,
             dx,
             y,
             rtol,
             atol,
             results: SolverResult::default(),
-            uround: f64::EPSILON,
+            uround: T::from(f64::EPSILON).unwrap(),
             h,
-            h_old: 0.0,
+            h_old: T::from(0.0).unwrap(),
             n_max,
             n_stiff,
             controller: Controller::new(
@@ -160,7 +168,7 @@ where
                 fac_min,
                 h_max,
                 safety_factor,
-                sign(1.0, x_end - x),
+                sign(T::from(1.0).unwrap(), x_end - x),
             ),
             out_type,
             rcont: [
@@ -175,57 +183,59 @@ where
     }
 
     /// Compute the initial stepsize
-    fn hinit(&self) -> f64 {
+    fn hinit(&self) -> T {
         let (rows, cols) = self.y.shape_generic();
         let mut f0 = OVector::zeros_generic(rows, cols);
         self.f.system(self.x, &self.y, &mut f0);
-        let posneg = sign(1.0, self.x_end - self.x);
+        let posneg = sign(T::from(1.0).unwrap(), self.x_end - self.x);
 
         // Compute the norm of y0 and f0
         let dim = rows.value();
-        let mut d0 = 0.0;
-        let mut d1 = 0.0;
+        let mut d0 = T::zero();
+        let mut d1 = T::zero();
         for i in 0..dim {
-            let y_i = f64::from(self.y[i]);
+            let y_i = T::from(self.y[i]).unwrap();
             let sci = self.atol + y_i.abs() * self.rtol;
             d0 += (y_i / sci) * (y_i / sci);
-            let f0_i = f64::from(f0[i]);
+            let f0_i = T::from(f0[i]).unwrap();
             d1 += (f0_i / sci) * (f0_i / sci);
         }
 
         // Compute h0
-        let mut h0 = if d0 < 1.0E-10 || d1 < 1.0E-10 {
-            1.0E-6
+        let mut h0 = if d0 < T::from(1.0E-10).unwrap() || d1 < T::from(1.0E-10).unwrap() {
+            T::from(1.0E-6).unwrap()
         } else {
-            0.01 * (d0 / d1).sqrt()
+            T::from(0.01).unwrap() * (d0 / d1).sqrt()
         };
 
         h0 = h0.min(self.controller.h_max());
         h0 = sign(h0, posneg);
 
-        let y1 = &self.y + &f0 * h0.to_subset().unwrap();
+        let y1 = &self.y + &f0 * h0;
         let mut f1 = OVector::zeros_generic(rows, cols);
         self.f.system(self.x + h0, &y1, &mut f1);
 
         // Compute the norm of f1-f0 divided by h0
-        let mut d2: f64 = 0.0;
+        let mut d2 = T::zero();
         for i in 0..dim {
-            let f0_i = f64::from(f0[i]);
-            let f1_i = f64::from(f1[i]);
-            let y_i = f64::from(self.y[i]);
-            let sci: f64 = self.atol + y_i.abs() * self.rtol;
+            let f0_i = f0[i];
+            let f1_i = f1[i];
+            let y_i = self.y[i];
+            let sci = self.atol + y_i.abs() * self.rtol;
             d2 += ((f1_i - f0_i) / sci) * ((f1_i - f0_i) / sci);
         }
         d2 = d2.sqrt() / h0;
 
-        let h1 = if d1.sqrt().max(d2.abs()) <= 1.0E-15 {
-            (1.0E-6_f64).max(h0.abs() * 1.0E-3)
+        let h1 = if d1.sqrt().max(d2.abs()) <= T::from(1.0E-15).unwrap() {
+            T::from(1.0E-6_f64)
+                .unwrap()
+                .max(h0.abs() * T::from(1.0E-3).unwrap())
         } else {
-            (0.01 / (d1.sqrt().max(d2))).powf(1.0 / 5.0)
+            (T::from(0.01).unwrap() / (d1.sqrt().max(d2))).powf(T::one() / T::from(5.0).unwrap())
         };
 
         sign(
-            (100.0 * h0.abs()).min(h1.min(self.controller.h_max())),
+            (T::from(100.0).unwrap() * h0.abs()).min(h1.min(self.controller.h_max())),
             posneg,
         )
     }
@@ -237,13 +247,13 @@ where
         self.x_old = self.x;
         let mut n_step = 0;
         let mut last = false;
-        let mut h_new = 0.0;
+        let mut h_new = T::zero();
         let dim = rows.value();
         let mut non_stiff = 0;
         let mut iasti = 0;
-        let posneg = sign(1.0, self.x_end - self.x);
+        let posneg = sign(T::one(), self.x_end - self.x);
 
-        if self.h == 0.0 {
+        if self.h == T::zero() {
             self.h = self.hinit();
             self.stats.num_eval += 2;
         }
@@ -263,23 +273,28 @@ where
             // Check if step number is within allowed range
             if n_step > self.n_max {
                 self.h_old = self.h;
-                return Err(IntegrationError::MaxNumStepReached { x: self.x, n_step });
+                return Err(IntegrationError::MaxNumStepReached {
+                    x: f64::from(self.x),
+                    n_step,
+                });
             }
 
             // Check for step size underflow
-            if 0.1 * self.h.abs() <= self.uround * self.x.abs() {
+            if T::from(0.1).unwrap() * self.h.abs() <= self.uround * self.x.abs() {
                 self.h_old = self.h;
-                return Err(IntegrationError::StepSizeUnderflow { x: self.x });
+                return Err(IntegrationError::StepSizeUnderflow {
+                    x: f64::from(self.x),
+                });
             }
 
             // Check if it's the last iteration
-            if (self.x + 1.01 * self.h - self.x_end) * posneg > 0.0 {
+            if (self.x + T::from(1.01).unwrap() * self.h - self.x_end) * posneg > T::zero() {
                 self.h = self.x_end - self.x;
                 last = true;
             }
             n_step += 1;
 
-            let h = self.h.to_subset().unwrap();
+            let h = self.h;
             // 6 Stages
             let mut y_next = OVector::zeros_generic(rows, cols);
             let mut y_stiff = OVector::zeros_generic(rows, cols);
@@ -288,11 +303,8 @@ where
                 for (j, k_value) in k.iter().enumerate().take(s) {
                     y_next += k_value * h * dopri54::a(s + 1, j + 1);
                 }
-                self.f.system(
-                    self.x + self.h * dopri54::c::<f64>(s + 1),
-                    &y_next,
-                    &mut k[s],
-                );
+                self.f
+                    .system(self.x + self.h * dopri54::c::<T>(s + 1), &y_next, &mut k[s]);
                 if s == 5 {
                     y_stiff = y_next.clone();
                 }
@@ -302,34 +314,34 @@ where
 
             // Prepare dense output
             if self.out_type == OutputType::Dense {
-                self.rcont[4] = (&k[0] * dopri54::d(1)
-                    + &k[2] * dopri54::d(3)
-                    + &k[3] * dopri54::d(4)
-                    + &k[4] * dopri54::d(5)
-                    + &k[5] * dopri54::d(6)
-                    + &k[1] * dopri54::d(7))
+                self.rcont[4] = (&k[0] * dopri54::d::<T>(1)
+                    + &k[2] * dopri54::d::<T>(3)
+                    + &k[3] * dopri54::d::<T>(4)
+                    + &k[4] * dopri54::d::<T>(5)
+                    + &k[5] * dopri54::d::<T>(6)
+                    + &k[1] * dopri54::d::<T>(7))
                     * h;
             }
 
             // Compute error estimate
-            k[3] = (&k[0] * dopri54::e(1)
-                + &k[2] * dopri54::e(3)
-                + &k[3] * dopri54::e(4)
-                + &k[4] * dopri54::e(5)
-                + &k[5] * dopri54::e(6)
-                + &k[1] * dopri54::e(7))
+            k[3] = (&k[0] * dopri54::e::<T>(1)
+                + &k[2] * dopri54::e::<T>(3)
+                + &k[3] * dopri54::e::<T>(4)
+                + &k[4] * dopri54::e::<T>(5)
+                + &k[5] * dopri54::e::<T>(6)
+                + &k[1] * dopri54::e::<T>(7))
                 * h;
 
             // Compute error
-            let mut err = 0.0;
+            let mut err = T::zero();
             for i in 0..dim {
-                let y_i = f64::from(self.y[i]);
-                let y_next_i = f64::from(y_next[i]);
-                let sc_i: f64 = self.atol + y_i.abs().max(y_next_i.abs()) * self.rtol;
-                let err_est_i = f64::from(k[3][i]);
+                let y_i = T::from(self.y[i]).unwrap();
+                let y_next_i = T::from(y_next[i]).unwrap();
+                let sc_i: T = self.atol + y_i.abs().max(y_next_i.abs()) * self.rtol;
+                let err_est_i = T::from(k[3][i]).unwrap();
                 err += (err_est_i / sc_i) * (err_est_i / sc_i);
             }
-            err = (err / dim as f64).sqrt();
+            err = (err / T::from(dim).unwrap()).sqrt();
 
             // Step size control
             if self.controller.accept(err, self.h, &mut h_new) {
@@ -337,20 +349,22 @@ where
 
                 // Stifness detection
                 if self.stats.accepted_steps % self.n_stiff == 0 || iasti > 0 {
-                    let num = f64::from((&k[1] - &k[5]).dot(&(&k[1] - &k[5])));
-                    let den = f64::from((&y_next - &y_stiff).dot(&(&y_next - &y_stiff)));
-                    let h_lamb = if den > 0.0 {
+                    let num = T::from((&k[1] - &k[5]).dot(&(&k[1] - &k[5]))).unwrap();
+                    let den = T::from((&y_next - &y_stiff).dot(&(&y_next - &y_stiff))).unwrap();
+                    let h_lamb = if den > T::zero() {
                         self.h * (num / den).sqrt()
                     } else {
-                        0.0
+                        T::zero()
                     };
 
-                    if h_lamb > 3.25 {
+                    if h_lamb > T::from(3.25).unwrap() {
                         iasti += 1;
                         non_stiff = 0;
                         if iasti == 15 {
                             self.h_old = self.h;
-                            return Err(IntegrationError::StiffnessDetected { x: self.x });
+                            return Err(IntegrationError::StiffnessDetected {
+                                x: f64::from(self.x),
+                            });
                         }
                     } else {
                         non_stiff += 1;
@@ -362,7 +376,7 @@ where
 
                 // Prepare dense output
                 if self.out_type == OutputType::Dense {
-                    let h = self.h.to_subset().unwrap();
+                    let h = self.h;
 
                     let ydiff = &y_next - &self.y;
                     let bspl = &k[0] * h - &ydiff;
@@ -408,8 +422,8 @@ where
             while self.xd.abs() <= self.x.abs() {
                 if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
                     let theta = (self.xd - self.x_old) / self.h_old;
-                    let theta1 = (1.0 - theta).to_subset().unwrap();
-                    let theta = theta.to_subset().unwrap();
+                    let theta1 = T::one() - theta;
+                    //let theta = theta.to_subset().unwrap();
                     let y_out = &self.rcont[0]
                         + (&self.rcont[1]
                             + (&self.rcont[2]
@@ -426,7 +440,7 @@ where
     }
 
     /// Getter for the independent variable's output.
-    pub fn x_out(&self) -> &Vec<f64> {
+    pub fn x_out(&self) -> &Vec<T> {
         &self.results.get().0
     }
 
@@ -436,25 +450,24 @@ where
     }
 
     /// Getter for the results type, a pair of independent and dependent variables
-    pub fn results(&self) -> &SolverResult<OVector<T, D>> {
+    pub fn results(&self) -> &SolverResult<T, OVector<T, D>> {
         &self.results
     }
 }
 
-impl<T, D: Dim, F> Into<SolverResult<OVector<T, D>>> for Dopri5<OVector<T, D>, F>
+impl<T, D: Dim, F> Into<SolverResult<T, OVector<T, D>>> for Dopri5<T, OVector<T, D>, F>
 where
-    f64: From<T>,
-    T: Copy + SubsetOf<f64> + Scalar + ClosedAdd + ClosedMul + ClosedSub + Zero,
-    F: System<OVector<T, D>>,
+    T: FloatNumber,
+    F: System<T, OVector<T, D>>,
     DefaultAllocator: Allocator<T, D>,
 {
-    fn into(self) -> SolverResult<OVector<T, D>> {
+    fn into(self) -> SolverResult<T, OVector<T, D>> {
         self.results
     }
 }
 
-fn sign(a: f64, b: f64) -> f64 {
-    if b > 0.0 {
+fn sign<T: FloatNumber>(a: T, b: T) -> T {
+    if b > T::from(0.).unwrap() {
         a.abs()
     } else {
         -a.abs()
@@ -469,7 +482,7 @@ mod tests {
 
     // Same as Test3 from rk4.rs, but aborts after x is greater/equal than 0.5
     struct Test1 {}
-    impl<D: Dim> System<OVector<f64, D>> for Test1
+    impl<D: Dim> System<f64, OVector<f64, D>> for Test1
     where
         DefaultAllocator: Allocator<f64, D>,
     {

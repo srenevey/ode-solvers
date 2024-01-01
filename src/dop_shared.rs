@@ -1,23 +1,57 @@
 //! Shared traits and structures for dopri5 and dop853.
 
+use nalgebra::Scalar;
+use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
+use simba::scalar::{ClosedAdd, ClosedDiv, ClosedMul, ClosedNeg, ClosedSub, SubsetOf};
 use std::fmt;
 use thiserror::Error;
 
 /// Trait needed to be implemented by the user.
-pub trait System<V> {
+pub trait System<T, V>
+where
+    T: SubsetOf<f64>,
+{
     /// System of ordinary differential equations.
-    fn system(&self, x: f64, y: &V, dy: &mut V);
+    fn system(&self, x: T, y: &V, dy: &mut V);
     /// Stop function called at every successful integration step. The integration is stopped when this function returns true.
-    fn solout(&mut self, _x: f64, _y: &V, _dy: &V) -> bool {
+    fn solout(&mut self, _x: T, _y: &V, _dy: &V) -> bool {
         false
     }
 }
 
+/// A struct that holds the result of a solver/stepper run
 #[derive(Debug, Clone)]
-pub struct SolverResult<V>(Vec<f64>, Vec<V>);
+pub struct SolverResult<T, V>(Vec<T>, Vec<V>);
 
-impl<V> SolverResult<V> {
-    pub fn new(x: Vec<f64>, y: Vec<V>) -> Self {
+/// This trait combines several traits that are useful
+/// when writing generic code that shall work in f32 and f64
+///
+/// It is only implemented for f32 and f64 yet.
+pub trait FloatNumber:
+    Copy
+    + Float
+    + NumCast
+    + FromPrimitive
+    + SubsetOf<f64>
+    + Scalar
+    + ClosedAdd
+    + ClosedMul
+    + ClosedDiv
+    + ClosedSub
+    + ClosedNeg
+    + Zero
+    + One
+{
+}
+
+/// Implementation of the SolverNumFloat trait for f32
+impl FloatNumber for f32 {}
+
+/// Implementation of the SolverNumFloat trait for f64
+impl FloatNumber for f64 {}
+
+impl<T, V> SolverResult<T, V> {
+    pub fn new(x: Vec<T>, y: Vec<V>) -> Self {
         SolverResult { 0: x, 1: y }
     }
 
@@ -28,24 +62,24 @@ impl<V> SolverResult<V> {
         }
     }
 
-    pub fn push(&mut self, x: f64, y: V) {
+    pub fn push(&mut self, x: T, y: V) {
         self.0.push(x);
         self.1.push(y);
     }
 
-    pub fn append(&mut self, mut other: SolverResult<V>) {
+    pub fn append(&mut self, mut other: SolverResult<T, V>) {
         self.0.append(&mut other.0);
         self.1.append(&mut other.1);
     }
 
     /// Returns a pair that contains references to the internal vectors
-    pub fn get(&self) -> (&Vec<f64>, &Vec<V>) {
+    pub fn get(&self) -> (&Vec<T>, &Vec<V>) {
         (&self.0, &self.1)
     }
 }
 
 /// default implementation starts with empty vectors for x and y
-impl<V> Default for SolverResult<V> {
+impl<T, V> Default for SolverResult<T, V> {
     fn default() -> Self {
         Self {
             0: Default::default(),

@@ -5,3 +5,4 @@ outputs
 .DS_Store
 .idea
 Cargo.lock
+.vscode
