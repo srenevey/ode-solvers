@@ -85,9 +85,9 @@ where
             rtol,
             atol,
             results: SolverResult::default(),
-            uround: T::from(f64::EPSILON).unwrap(),
-            h: T::from(0.).unwrap(),
-            h_old: T::from(0.).unwrap(),
+            uround: T::epsilon(),
+            h: T::zero(),
+            h_old: T::zero(),
             n_max: 100000,
             n_stiff: 1000,
             controller: Controller::default(x, x_end),
@@ -149,7 +149,7 @@ where
             f,
             x,
             xd: x,
-            x_old: T::from(0.0).unwrap(),
+            x_old: T::zero(),
             x_end,
             dx,
             y,
@@ -158,7 +158,7 @@ where
             results: SolverResult::default(),
             uround: T::from(f64::EPSILON).unwrap(),
             h,
-            h_old: T::from(0.0).unwrap(),
+            h_old: T::zero(),
             n_max,
             n_stiff,
             controller: Controller::new(
@@ -168,7 +168,7 @@ where
                 fac_min,
                 h_max,
                 safety_factor,
-                sign(T::from(1.0).unwrap(), x_end - x),
+                sign(T::one(), x_end - x),
             ),
             out_type,
             rcont: [
@@ -202,7 +202,8 @@ where
         }
 
         // Compute h0
-        let mut h0 = if d0 < T::from(1.0E-10).unwrap() || d1 < T::from(1.0E-10).unwrap() {
+        let tol = T::from(1.0E-10).unwrap();
+        let mut h0 = if d0 < tol || d1 < tol {
             T::from(1.0E-6).unwrap()
         } else {
             T::from(0.01).unwrap() * (d0 / d1).sqrt()
@@ -423,7 +424,6 @@ where
                 if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
                     let theta = (self.xd - self.x_old) / self.h_old;
                     let theta1 = T::one() - theta;
-                    //let theta = theta.to_subset().unwrap();
                     let y_out = &self.rcont[0]
                         + (&self.rcont[1]
                             + (&self.rcont[2]
@@ -467,7 +467,7 @@ where
 }
 
 fn sign<T: FloatNumber>(a: T, b: T) -> T {
-    if b > T::from(0.).unwrap() {
+    if b > T::zero() {
         a.abs()
     } else {
         -a.abs()

@@ -210,7 +210,8 @@ where
         }
 
         // Compute h0
-        let mut h0 = if d0 < T::from(1.0E-10).unwrap() || d1 < T::from(1.0E-10).unwrap() {
+        let tol = T::from(1.0E-10).unwrap();
+        let mut h0 = if d0 < tol || d1 < tol {
             T::from(1.0E-6).unwrap()
         } else {
             T::from(0.01).unwrap() * (d0 / d1).sqrt()
@@ -239,7 +240,7 @@ where
                 .unwrap()
                 .max(h0.abs() * T::from(1.0E-3).unwrap())
         } else {
-            (T::from(0.01).unwrap() / (d1.sqrt().max(d2))).powf(T::one() / T::from(8.0).unwrap())
+            (T::from(0.01).unwrap() / (d1.sqrt().max(d2))).powf(T::from(0.125).unwrap())
         };
 
         sign(

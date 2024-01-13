@@ -61,7 +61,7 @@ where
             k,
             buffer,
             step_size,
-            half_step: step_size / T::from_f32(2.).unwrap(),
+            half_step: step_size / T::from(2.).unwrap(),
             results: SolverResult::with_capacity(num_steps),
             stats: Stats::new(),
         }
@@ -123,7 +123,7 @@ where
             let two = T::from(2.).unwrap();
             *y_elem = *y_elem
                 + (self.k[0][idx] + self.k[1][idx] * two + self.k[2][idx] * two + self.k[3][idx])
-                    * (self.step_size / T::from_f32(6.).unwrap());
+                    * (self.step_size / T::from(6.).unwrap());
         }
 
         // Early abortion check

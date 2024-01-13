@@ -38,7 +38,7 @@ impl<T: FloatNumber> Controller<T> {
         Controller {
             alpha,
             beta,
-            facc1: T::from(1.0).unwrap() / fac_min,
+            facc1: T::one() / fac_min,
             facc2: T::from(1.0).unwrap() / fac_max,
             fac_old: T::from(1.0E-4).unwrap(),
             h_max: h_max.abs(),

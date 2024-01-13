@@ -11,7 +11,7 @@ use thiserror::Error;
 /// The type parameter T should be either `f32` or `f64`, the trait [FloatNumber] is used
 /// internally to allow generic code.
 ///
-/// The type parameter V is a state vector. To have an easy start we recommend to use [nalgebra] vectors.
+/// The type parameter V is a state vector. To have an easy start it is recommend to use [nalgebra] vectors.
 /// ```rust
 /// // A predefined type for a vector (works from 1..6)
 /// type Precision = f64

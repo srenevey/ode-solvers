@@ -1,6 +1,6 @@
 // A bouncing ball example
 // This shows how to couple multiple calls of the ODE solver and move the ownership of the results to a custom data structure
-// This also useful for sequential simulation, e.g. for reactor cascades.
+// This is also useful for sequential simulation, e.g. for reactor cascades.
 
 use std::{fs::File, io::BufWriter, io::Write, path::Path};
 
@@ -40,7 +40,7 @@ fn main() {
         num_bounces = num_bounces + 1;
 
         // solout may not be called and therefore end not "smooth" when observing dense values with dopri5 or dop853
-        // therefore we seach for the point where the results turn zero
+        // Therefore we seach for the point where the results turn zero
         let (_, y_out) = stepper.results().get();
         let f = y_out.iter().find(|y| y[0] <= 0.);
         if f.is_none() {
@@ -49,7 +49,7 @@ fn main() {
         }
 
         let last_state = f.unwrap();
-        println!("Last state: {:?}\n\n", last_state);
+        println!("Last state: {:?}", last_state);
 
         y0[0] = last_state[0].abs();
         y0[1] = -1. * last_state[1] * BOUNCE;
