@@ -1,45 +1,32 @@
 //! Explicit Runge-Kutta method of order 4 with fixed step size.
 
-use std::ops::Mul;
+use crate::dop_shared::{FloatNumber, IntegrationError, SolverResult, Stats, System};
 
-use crate::dop_shared::{IntegrationError, Stats, System};
-
-use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector, Scalar};
-use num_traits::Zero;
-use simba::scalar::{ClosedAdd, ClosedMul, ClosedNeg, ClosedSub, SubsetOf};
+use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector};
 
 /// Structure containing the parameters for the numerical integration.
-pub struct Rk4<V, F>
+pub struct Rk4<T, V, F>
 where
-    F: System<V>,
+    F: System<T, V>,
+    T: FloatNumber,
 {
     f: F,
-    x: f64,
+    x: T,
     y: V,
-    x_end: f64,
+    x_end: T,
     k: [V; 4],
     buffer: V, // Used for temporary copies in step
-    step_size: f64,
-    half_step: f64,
-    x_out: Vec<f64>,
-    y_out: Vec<V>,
+    step_size: T,
+    half_step: T,
+    results: SolverResult<T, V>,
     stats: Stats,
 }
 
-impl<T, D: Dim, F> Rk4<OVector<T, D>, F>
+impl<T, D: Dim, F> Rk4<T, OVector<T, D>, F>
 where
-    f64: From<T>,
-    T: Copy
-        + SubsetOf<f64>
-        + Scalar
-        + ClosedAdd
-        + ClosedMul
-        + ClosedSub
-        + ClosedNeg
-        + Zero
-        + Mul<f64, Output = T>,
-    F: System<OVector<T, D>>,
-    OVector<T, D>: std::ops::Mul<f64, Output = OVector<T, D>>,
+    T: FloatNumber,
+    F: System<T, OVector<T, D>>,
+    OVector<T, D>: std::ops::Mul<T, Output = OVector<T, D>>,
     DefaultAllocator: Allocator<T, D>,
 {
     /// Default initializer for the structure
@@ -52,9 +39,9 @@ where
     /// * `x_end`       - Final value of the independent variable
     /// * `step_size`   - Step size used in the method
     ///
-    pub fn new(f: F, x: f64, y: OVector<T, D>, x_end: f64, step_size: f64) -> Self {
+    pub fn new(f: F, x: T, y: OVector<T, D>, x_end: T, step_size: T) -> Self {
         // Cheaper push while solving due to usage of Vec::with_capacity
-        let num_steps = ((x_end - x) / step_size).ceil() as usize;
+        let num_steps = (((x_end - x) / step_size).ceil()).to_usize().unwrap();
 
         // Preallocate k
         let (rows, cols) = y.shape_generic();
@@ -74,9 +61,8 @@ where
             k,
             buffer,
             step_size,
-            half_step: step_size / 2.,
-            x_out: Vec::with_capacity(num_steps),
-            y_out: Vec::with_capacity(num_steps),
+            half_step: step_size / T::from(2.).unwrap(),
+            results: SolverResult::with_capacity(num_steps),
             stats: Stats::new(),
         }
     }
@@ -84,10 +70,12 @@ where
     /// Core integration method.
     pub fn integrate(&mut self) -> Result<Stats, IntegrationError> {
         // Save initial values
-        self.x_out.push(self.x);
-        self.y_out.push(self.y.clone());
+        self.results.push(self.x, self.y.clone());
 
-        let num_steps = ((self.x_end - self.x) / self.step_size).ceil() as usize;
+        let num_steps = (((self.x_end - self.x) / self.step_size).ceil())
+            .to_usize()
+            .unwrap();
+
         for _ in 0..num_steps {
             let (x_new, y_new, abort) = self.step();
 
@@ -99,8 +87,7 @@ where
                     *y_self = *y_new_elem;
                 });
 
-            self.x_out.push(x_new);
-            self.y_out.push(y_new);
+            self.results.push(x_new, y_new);
 
             self.stats.num_eval += 4;
             self.stats.accepted_steps += 1;
@@ -113,7 +100,7 @@ where
     }
 
     /// Performs one step of the Runge-Kutta 4 method.
-    fn step(&mut self) -> (f64, OVector<T, D>, bool) {
+    fn step(&mut self) -> (T, OVector<T, D>, bool) {
         self.f.system(self.x, &self.y, &mut self.k[0]);
 
         self.populate_buffer(0, self.half_step);
@@ -133,9 +120,10 @@ where
         let mut y_new = self.y.clone();
 
         for (idx, y_elem) in y_new.iter_mut().enumerate() {
+            let two = T::from(2.).unwrap();
             *y_elem = *y_elem
-                + (self.k[0][idx] + self.k[1][idx] * 2. + self.k[2][idx] * 2. + self.k[3][idx])
-                    * (self.step_size / 6.);
+                + (self.k[0][idx] + self.k[1][idx] * two + self.k[2][idx] * two + self.k[3][idx])
+                    * (self.step_size / T::from(6.).unwrap());
         }
 
         // Early abortion check
@@ -144,7 +132,7 @@ where
     }
 
     /// Populate the buffer with the sum of y and the previous k-value
-    fn populate_buffer(&mut self, idx: usize, step: f64) {
+    fn populate_buffer(&mut self, idx: usize, step: T) {
         self.buffer
             .iter_mut()
             .zip(self.y.iter())
@@ -155,13 +143,29 @@ where
     }
 
     /// Getter for the independent variable's output.
-    pub fn x_out(&self) -> &Vec<f64> {
-        &self.x_out
+    pub fn x_out(&self) -> &Vec<T> {
+        &self.results.get().0
     }
 
     /// Getter for the dependent variables' output.
     pub fn y_out(&self) -> &Vec<OVector<T, D>> {
-        &self.y_out
+        &self.results.get().1
+    }
+
+    /// Getter for the results type, a pair of independent and dependent variables
+    pub fn results(&self) -> &SolverResult<T, OVector<T, D>> {
+        &self.results
+    }
+}
+
+impl<T, D: Dim, F> Into<SolverResult<T, OVector<T, D>>> for Rk4<T, OVector<T, D>, F>
+where
+    T: FloatNumber,
+    F: System<T, OVector<T, D>>,
+    DefaultAllocator: Allocator<T, D>,
+{
+    fn into(self) -> SolverResult<T, OVector<T, D>> {
+        self.results
     }
 }
 
@@ -172,7 +176,7 @@ mod tests {
     use nalgebra::{allocator::Allocator, DefaultAllocator, Dim};
 
     struct Test1 {}
-    impl<D: Dim> System<OVector<f64, D>> for Test1
+    impl<D: Dim> System<f64, OVector<f64, D>> for Test1
     where
         DefaultAllocator: Allocator<f64, D>,
     {
@@ -182,7 +186,7 @@ mod tests {
     }
 
     struct Test2 {}
-    impl<D: Dim> System<OVector<f64, D>> for Test2
+    impl<D: Dim> System<f64, OVector<f64, D>> for Test2
     where
         DefaultAllocator: Allocator<f64, D>,
     {
@@ -192,7 +196,7 @@ mod tests {
     }
 
     struct Test3 {}
-    impl<D: Dim> System<OVector<f64, D>> for Test3
+    impl<D: Dim> System<f64, OVector<f64, D>> for Test3
     where
         DefaultAllocator: Allocator<f64, D>,
     {
@@ -203,7 +207,7 @@ mod tests {
 
     // Same as Test3, but aborts after x is greater/equal than 0.5
     struct Test4 {}
-    impl<D: Dim> System<OVector<f64, D>> for Test4
+    impl<D: Dim> System<f64, OVector<f64, D>> for Test4
     where
         DefaultAllocator: Allocator<f64, D>,
     {

@@ -1,15 +1,105 @@
 //! Shared traits and structures for dopri5 and dop853.
 
+use nalgebra::Scalar;
+use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
+use simba::scalar::{ClosedAdd, ClosedDiv, ClosedMul, ClosedNeg, ClosedSub, SubsetOf};
 use std::fmt;
 use thiserror::Error;
 
-/// Trait needed to be implemented by the user.
-pub trait System<V> {
+/// Trait needed to be implemented by the user
+///
+/// The type parameter T should be either `f32` or `f64`, the trait [FloatNumber] is used
+/// internally to allow generic code.
+///
+/// The type parameter V is a state vector. To have an easy start it is recommend to use [nalgebra] vectors.
+/// ```rust
+/// // A predefined type for a vector (works from 1..6)
+/// type Precision = f64
+/// type State = Vector3<Precision>;
+/// type MySystem = System<Precision, State>
+///
+/// // Definition of a higher dimensional vector using nalgebra
+/// type AltState = SVector<Precision, 9>
+/// type MyAltSystem = System<Precision, State>
+/// ```
+pub trait System<T, V>
+where
+    T: FloatNumber,
+{
     /// System of ordinary differential equations.
-    fn system(&self, x: f64, y: &V, dy: &mut V);
+    fn system(&self, x: T, y: &V, dy: &mut V);
     /// Stop function called at every successful integration step. The integration is stopped when this function returns true.
-    fn solout(&mut self, _x: f64, _y: &V, _dy: &V) -> bool {
+    fn solout(&mut self, _x: T, _y: &V, _dy: &V) -> bool {
         false
+    }
+}
+
+/// A struct that holds the result of a solver/stepper run
+#[derive(Debug, Clone)]
+pub struct SolverResult<T, V>(Vec<T>, Vec<V>);
+
+/// This trait combines several traits that are useful
+/// when writing generic code that shall work in f32 and f64
+///
+/// It is only implemented for f32 and f64 yet.
+pub trait FloatNumber:
+    Copy
+    + Float
+    + NumCast
+    + FromPrimitive
+    + SubsetOf<f64>
+    + Scalar
+    + ClosedAdd
+    + ClosedMul
+    + ClosedDiv
+    + ClosedSub
+    + ClosedNeg
+    + Zero
+    + One
+{
+}
+
+/// Implementation of the SolverNumFloat trait for f32
+impl FloatNumber for f32 {}
+
+/// Implementation of the SolverNumFloat trait for f64
+impl FloatNumber for f64 {}
+
+impl<T, V> SolverResult<T, V> {
+    pub fn new(x: Vec<T>, y: Vec<V>) -> Self {
+        SolverResult { 0: x, 1: y }
+    }
+
+    pub fn with_capacity(n: usize) -> Self {
+        SolverResult {
+            0: Vec::with_capacity(n),
+            1: Vec::with_capacity(n),
+        }
+    }
+
+    pub fn push(&mut self, x: T, y: V) {
+        self.0.push(x);
+        self.1.push(y);
+    }
+
+    pub fn append(&mut self, mut other: SolverResult<T, V>) {
+        self.0.append(&mut other.0);
+        self.1.append(&mut other.1);
+    }
+
+    /// Returns a pair that contains references to the internal vectors
+    pub fn get(&self) -> (&Vec<T>, &Vec<V>) {
+        (&self.0, &self.1)
+    }
+}
+
+/// default implementation starts with empty vectors for x and y
+impl<T, V> Default for SolverResult<T, V> {
+    fn default() -> Self {
+        Self {
+            0: Default::default(),
+            1: Default::default(),
+        }
     }
 }
 
