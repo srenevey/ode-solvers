@@ -116,10 +116,6 @@
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="2"><a href="#acknowledgments" class="nav-link">Acknowledgments</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
             <li class="nav-item" data-level="2"><a href="#references" class="nav-link">References</a>
               <ul class="nav flex-column">
               </ul>
@@ -136,7 +132,7 @@
 <h2 id="installation">Installation</h2>
 <p>To start using the crate in your project, add the following dependency in your project's Cargo.toml file:</p>
 <pre><code class="language-rust">[dependencies]
-ode_solvers = &quot;0.3.7&quot;
+ode_solvers = &quot;0.4.x&quot;
 </code></pre>
 <p>Then, in your main file, add</p>
 <pre><code class="language-rust">use ode_solvers::*;
@@ -145,17 +141,17 @@ ode_solvers = &quot;0.3.7&quot;
 <p>The numerical integration methods implemented in the crate support multi-dimensional systems. In order to define the dimension of the system, declare a type alias for the state vector. For instance</p>
 <pre><code class="language-rust">type State = Vector3&lt;f64&gt;;
 </code></pre>
-<p>The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the <a href="https://nalgebra.org/">nalgebra</a> crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:</p>
+<p>The state representation of the system is based on the SVector&lt;T, D&gt; structure defined in the <a href="https://nalgebra.org/">nalgebra</a> crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T, D&gt;  where the second type parameter of SVector is a dimension. For instance, for a 9-dimensional system, one would have:</p>
 <pre><code class="language-rust">type State = SVector&lt;f64, 9&gt;;
 </code></pre>
 <p>Alternativly, one can also use the DVector&lt;T&gt; structure from the <a href="https://nalgebra.org/">nalgebra</a> crate as the state representation. When using a DVector&lt;T&gt;, the number of rows in the DVector&lt;T&gt; defines the dimension of the system.</p>
 <pre><code class="language-rust">type State = DVector&lt;f64&gt;;
 </code></pre>
 <h2 id="system-definition">System definition</h2>
-<p>The system of first order ODEs must be defined in the <code>system</code> method of the <code>System&lt;V&gt;</code> trait. Typically, this trait is defined for a structure containing some parameters of the model. The signature of the <code>System&lt;V&gt;</code> trait is:</p>
-<pre><code class="language-rust">pub trait System&lt;V&gt; {
-    fn system(&amp;self, x: f64, y: &amp;V, dy: &amp;mut V);
-    fn solout(&amp;self, _x: f64, _y: &amp;V, _dy: &amp;V) -&gt; bool {
+<p>The system of first order ODEs must be defined in the <code>system</code> method of the <code>System&lt;T, V&gt;</code> trait. Typically, this trait is defined for a structure containing some parameters of the model. The signature of the <code>System&lt;T, V&gt;</code> trait is:</p>
+<pre><code class="language-rust">pub trait System&lt;T, V&gt; {
+    fn system(&amp;self, x: T, y: &amp;V, dy: &amp;mut V);
+    fn solout(&amp;self, _x: T, _y: &amp;V, _dy: &amp;V) -&gt; bool {
         false
     }
 }
@@ -280,8 +276,6 @@ let y_out = stepper.y_out();
 <p>which are combined into a single error estimator</p>
 <p><center><script type="math/tex; mode=display">err=err_5\frac{err_5}{\sqrt{err_5^2+0.01err_3^2}}</script></center></p>
 <p>For a thorough discussion, see Hairer et al. [1].</p>
-<h2 id="acknowledgments">Acknowledgments</h2>
-<p>The Dopri5 and Dop853 algorithms implemented in this crate are described in references [1] and [2]. They were originally implemented in FORTRAN by E. Hairer and G. Wanner, Université de Genève, Switzerland. This Rust implementation has been adapted from the C version written by J. Colinge, Université de Genève, Switzerland and the C++ version written by Blake Ashby, Stanford University, USA.</p>
 <h2 id="references">References</h2>
 <p>[1] Hairer, E., Nørsett, S.P., Wanner, G., <em>Solving Ordinary Differential Equations I, Nonstiff Problems</em>, Second Revised Edition, Springer, 2008</p>
 <p>[2] Hairer, E., Wanner, G., <em>Solving Ordinary Differential Equations II, Stiff and Differential-Algebraic Problems</em>, Second Revised Edition, Springer, 2002</p>
@@ -370,5 +364,5 @@ let y_out = stepper.y_out();
 
 <!--
 MkDocs version : 1.3.1
-Build Date UTC : 2024-01-14 02:38:42.572823+00:00
+Build Date UTC : 2024-01-14 02:41:26.086723+00:00
 -->

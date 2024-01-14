@@ -105,6 +105,16 @@
 
 <h2 id="changelog">Changelog</h2>
 <ul>
+<li>0.4.0<ul>
+<li>Add generic type for the independent variable.</li>
+<li>Update internal representation of the solver result.</li>
+<li>Add bouncing ball example.</li>
+</ul>
+</li>
+<li>0.3.8<ul>
+<li>Update the Butcher tableaus to declare the coefficients as constant instead of heap allocating.</li>
+</ul>
+</li>
 <li>0.3.7<ul>
 <li>Fix a bug where the final step wouldn't be computed if rejected by the controller.</li>
 </ul>
@@ -118,7 +128,7 @@
 </ul>
 </li>
 <li>0.3.4<ul>
-<li>Update to nalgebra's OVector to support DVector and SVector.</li>
+<li>Update the methods to use nalgebra's OVector to support DVector and SVector.</li>
 <li>Update the dependencies.</li>
 </ul>
 </li>
@@ -155,7 +165,7 @@
 <li>Implement automatic stiffness detection.</li>
 <li>Implement "backward" integration by allowing <script type="math/tex">x_{end}</script> - <script type="math/tex">x_0</script> to be positive or negative.</li>
 <li>Fix a bug in sparse output of dopri5.</li>
-<li>Add the Lorenz attractor example.</li>
+<li>Add Lorenz attractor example.</li>
 </ul>
 </li>
 </ul></div>
