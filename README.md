@@ -14,7 +14,7 @@ To start using the crate in a project, the following dependency must be added in
 
 ```rust
 [dependencies]
-ode_solvers = "0.3.7"
+ode_solvers = "0.4.0"
 ```
 
 Then, in the main file, add
@@ -33,7 +33,7 @@ The numerical integration methods implemented in the crate support multi-dimensi
 type State = Vector3<f64>;
 ```
 
-The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the [nalgebra](https://nalgebra.org/) crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. Note that the type T must be f64. For instance, for a 9-dimensional system, one would have:
+The state representation of the system is based on the SVector&lt;T,D&gt; structure defined in the [nalgebra](https://nalgebra.org/) crate. For convenience, ode-solvers re-exports six types to work with systems of dimension 1 to 6: Vector1&lt;T&gt;,..., Vector6&lt;T&gt;. For higher dimensions, the user should import the nalgebra crate and define a SVector&lt;T,D&gt;  where the second type parameter of SVector is a dimension. For instance, for a 9-dimensional system, one would have:
 
 ```rust
 type State = SVector<f64, 9>;
@@ -48,12 +48,12 @@ type State = DVector<f64>;
 
 ## System definition
 
-The system of first order ODEs must be defined in the `system` method of the `System<V>` trait. Typically, this trait is defined for a structure containing some parameters of the model. The signature of the `System<V>` trait is:
+The system of first order ODEs must be defined in the `system` method of the `System<T, V>` trait. Typically, this trait is defined for a structure containing some parameters of the model. The signature of the `System<T, V>` trait is:
 
 ```rust
-pub trait System<V> {
-    fn system(&self, x: f64, y: &V, dy: &mut V);
-    fn solout(&self, _x: f64, _y: &V, _dy: &V) -> bool {
+pub trait System<T, V> {
+    fn system(&self, x: T, y: &V, dy: &mut V);
+    fn solout(&self, _x: T, _y: &V, _dy: &V) -> bool {
         false
     }
 }
@@ -99,7 +99,3 @@ let y_out = stepper.y_out();
 ```
 
 See the [homepage](https://srenevey.github.io/ode-solvers/) for more details.
-
-## Acknowledgments
-
-The Dopri5 and Dop853 algorithms implemented in this crate were originally implemented in FORTRAN by E. Hairer and G. Wanner, Université de Genève, Switzerland. This Rust implementation has been adapted from the C version written by J. Colinge, Université de Genève, Switzerland and the C++ version written by Blake Ashby, Stanford University, USA.
