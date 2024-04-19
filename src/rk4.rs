@@ -131,7 +131,7 @@ where
         (x_new, y_new, abort)
     }
 
-    /// Core mut integration method.
+    /// Core integration method, but mutable.
     pub fn mut_integrate(&mut self) -> Result<Stats, IntegrationError> {
         // Save initial values
         self.results.push(self.x, self.y.clone());
@@ -163,7 +163,7 @@ where
         Ok(self.stats)
     }
 
-    /// Performs one step of the Runge-Kutta 4 method.
+    /// Performs one step of the Runge-Kutta 4 method, but with mutable State.
     fn mut_step(&mut self) -> (T, OVector<T, D>, bool) {
         self.f.mut_system(self.x, &mut self.y, &mut self.k[0]);
 
