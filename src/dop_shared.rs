@@ -28,6 +28,10 @@ where
 {
     /// System of ordinary differential equations.
     fn system(&self, x: T, y: &V, dy: &mut V);
+
+    /// Mutable System of ordinary dfferential equations.
+    fn mut_system(&self, x: T, y: &mut V, dy: &mut V) {}
+
     /// Stop function called at every successful integration step. The integration is stopped when this function returns true.
     fn solout(&mut self, _x: T, _y: &V, _dy: &V) -> bool {
         false
