@@ -27,7 +27,7 @@ where
     T: FloatNumber,
     F: System<T, OVector<T, D>>,
     OVector<T, D>: std::ops::Mul<T, Output = OVector<T, D>>,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     /// Default initializer for the structure
     ///
@@ -162,7 +162,7 @@ impl<T, D: Dim, F> Into<SolverResult<T, OVector<T, D>>> for Rk4<T, OVector<T, D>
 where
     T: FloatNumber,
     F: System<T, OVector<T, D>>,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     fn into(self) -> SolverResult<T, OVector<T, D>> {
         self.results
@@ -178,7 +178,7 @@ mod tests {
     struct Test1 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test1
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = (x - y[0]) / 2.;
@@ -188,7 +188,7 @@ mod tests {
     struct Test2 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test2
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = -2. * x - y[0];
@@ -198,7 +198,7 @@ mod tests {
     struct Test3 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test3
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = (5. * x * x - y[0]) / (x + y[0]).exp();
@@ -209,7 +209,7 @@ mod tests {
     struct Test4 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test4
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = (5. * x * x - y[0]) / (x + y[0]).exp();

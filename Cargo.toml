@@ -16,7 +16,7 @@ categories = ["science"]
 license = "BSD-3-Clause"
 
 [dependencies]
-nalgebra = "0.32.3"
+nalgebra = "0.33.0"
 num-traits = "0.2.17"
-simba = "0.8.1"
+simba = "0.9.0"
 thiserror = "1.0.56"

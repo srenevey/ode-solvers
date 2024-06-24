@@ -2,7 +2,10 @@
 
 use nalgebra::Scalar;
 use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
-use simba::scalar::{ClosedAdd, ClosedDiv, ClosedMul, ClosedNeg, ClosedSub, SubsetOf};
+use simba::scalar::{
+    ClosedAdd, ClosedAddAssign, ClosedDiv, ClosedDivAssign, ClosedMul, ClosedMulAssign, ClosedNeg,
+    ClosedSub, ClosedSubAssign, SubsetOf,
+};
 use std::fmt;
 use thiserror::Error;
 
@@ -54,6 +57,10 @@ pub trait FloatNumber:
     + ClosedDiv
     + ClosedSub
     + ClosedNeg
+    + ClosedAddAssign
+    + ClosedMulAssign
+    + ClosedDivAssign
+    + ClosedSubAssign
     + Zero
     + One
 {
