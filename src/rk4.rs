@@ -33,7 +33,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `f`           - Structure implementing the System<V> trait
+    /// * `f`           - Structure implementing the [`System`] trait
     /// * `x`           - Initial value of the independent variable (usually time)
     /// * `y`           - Initial value of the dependent variable(s)
     /// * `x_end`       - Final value of the independent variable
