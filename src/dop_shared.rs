@@ -15,15 +15,18 @@ use thiserror::Error;
 /// internally to allow generic code.
 ///
 /// The type parameter V is a state vector. To have an easy start it is recommend to use [nalgebra] vectors.
-/// ```rust
+///
+/// ```
+/// use ode_solvers::{System, SVector, Vector3};
+///
 /// // A predefined type for a vector (works from 1..6)
-/// type Precision = f64
+/// type Precision = f64;
 /// type State = Vector3<Precision>;
-/// type MySystem = System<Precision, State>
+/// type MySystem = dyn System<Precision, State>;
 ///
 /// // Definition of a higher dimensional vector using nalgebra
-/// type AltState = SVector<Precision, 9>
-/// type MyAltSystem = System<Precision, State>
+/// type AltState = SVector<Precision, 9>;
+/// type MyAltSystem = dyn System<Precision, State>;
 /// ```
 pub trait System<T, V>
 where
