@@ -77,14 +77,11 @@ impl FloatNumber for f64 {}
 
 impl<T, V> SolverResult<T, V> {
     pub fn new(x: Vec<T>, y: Vec<V>) -> Self {
-        SolverResult { 0: x, 1: y }
+        SolverResult(x, y)
     }
 
     pub fn with_capacity(n: usize) -> Self {
-        SolverResult {
-            0: Vec::with_capacity(n),
-            1: Vec::with_capacity(n),
-        }
+        SolverResult(Vec::with_capacity(n), Vec::with_capacity(n))
     }
 
     pub fn push(&mut self, x: T, y: V) {
@@ -106,10 +103,7 @@ impl<T, V> SolverResult<T, V> {
 /// default implementation starts with empty vectors for x and y
 impl<T, V> Default for SolverResult<T, V> {
     fn default() -> Self {
-        Self {
-            0: Default::default(),
-            1: Default::default(),
-        }
+        Self(Default::default(), Default::default())
     }
 }
 

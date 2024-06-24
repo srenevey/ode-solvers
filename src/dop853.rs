@@ -489,7 +489,7 @@ where
                 // Early abortion check
                 if self
                     .f
-                    .solout(self.x, &self.results.get().1.last().unwrap(), &k[0])
+                    .solout(self.x, self.results.get().1.last().unwrap(), &k[0])
                 {
                     last = true;
                 }
@@ -547,12 +547,12 @@ where
 
     /// Getter for the independent variable's output.
     pub fn x_out(&self) -> &Vec<T> {
-        &self.results.get().0
+        self.results.get().0
     }
 
     /// Getter for the dependent variables' output.
     pub fn y_out(&self) -> &Vec<OVector<T, D>> {
-        &self.results.get().1
+        self.results.get().1
     }
 
     /// Getter for the results type, a pair of independent and dependent variables
@@ -561,14 +561,14 @@ where
     }
 }
 
-impl<T, D: Dim, F> Into<SolverResult<T, OVector<T, D>>> for Dop853<T, OVector<T, D>, F>
+impl<T, D: Dim, F> From<Dop853<T, OVector<T, D>, F>> for SolverResult<T, OVector<T, D>>
 where
     T: FloatNumber,
     F: System<T, OVector<T, D>>,
     DefaultAllocator: Allocator<D>,
 {
-    fn into(self) -> SolverResult<T, OVector<T, D>> {
-        self.results
+    fn from(val: Dop853<T, OVector<T, D>, F>) -> Self {
+        val.results
     }
 }
 
@@ -597,7 +597,7 @@ mod tests {
         }
 
         fn solout(&mut self, x: f64, _y: &OVector<f64, D>, _dy: &OVector<f64, D>) -> bool {
-            return x >= 0.5;
+            x >= 0.5
         }
     }
 

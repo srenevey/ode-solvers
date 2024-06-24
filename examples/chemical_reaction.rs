@@ -21,7 +21,7 @@ fn main() {
     // Handle result.
     match res {
         Ok(stats) => println!("{}", stats),
-        Err(e) => println!("An error occured: {}", e),
+        Err(e) => println!("An error occurred: {}", e),
     }
 }
 

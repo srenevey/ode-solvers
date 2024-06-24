@@ -121,8 +121,8 @@ where
 
         for (idx, y_elem) in y_new.iter_mut().enumerate() {
             let two = T::from(2.).unwrap();
-            *y_elem = *y_elem
-                + (self.k[0][idx] + self.k[1][idx] * two + self.k[2][idx] * two + self.k[3][idx])
+            *y_elem +=
+                (self.k[0][idx] + self.k[1][idx] * two + self.k[2][idx] * two + self.k[3][idx])
                     * (self.step_size / T::from(6.).unwrap());
         }
 
@@ -144,12 +144,12 @@ where
 
     /// Getter for the independent variable's output.
     pub fn x_out(&self) -> &Vec<T> {
-        &self.results.get().0
+        self.results.get().0
     }
 
     /// Getter for the dependent variables' output.
     pub fn y_out(&self) -> &Vec<OVector<T, D>> {
-        &self.results.get().1
+        self.results.get().1
     }
 
     /// Getter for the results type, a pair of independent and dependent variables
@@ -158,14 +158,14 @@ where
     }
 }
 
-impl<T, D: Dim, F> Into<SolverResult<T, OVector<T, D>>> for Rk4<T, OVector<T, D>, F>
+impl<T, D: Dim, F> From<Rk4<T, OVector<T, D>, F>> for SolverResult<T, OVector<T, D>>
 where
     T: FloatNumber,
     F: System<T, OVector<T, D>>,
     DefaultAllocator: Allocator<D>,
 {
-    fn into(self) -> SolverResult<T, OVector<T, D>> {
-        self.results
+    fn from(val: Rk4<T, OVector<T, D>, F>) -> Self {
+        val.results
     }
 }
 
@@ -216,7 +216,7 @@ mod tests {
         }
 
         fn solout(&mut self, x: f64, _y: &OVector<f64, D>, _dy: &OVector<f64, D>) -> bool {
-            return x >= 0.5;
+            x >= 0.5
         }
     }
 
