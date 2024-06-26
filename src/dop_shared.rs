@@ -2,7 +2,10 @@
 
 use nalgebra::Scalar;
 use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
-use simba::scalar::{ClosedAdd, ClosedDiv, ClosedMul, ClosedNeg, ClosedSub, SubsetOf};
+use simba::scalar::{
+    ClosedAdd, ClosedAddAssign, ClosedDiv, ClosedDivAssign, ClosedMul, ClosedMulAssign, ClosedNeg,
+    ClosedSub, ClosedSubAssign, SubsetOf,
+};
 use std::fmt;
 use thiserror::Error;
 
@@ -12,15 +15,18 @@ use thiserror::Error;
 /// internally to allow generic code.
 ///
 /// The type parameter V is a state vector. To have an easy start it is recommend to use [nalgebra] vectors.
-/// ```rust
+///
+/// ```
+/// use ode_solvers::{System, SVector, Vector3};
+///
 /// // A predefined type for a vector (works from 1..6)
-/// type Precision = f64
+/// type Precision = f64;
 /// type State = Vector3<Precision>;
-/// type MySystem = System<Precision, State>
+/// type MySystem = dyn System<Precision, State>;
 ///
 /// // Definition of a higher dimensional vector using nalgebra
-/// type AltState = SVector<Precision, 9>
-/// type MyAltSystem = System<Precision, State>
+/// type AltState = SVector<Precision, 9>;
+/// type MyAltSystem = dyn System<Precision, State>;
 /// ```
 pub trait System<T, V>
 where
@@ -54,6 +60,10 @@ pub trait FloatNumber:
     + ClosedDiv
     + ClosedSub
     + ClosedNeg
+    + ClosedAddAssign
+    + ClosedMulAssign
+    + ClosedDivAssign
+    + ClosedSubAssign
     + Zero
     + One
 {
@@ -67,14 +77,11 @@ impl FloatNumber for f64 {}
 
 impl<T, V> SolverResult<T, V> {
     pub fn new(x: Vec<T>, y: Vec<V>) -> Self {
-        SolverResult { 0: x, 1: y }
+        SolverResult(x, y)
     }
 
     pub fn with_capacity(n: usize) -> Self {
-        SolverResult {
-            0: Vec::with_capacity(n),
-            1: Vec::with_capacity(n),
-        }
+        SolverResult(Vec::with_capacity(n), Vec::with_capacity(n))
     }
 
     pub fn push(&mut self, x: T, y: V) {
@@ -96,10 +103,7 @@ impl<T, V> SolverResult<T, V> {
 /// default implementation starts with empty vectors for x and y
 impl<T, V> Default for SolverResult<T, V> {
     fn default() -> Self {
-        Self {
-            0: Default::default(),
-            1: Default::default(),
-        }
+        Self(Default::default(), Default::default())
     }
 }
 

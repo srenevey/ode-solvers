@@ -58,13 +58,13 @@ where
     T: FloatNumber,
     F: System<T, OVector<T, D>>,
     OVector<T, D>: std::ops::Mul<T, Output = OVector<T, D>>,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     /// Default initializer for the structure
     ///
     /// # Arguments
     ///
-    /// * `f`       - Structure implementing the System<V> trait
+    /// * `f`       - Structure implementing the [`System`] trait
     /// * `x`       - Initial value of the independent variable (usually time)
     /// * `x_end`   - Final value of the independent variable
     /// * `dx`      - Increment in the dense output. This argument has no effect if the output type is Sparse
@@ -107,7 +107,7 @@ where
     ///
     /// # Arguments
     ///
-    /// * `f`       - Structure implementing the System<V> trait
+    /// * `f`       - Structure implementing the [`System`] trait
     /// * `x`       - Initial value of the independent variable (usually time)
     /// * `x_end`   - Final value of the independent variable
     /// * `dx`      - Increment in the dense output. This argument has no effect if the output type is Sparse
@@ -441,12 +441,12 @@ where
 
     /// Getter for the independent variable's output.
     pub fn x_out(&self) -> &Vec<T> {
-        &self.results.get().0
+        self.results.get().0
     }
 
     /// Getter for the dependent variables' output.
     pub fn y_out(&self) -> &Vec<OVector<T, D>> {
-        &self.results.get().1
+        self.results.get().1
     }
 
     /// Getter for the results type, a pair of independent and dependent variables
@@ -455,14 +455,14 @@ where
     }
 }
 
-impl<T, D: Dim, F> Into<SolverResult<T, OVector<T, D>>> for Dopri5<T, OVector<T, D>, F>
+impl<T, D: Dim, F> From<Dopri5<T, OVector<T, D>, F>> for SolverResult<T, OVector<T, D>>
 where
     T: FloatNumber,
     F: System<T, OVector<T, D>>,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
-    fn into(self) -> SolverResult<T, OVector<T, D>> {
-        self.results
+    fn from(val: Dopri5<T, OVector<T, D>, F>) -> Self {
+        val.results
     }
 }
 
@@ -484,14 +484,14 @@ mod tests {
     struct Test1 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test1
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = (5. * x * x - y[0]) / (x + y[0]).exp();
         }
 
         fn solout(&mut self, x: f64, _y: &OVector<f64, D>, _dy: &OVector<f64, D>) -> bool {
-            return x >= 0.5;
+            x >= 0.5
         }
     }
 

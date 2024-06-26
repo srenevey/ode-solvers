@@ -27,13 +27,13 @@ where
     T: FloatNumber,
     F: System<T, OVector<T, D>>,
     OVector<T, D>: std::ops::Mul<T, Output = OVector<T, D>>,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     /// Default initializer for the structure
     ///
     /// # Arguments
     ///
-    /// * `f`           - Structure implementing the System<V> trait
+    /// * `f`           - Structure implementing the [`System`] trait
     /// * `x`           - Initial value of the independent variable (usually time)
     /// * `y`           - Initial value of the dependent variable(s)
     /// * `x_end`       - Final value of the independent variable
@@ -121,8 +121,8 @@ where
 
         for (idx, y_elem) in y_new.iter_mut().enumerate() {
             let two = T::from(2.).unwrap();
-            *y_elem = *y_elem
-                + (self.k[0][idx] + self.k[1][idx] * two + self.k[2][idx] * two + self.k[3][idx])
+            *y_elem +=
+                (self.k[0][idx] + self.k[1][idx] * two + self.k[2][idx] * two + self.k[3][idx])
                     * (self.step_size / T::from(6.).unwrap());
         }
 
@@ -144,12 +144,12 @@ where
 
     /// Getter for the independent variable's output.
     pub fn x_out(&self) -> &Vec<T> {
-        &self.results.get().0
+        self.results.get().0
     }
 
     /// Getter for the dependent variables' output.
     pub fn y_out(&self) -> &Vec<OVector<T, D>> {
-        &self.results.get().1
+        self.results.get().1
     }
 
     /// Getter for the results type, a pair of independent and dependent variables
@@ -158,14 +158,14 @@ where
     }
 }
 
-impl<T, D: Dim, F> Into<SolverResult<T, OVector<T, D>>> for Rk4<T, OVector<T, D>, F>
+impl<T, D: Dim, F> From<Rk4<T, OVector<T, D>, F>> for SolverResult<T, OVector<T, D>>
 where
     T: FloatNumber,
     F: System<T, OVector<T, D>>,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
-    fn into(self) -> SolverResult<T, OVector<T, D>> {
-        self.results
+    fn from(val: Rk4<T, OVector<T, D>, F>) -> Self {
+        val.results
     }
 }
 
@@ -178,7 +178,7 @@ mod tests {
     struct Test1 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test1
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = (x - y[0]) / 2.;
@@ -188,7 +188,7 @@ mod tests {
     struct Test2 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test2
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = -2. * x - y[0];
@@ -198,7 +198,7 @@ mod tests {
     struct Test3 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test3
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = (5. * x * x - y[0]) / (x + y[0]).exp();
@@ -209,14 +209,14 @@ mod tests {
     struct Test4 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test4
     where
-        DefaultAllocator: Allocator<f64, D>,
+        DefaultAllocator: Allocator<D>,
     {
         fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
             dy[0] = (5. * x * x - y[0]) / (x + y[0]).exp();
         }
 
         fn solout(&mut self, x: f64, _y: &OVector<f64, D>, _dy: &OVector<f64, D>) -> bool {
-            return x >= 0.5;
+            x >= 0.5
         }
     }
 

@@ -2,7 +2,12 @@
 // This shows how to couple multiple calls of the ODE solver and move the ownership of the results to a custom data structure
 // This is also useful for sequential simulation, e.g. for reactor cascades.
 
-use std::{fs::File, io::BufWriter, io::Write, path::Path};
+use std::{
+    fs::{create_dir_all, File},
+    io::BufWriter,
+    io::Write,
+    path::Path,
+};
 
 use ode_solvers::dop_shared::SolverResult;
 use ode_solvers::*;
@@ -34,10 +39,10 @@ fn main() {
         // Handle result.
         match res {
             Ok(stats) => println!("{}", stats),
-            Err(e) => println!("An error occured: {}", e),
+            Err(e) => println!("An error occurred: {}", e),
         }
 
-        num_bounces = num_bounces + 1;
+        num_bounces += 1;
 
         // solout may not be called and therefore end not "smooth" when observing dense values with dopri5 or dop853
         // Therefore we seach for the point where the results turn zero
@@ -72,7 +77,7 @@ struct BouncingBall;
 impl ode_solvers::System<Time, State> for BouncingBall {
     fn system(&self, _t: Time, y: &State, dy: &mut State) {
         dy[0] = y[1]; // location is changed by v
-        dy[1] = -G as f32; // v is changed by acc of gravity
+        dy[1] = -G; // v is changed by acc of gravity
     }
 
     fn solout(&mut self, _x: Time, y: &State, _dy: &State) -> bool {
@@ -80,8 +85,14 @@ impl ode_solvers::System<Time, State> for BouncingBall {
     }
 }
 
-pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {
+pub fn save(times: &[Time], states: &Vec<State>, filename: &Path) {
     // Create or open file
+    if let Some(dir) = filename.parent() {
+        if let Err(e) = create_dir_all(dir) {
+            println!("Could not create directory. Error: {:?}", e);
+            return;
+        }
+    }
     let file = match File::create(filename) {
         Err(e) => {
             println!("Could not open file. Error: {:?}", e);

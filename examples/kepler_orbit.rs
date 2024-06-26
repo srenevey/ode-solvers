@@ -7,7 +7,13 @@ use ode_solvers::*;
 type State = Vector6<f64>;
 type Time = f64;
 
-use std::{f64::consts::PI, fs::File, io::BufWriter, io::Write, path::Path};
+use std::{
+    f64::consts::PI,
+    fs::{create_dir_all, File},
+    io::BufWriter,
+    io::Write,
+    path::Path,
+};
 
 fn main() {
     // Create the structure containing the ODEs.
@@ -38,7 +44,7 @@ fn main() {
             save(stepper.x_out(), stepper.y_out(), path);
             println!("Results saved in: {:?}", path);
         }
-        Err(e) => println!("An error occured: {}", e),
+        Err(e) => println!("An error occurred: {}", e),
     }
 }
 
@@ -65,8 +71,14 @@ impl ode_solvers::System<f64, State> for KeplerOrbit {
     // }
 }
 
-pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {
+pub fn save(times: &[Time], states: &[State], filename: &Path) {
     // Create or open file
+    if let Some(dir) = filename.parent() {
+        if let Err(e) = create_dir_all(dir) {
+            println!("Could not create directory. Error: {:?}", e);
+            return;
+        }
+    }
     let file = match File::create(filename) {
         Err(e) => {
             println!("Could not open file. Error: {:?}", e);
