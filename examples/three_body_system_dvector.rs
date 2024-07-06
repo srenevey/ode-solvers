@@ -58,7 +58,7 @@ impl ode_solvers::System<f64, State> for ThreeBodyProblem {
     }
 }
 
-pub fn save(times: &Vec<Time>, states: &Vec<State>, filename: &Path) {
+pub fn save(times: &[Time], states: &[State], filename: &Path) {
     // Create or open file
     if let Some(dir) = filename.parent() {
         if let Err(e) = create_dir_all(dir) {
