@@ -14,7 +14,7 @@ To start using the crate in a project, the following dependency must be added in
 
 ```rust
 [dependencies]
-ode_solvers = "0.4.0"
+ode_solvers = "0.5.0"
 ```
 
 Then, in the main file, add
