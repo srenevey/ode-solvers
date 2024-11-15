@@ -131,6 +131,70 @@ where
         (x_new, y_new, abort)
     }
 
+    /// Core integration method, but mutable.
+    pub fn mut_integrate(&mut self) -> Result<Stats, IntegrationError> {
+        // Save initial values
+        self.results.push(self.x, self.y.clone());
+
+        let num_steps = (((self.x_end - self.x) / self.step_size).ceil())
+            .to_usize()
+            .unwrap();
+
+        for _ in 0..num_steps {
+            let (x_new, y_new, abort) = self.mut_step();
+
+            self.x = x_new;
+            self.y
+                .iter_mut()
+                .zip(y_new.iter())
+                .for_each(|(y_self, y_new_elem)| {
+                    *y_self = *y_new_elem;
+                });
+
+            self.results.push(x_new, y_new);
+
+            self.stats.num_eval += 4;
+            self.stats.accepted_steps += 1;
+
+            if abort {
+                break;
+            }
+        }
+        Ok(self.stats)
+    }
+
+    /// Performs one step of the Runge-Kutta 4 method, but with mutable State.
+    fn mut_step(&mut self) -> (T, OVector<T, D>, bool) {
+        self.f.mut_system(self.x, &mut self.y, &mut self.k[0]);
+
+        self.populate_buffer(0, self.half_step);
+        self.f
+            .mut_system(self.x + self.half_step, &mut self.buffer, &mut self.k[1]);
+
+        self.populate_buffer(1, self.half_step);
+        self.f
+            .mut_system(self.x + self.half_step, &mut self.buffer, &mut self.k[2]);
+
+        self.populate_buffer(2, self.step_size);
+        self.f
+            .mut_system(self.x + self.step_size, &mut self.buffer, &mut self.k[3]);
+
+        let x_new = self.x + self.step_size;
+
+        let mut y_new = self.y.clone();
+
+        for (idx, y_elem) in y_new.iter_mut().enumerate() {
+            let two = T::from(2.).unwrap();
+            *y_elem = *y_elem
+                + (self.k[0][idx] + self.k[1][idx] * two + self.k[2][idx] * two + self.k[3][idx])
+                    * (self.step_size / T::from(6.).unwrap());
+        }
+
+        // Early abortion check
+        let abort = self.f.solout(x_new, &y_new, &self.k[0]);
+        (x_new, y_new, abort)
+    }
+
     /// Populate the buffer with the sum of y and the previous k-value
     fn populate_buffer(&mut self, idx: usize, step: T) {
         self.buffer
