@@ -1,10 +1,10 @@
 //! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 5(4) and dense output of order 4.
 
 use crate::butcher_tableau::dopri54;
+use crate::continuous_output_model::ContinuousOutputModel;
 use crate::controller::Controller;
 use crate::dop_shared::*;
-
-use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector};
+use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, MatrixSum, OVector, U1};
 
 trait DefaultController<T: FloatNumber> {
     fn default(x: T, x_end: T) -> Self;
@@ -119,9 +119,9 @@ where
     /// * `fac_min` - Minimum factor between two successive steps. Default is 0.2
     /// * `fac_max` - Maximum factor between two successive steps. Default is 10.0
     /// * `h_max`   - Maximum step size. Default is `x_end-x`
-    /// * `h`       - Initial value of the step size. If h = 0.0, the intial value of h is computed automatically
+    /// * `h`       - Initial value of the step size. If h = 0.0, the initial value of h is computed automatically
     /// * `n_max`   - Maximum number of iterations. Default is 100000
-    /// * `n_stiff` - Stifness is tested when the number of iterations is a multiple of n_stiff. Default is 1000
+    /// * `n_stiff` - Stiffness is tested when the number of iterations is a multiple of n_stiff. Default is 1000
     /// * `out_type`    - Type of the output. Must be a variant of the OutputType enum. Default is Dense
     ///
     #[allow(clippy::too_many_arguments)]
@@ -182,7 +182,7 @@ where
         }
     }
 
-    /// Compute the initial stepsize
+    /// Computes the initial step size
     fn hinit(&self) -> T {
         let (rows, cols) = self.y.shape_generic();
         let mut f0 = OVector::zeros_generic(rows, cols);
@@ -241,9 +241,25 @@ where
         )
     }
 
-    /// Core integration method.
+    /// Integrates the system and builds a continuous output model.
+    pub fn integrate_with_continuous_output_model(
+        &mut self,
+        continuous_output: &mut ContinuousOutputModel<T, OVector<T, D>>,
+    ) -> Result<Stats, IntegrationError> {
+        self.integrate_core(Some(continuous_output))
+    }
+
+    /// Integrates the system.
     pub fn integrate(&mut self) -> Result<Stats, IntegrationError> {
-        // Initilization
+        self.integrate_core(None)
+    }
+
+    /// Core integration method.
+    fn integrate_core(
+        &mut self,
+        mut continuous_output_model: Option<&mut ContinuousOutputModel<T, OVector<T, D>>>,
+    ) -> Result<Stats, IntegrationError> {
+        // Initialization
         let (rows, cols) = self.y.shape_generic();
         self.x_old = self.x;
         let mut n_step = 0;
@@ -253,6 +269,11 @@ where
         let mut non_stiff = 0;
         let mut iasti = 0;
         let posneg = sign(T::one(), self.x_end - self.x);
+
+        // Initialize the lower bound of the continuous output model if one is present
+        if let Some(output) = continuous_output_model.as_deref_mut() {
+            output.set_lower_bound(self.x);
+        }
 
         if self.h == T::zero() {
             self.h = self.hinit();
@@ -348,7 +369,7 @@ where
             if self.controller.accept(err, self.h, &mut h_new) {
                 self.stats.accepted_steps += 1;
 
-                // Stifness detection
+                // Stiffness detection
                 if self.stats.accepted_steps % self.n_stiff == 0 || iasti > 0 {
                     let num = T::from((&k[1] - &k[5]).dot(&(&k[1] - &k[5]))).unwrap();
                     let den = T::from((&y_next - &y_stiff).dot(&(&y_next - &y_stiff))).unwrap();
@@ -393,7 +414,7 @@ where
                 self.x += self.h;
                 self.h_old = self.h;
 
-                self.solution_output(y_next, &k);
+                self.solution_output(y_next, &mut continuous_output_model);
 
                 if self
                     .f
@@ -418,25 +439,46 @@ where
         Ok(self.stats)
     }
 
-    fn solution_output(&mut self, y_next: OVector<T, D>, _k: &[OVector<T, D>]) {
+    fn solution_output(
+        &mut self,
+        y_next: OVector<T, D>,
+        continuous_output_model: &mut Option<&mut ContinuousOutputModel<T, OVector<T, D>>>,
+    ) {
         if self.out_type == OutputType::Dense {
             while self.xd.abs() <= self.x.abs() {
                 if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
                     let theta = (self.xd - self.x_old) / self.h_old;
                     let theta1 = T::one() - theta;
-                    let y_out = &self.rcont[0]
-                        + (&self.rcont[1]
-                            + (&self.rcont[2]
-                                + (&self.rcont[3] + &self.rcont[4] * theta1) * theta)
-                                * theta1)
-                            * theta;
+                    let y_out = self.compute_y_out(theta, theta1);
                     self.results.push(self.xd, y_out);
                     self.xd += self.dx;
                 }
             }
+
+            // Ensure the last point is added if it's within floating point error of x_end.
+            if (self.xd - self.x_end).abs() < T::from(1e-9).unwrap() {
+                let theta = (self.x_end - self.x_old) / self.h_old;
+                let theta1 = T::one() - theta;
+                let y_out = self.compute_y_out(theta, theta1);
+                self.results.push(self.x_end, y_out);
+                self.xd += self.dx;
+            }
         } else {
             self.results.push(self.x, y_next)
         }
+
+        // Update the continuous output model if one is present
+        if let Some(output) = continuous_output_model.as_deref_mut() {
+            output.add_interval(self.x.abs(), self.rcont.to_vec(), self.h_old);
+        }
+    }
+
+    /// Computes the value of y for given theta and theta1 values.
+    fn compute_y_out(&mut self, theta: T, theta1: T) -> MatrixSum<T, D, U1, D, U1> {
+        &self.rcont[0]
+            + (&self.rcont[1]
+                + (&self.rcont[2] + (&self.rcont[3] + &self.rcont[4] * theta1) * theta) * theta1)
+                * theta
     }
 
     /// Getter for the independent variable's output.
@@ -463,14 +505,6 @@ where
 {
     fn from(val: Dopri5<T, OVector<T, D>, F>) -> Self {
         val.results
-    }
-}
-
-fn sign<T: FloatNumber>(a: T, b: T) -> T {
-    if b > T::zero() {
-        a.abs()
-    } else {
-        -a.abs()
     }
 }
 

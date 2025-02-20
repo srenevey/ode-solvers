@@ -14,7 +14,7 @@ To start using the crate in a project, the following dependency must be added in
 
 ```rust
 [dependencies]
-ode_solvers = "0.5.0"
+ode_solvers = "0.6.0"
 ```
 
 Then, in the main file, add
@@ -97,5 +97,18 @@ and the results are retrieved with
 let x_out = stepper.x_out();
 let y_out = stepper.y_out();
 ```
+
+## Continuous Output Model
+A continuous output model can be built when solving a system with Dopri5
+```rust
+let mut stepper = Dopri5::new(system, x0, x_end, dx, y0, rtol, atol);
+let mut continuous_output_model = ContinuousOutputModel::default();
+let res = stepper.integrate_with_continuous_output_model(&mut continuous_output_model);
+```
+The continuous output model can then be used to evaluate the solution at any point in the integration interval by calling the `evaluate(x: T)` method
+```rust
+let value = continuous_output_model.evaluate(1.2);
+```
+This method returns an `Option<State>` which is `None` if the interrogation point is outside the integration interval. The continuous output model is serializable which allows it to be saved and loaded independently of the system definition and integration process.
 
 See the [homepage](https://srenevey.github.io/ode-solvers/) for more details.
