@@ -105,7 +105,17 @@
 
 <h2 id="changelog">Changelog</h2>
 <ul>
-<li>0.5.0<ul>
+<li>
+<p>0.6.0</p>
+<ul>
+<li>Implement continuous output model to evaluate the solution at any point in the integration interval.</li>
+<li>Update Dopri5 and Dop853 to ensure that the last point is added if it's within floating point error of the upper bound of the integration.</li>
+<li>Add integration tests for Dopri5.</li>
+</ul>
+</li>
+<li>
+<p>0.5.0</p>
+<ul>
 <li>Update <code>nalgebra</code> and <code>simba</code> dependencies.</li>
 </ul>
 </li>
