@@ -41,7 +41,7 @@ struct ThreeBodyProblem {
     mu: f64,
 }
 
-impl ode_solvers::System<f64, State> for ThreeBodyProblem {
+impl System<f64, State> for ThreeBodyProblem {
     fn system(&self, _t: Time, y: &State, dy: &mut State) {
         let d = ((y[0] + self.mu).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();
         let r = ((y[0] - 1.0 + self.mu).powi(2) + y[1].powi(2) + y[2].powi(2)).sqrt();

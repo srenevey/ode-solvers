@@ -52,7 +52,7 @@ struct KeplerOrbit {
     mu: f64,
 }
 
-impl ode_solvers::System<f64, State> for KeplerOrbit {
+impl System<f64, State> for KeplerOrbit {
     // Equations of motion of the system
     fn system(&self, _t: Time, y: &State, dy: &mut State) {
         let r = (y[0] * y[0] + y[1] * y[1] + y[2] * y[2]).sqrt();

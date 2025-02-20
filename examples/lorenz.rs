@@ -45,7 +45,7 @@ struct LorenzAttractor {
     rho: f64,
 }
 
-impl ode_solvers::System<f64, State> for LorenzAttractor {
+impl System<f64, State> for LorenzAttractor {
     fn system(&self, _t: Time, y: &State, dy: &mut State) {
         dy[0] = self.sigma * (y[1] - y[0]);
         dy[1] = y[0] * (self.rho - y[2]) - y[1];

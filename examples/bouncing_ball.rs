@@ -45,7 +45,7 @@ fn main() {
         num_bounces += 1;
 
         // solout may not be called and therefore end not "smooth" when observing dense values with dopri5 or dop853
-        // Therefore we seach for the point where the results turn zero
+        // Therefore we search for the point where the results turn zero
         let (_, y_out) = stepper.results().get();
         let f = y_out.iter().find(|y| y[0] <= 0.);
         if f.is_none() {
@@ -59,7 +59,7 @@ fn main() {
         y0[0] = last_state[0].abs();
         y0[1] = -1. * last_state[1] * BOUNCE;
 
-        // beware in the case of dopri5 or dop853 the results contain a lot of invalid data with y[0] < 0
+        // Note that in the case of dopri5 or dop853, the results contain a lot of invalid data with y[0] < 0
         combined_solver_results.append(stepper.into());
     }
 
@@ -74,7 +74,7 @@ fn main() {
 
 struct BouncingBall;
 
-impl ode_solvers::System<Time, State> for BouncingBall {
+impl System<Time, State> for BouncingBall {
     fn system(&self, _t: Time, y: &State, dy: &mut State) {
         dy[0] = y[1]; // location is changed by v
         dy[1] = -G; // v is changed by acc of gravity
