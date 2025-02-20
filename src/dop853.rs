@@ -4,7 +4,7 @@ use crate::butcher_tableau::dopri853;
 use crate::controller::Controller;
 use crate::dop_shared::*;
 
-use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector};
+use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, MatrixSum, OVector, U1};
 
 trait DefaultController<T: FloatNumber> {
     fn default(x: T, x_end: T) -> Self;
@@ -123,9 +123,9 @@ where
     /// * `fac_min` - Minimum factor between two successive steps. Default is 0.333
     /// * `fac_max` - Maximum factor between two successive steps. Default is 6.0
     /// * `h_max`   - Maximum step size. Default is `x_end-x
-    /// * `h`       - Initial value of the step size. If h = 0.0, the intial value of h is computed automatically
+    /// * `h`       - Initial value of the step size. If h = 0.0, the initial value of h is computed automatically
     /// * `n_max`   - Maximum number of iterations. Default is 100000
-    /// * `n_stiff` - Stifness is tested when the number of iterations is a multiple of n_stiff. Default is 1000
+    /// * `n_stiff` - Stiffness is tested when the number of iterations is a multiple of n_stiff. Default is 1000
     /// * `out_type`    - Type of the output. Must be a variant of the OutputType enum. Default is Dense
     ///
     #[allow(clippy::too_many_arguments)]
@@ -190,7 +190,7 @@ where
         }
     }
 
-    /// Compute the initial stepsize
+    /// Computes the initial step size.
     fn hinit(&self) -> T {
         let (rows, cols) = self.y.shape_generic();
         let mut f0 = OVector::zeros_generic(rows, cols);
@@ -367,7 +367,7 @@ where
                 self.f.system(self.x + self.h, &y_tmp, &mut k[3]);
                 self.stats.num_eval += 1;
 
-                // Stifness detection
+                // Stiffness detection
                 if self.stats.accepted_steps % self.n_stiff == 0 || iasti > 0 {
                     let num = T::from((&k[3] - &k[2]).dot(&(&k[3] - &k[2]))).unwrap();
                     let den = T::from((&k[4] - &y_next).dot(&(&k[4] - &y_next))).unwrap();
@@ -521,28 +521,40 @@ where
                     if self.x_old.abs() <= self.xd.abs() && self.x.abs() >= self.xd.abs() {
                         let theta = (self.xd - self.x_old) / self.h_old;
                         let theta1 = T::one() - theta;
-
-                        let y_out = &self.rcont[0]
-                            + (&self.rcont[1]
-                                + (&self.rcont[2]
-                                    + (&self.rcont[3]
-                                        + (&self.rcont[4]
-                                            + (&self.rcont[5]
-                                                + (&self.rcont[6] + &self.rcont[7] * theta)
-                                                    * theta1)
-                                                * theta)
-                                            * theta1)
-                                        * theta)
-                                    * theta1)
-                                * theta;
+                        let y_out = self.compute_y_out(theta, theta1);
                         self.results.push(self.xd, y_out);
                         self.xd += self.dx;
                     }
                 }
+
+                // Ensure the last point is added if it's within floating point error of x_end.
+                if (self.xd - self.x_end).abs() < T::from(1e-9).unwrap() {
+                    let theta = (self.x_end - self.x_old) / self.h_old;
+                    let theta1 = T::one() - theta;
+                    let y_out = self.compute_y_out(theta, theta1);
+                    self.results.push(self.x_end, y_out);
+                    self.xd += self.dx;
+                }
             }
         } else {
-            self.results.push(self.x0, y_next);
+            self.results.push(self.x0, y_next.clone());
         }
+    }
+
+    /// Computes the value of y for given theta and theta1 values.
+    fn compute_y_out(&mut self, theta: T, theta1: T) -> MatrixSum<T, D, U1, D, U1> {
+        &self.rcont[0]
+            + (&self.rcont[1]
+                + (&self.rcont[2]
+                    + (&self.rcont[3]
+                        + (&self.rcont[4]
+                            + (&self.rcont[5]
+                                + (&self.rcont[6] + &self.rcont[7] * theta) * theta1)
+                                * theta)
+                            * theta1)
+                        * theta)
+                    * theta1)
+                * theta
     }
 
     /// Getter for the independent variable's output.
@@ -569,14 +581,6 @@ where
 {
     fn from(val: Dop853<T, OVector<T, D>, F>) -> Self {
         val.results
-    }
-}
-
-fn sign<T: FloatNumber>(a: T, b: T) -> T {
-    if b > T::zero() {
-        a.abs()
-    } else {
-        -a.abs()
     }
 }
 

@@ -14,7 +14,7 @@ use thiserror::Error;
 /// The type parameter T should be either `f32` or `f64`, the trait [FloatNumber] is used
 /// internally to allow generic code.
 ///
-/// The type parameter V is a state vector. To have an easy start it is recommend to use [nalgebra] vectors.
+/// The type parameter V is a state vector. To have an easy start it is recommended to use [nalgebra] vectors.
 ///
 /// ```
 /// use ode_solvers::{System, SVector, Vector3};
@@ -34,6 +34,7 @@ where
 {
     /// System of ordinary differential equations.
     fn system(&self, x: T, y: &V, dy: &mut V);
+
     /// Stop function called at every successful integration step. The integration is stopped when this function returns true.
     fn solout(&mut self, _x: T, _y: &V, _dy: &V) -> bool {
         false
@@ -141,12 +142,6 @@ impl Stats {
             rejected_steps: 0,
         }
     }
-
-    /// Prints some statistics related to the integration process.
-    #[deprecated(since = "0.2.0", note = "Use std::fmt::Display instead")]
-    pub fn print(&self) {
-        println!("{}", self);
-    }
 }
 
 impl fmt::Display for Stats {
@@ -154,5 +149,13 @@ impl fmt::Display for Stats {
         writeln!(f, "Number of function evaluations: {}", self.num_eval)?;
         writeln!(f, "Number of accepted steps: {}", self.accepted_steps)?;
         write!(f, "Number of rejected steps: {}", self.rejected_steps)
+    }
+}
+
+pub(crate) fn sign<T: FloatNumber>(a: T, b: T) -> T {
+    if b > T::zero() {
+        a.abs()
+    } else {
+        -a.abs()
     }
 }
