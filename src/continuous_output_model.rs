@@ -75,12 +75,6 @@ where
         coefficients: Vec<OVector<T, D>>,
         step_size: T,
     ) {
-        debug_assert!(
-            self.breakpoints
-                .last()
-                .map_or(true, |&last| breakpoint > last),
-            "Breakpoints must be added in ascending order"
-        );
         self.breakpoints.push(breakpoint);
         self.intervals.push(Interval {
             coefficients,

@@ -113,6 +113,7 @@ impl<T, V> Default for SolverResult<T, V> {
 pub enum OutputType {
     Dense,
     Sparse,
+    Continuous,
 }
 
 /// Enumeration of the errors that may arise during integration.

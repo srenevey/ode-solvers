@@ -246,11 +246,15 @@ where
         &mut self,
         continuous_output: &mut ContinuousOutputModel<T, OVector<T, D>>,
     ) -> Result<Stats, IntegrationError> {
+        self.out_type = OutputType::Continuous;
         self.integrate_core(Some(continuous_output))
     }
 
     /// Integrates the system.
     pub fn integrate(&mut self) -> Result<Stats, IntegrationError> {
+        if self.out_type == OutputType::Continuous {
+            panic!("Please use `integrate_with_continuous_output_model` to compute a continuous output model.");
+        }
         self.integrate_core(None)
     }
 
@@ -334,8 +338,8 @@ where
             k[1] = k[6].clone();
             self.stats.num_eval += 6;
 
-            // Prepare dense output
-            if self.out_type == OutputType::Dense {
+            // Prepare dense/continuous output
+            if self.out_type == OutputType::Dense || self.out_type == OutputType::Continuous {
                 self.rcont[4] = (&k[0] * dopri54::d::<T>(1)
                     + &k[2] * dopri54::d::<T>(3)
                     + &k[3] * dopri54::d::<T>(4)
@@ -396,8 +400,8 @@ where
                     }
                 }
 
-                // Prepare dense output
-                if self.out_type == OutputType::Dense {
+                // Prepare dense/continuous output
+                if self.out_type == OutputType::Dense || self.out_type == OutputType::Continuous {
                     let h = self.h;
 
                     let ydiff = &y_next - &self.y;
@@ -414,7 +418,7 @@ where
                 self.x += self.h;
                 self.h_old = self.h;
 
-                self.solution_output(y_next, &mut continuous_output_model);
+                self.solution_output(y_next, &mut continuous_output_model, &k[0]);
 
                 if self
                     .f
@@ -443,6 +447,7 @@ where
         &mut self,
         y_next: OVector<T, D>,
         continuous_output_model: &mut Option<&mut ContinuousOutputModel<T, OVector<T, D>>>,
+        dy: &OVector<T, D>,
     ) {
         if self.out_type == OutputType::Dense {
             while self.xd.abs() <= self.x.abs() {
@@ -452,6 +457,13 @@ where
                     let y_out = self.compute_y_out(theta, theta1);
                     self.results.push(self.xd, y_out);
                     self.xd += self.dx;
+                }
+
+                if self
+                    .f
+                    .solout(self.xd, self.results.get().1.last().unwrap(), dy)
+                {
+                    break;
                 }
             }
 
@@ -514,7 +526,7 @@ mod tests {
     use crate::{OVector, System, Vector1};
     use nalgebra::{allocator::Allocator, DefaultAllocator, Dim};
 
-    // Same as Test3 from rk4.rs, but aborts after x is greater/equal than 0.5
+    // Same as Test3 from rk4.rs, but aborts after x is equal to or greater than 0.5
     struct Test1 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test1
     where
@@ -536,9 +548,34 @@ mod tests {
         let _ = stepper.integrate();
 
         let x = stepper.x_out();
-        assert!((*x.last().unwrap() - 0.5).abs() < 1.0E-9); //
+        assert!((*x.last().unwrap() - 0.5).abs() < 1.0E-9);
 
         let out = stepper.y_out();
-        assert!((&out[5][0] - 0.913059243).abs() < 1.0E-9);
+        assert!((&out[5][0] - 0.9130611474392001).abs() < 1.0E-9);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_integrate_when_continuous_output_type_panic() {
+        let system = Test1 {};
+        let mut stepper = Dopri5::from_param(
+            system,
+            0.,
+            1.,
+            0.1,
+            Vector1::new(1.),
+            1e-12,
+            1e-6,
+            0.1,
+            0.2,
+            0.3,
+            2.0,
+            5.0,
+            0.1,
+            10000,
+            1000,
+            OutputType::Continuous,
+        );
+        let _ = stepper.integrate();
     }
 }

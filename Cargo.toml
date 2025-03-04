@@ -1,6 +1,6 @@
 [package]
 name = "ode_solvers"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Sylvain Renevey <syl.renevey@gmail.com>"]
 description = "Numerical methods to solve ordinary differential equations (ODEs) in Rust."
 edition = "2021"
