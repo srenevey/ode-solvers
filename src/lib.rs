@@ -9,6 +9,7 @@ use nalgebra as na;
 
 // Declare modules
 pub mod butcher_tableau;
+mod constants;
 pub mod continuous_output_model;
 pub mod controller;
 pub mod dop853;

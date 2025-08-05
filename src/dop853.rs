@@ -1,6 +1,7 @@
 //! Explicit Runge-Kutta method with Dormand-Prince coefficients of order 8(5,3) and dense output of order 7.
 
 use crate::butcher_tableau::dopri853;
+use crate::constants::{dense_output, initial_step, stiffness};
 use crate::controller::Controller;
 use crate::dop_shared::*;
 
@@ -210,11 +211,11 @@ where
         }
 
         // Compute h0
-        let tol = T::from(1.0E-10).unwrap();
-        let mut h0 = if d0 < tol || d1 < tol {
-            T::from(1.0E-6).unwrap()
+        let tol = initial_step::min_tolerance();
+        let mut h0: T = if d0 < tol || d1 < tol {
+            initial_step::default_initial_step()
         } else {
-            T::from(0.01).unwrap() * (d0 / d1).sqrt()
+            initial_step::safety_factor::<T>() * (d0 / d1).sqrt()
         };
 
         h0 = h0.min(self.controller.h_max());
@@ -377,10 +378,10 @@ where
                         T::zero()
                     };
 
-                    if h_lamb > T::from(6.1).unwrap() {
+                    if h_lamb > stiffness::dop853_threshold() {
                         non_stiff = 0;
                         iasti += 1;
-                        if iasti == 15 {
+                        if iasti == stiffness::MAX_STIFF_ITERATIONS {
                             self.h_old = self.h;
                             return Err(IntegrationError::StiffnessDetected {
                                 x: f64::from(self.x),
@@ -388,7 +389,7 @@ where
                         }
                     } else {
                         non_stiff += 1;
-                        if non_stiff == 6 {
+                        if non_stiff == stiffness::NON_STIFF_RESET_COUNT {
                             iasti = 0;
                         }
                     }
@@ -528,7 +529,7 @@ where
                 }
 
                 // Ensure the last point is added if it's within floating point error of x_end.
-                if (self.xd - self.x_end).abs() < T::from(1e-9).unwrap() {
+                if (self.xd - self.x_end).abs() < dense_output::endpoint_tolerance() {
                     let theta = (self.x_end - self.x_old) / self.h_old;
                     let theta1 = T::one() - theta;
                     let y_out = self.compute_y_out(theta, theta1);
