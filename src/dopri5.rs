@@ -5,7 +5,7 @@ use crate::constants::{dense_output, initial_step, stiffness};
 use crate::continuous_output_model::ContinuousOutputModel;
 use crate::controller::Controller;
 use crate::dop_shared::*;
-use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, MatrixSum, OVector, U1};
+use nalgebra::{DefaultAllocator, Dim, MatrixSum, OVector, U1, allocator::Allocator};
 
 trait DefaultController<T: FloatNumber> {
     fn default(x: T, x_end: T) -> Self;
@@ -184,7 +184,7 @@ where
     }
 
     /// Sets the output type
-    /// 
+    ///
     /// See [`OutputType`] for more details.
     pub fn set_output(&mut self, out_type: OutputType) {
         self.out_type = out_type;
@@ -261,7 +261,9 @@ where
     /// Integrates the system.
     pub fn integrate(&mut self) -> Result<Stats, IntegrationError> {
         if self.out_type == OutputType::Continuous {
-            panic!("Please use `integrate_with_continuous_output_model` to compute a continuous output model.");
+            panic!(
+                "Please use `integrate_with_continuous_output_model` to compute a continuous output model."
+            );
         }
         self.integrate_core(None)
     }
@@ -382,7 +384,7 @@ where
                 self.stats.accepted_steps += 1;
 
                 // Stiffness detection
-                if self.stats.accepted_steps % self.n_stiff == 0 || iasti > 0 {
+                if self.stats.accepted_steps.is_multiple_of(self.n_stiff) || iasti > 0 {
                     let num = T::from((&k[1] - &k[5]).dot(&(&k[1] - &k[5]))).unwrap();
                     let den = T::from((&y_next - &y_stiff).dot(&(&y_next - &y_stiff))).unwrap();
                     let h_lamb = if den > T::zero() {
@@ -532,7 +534,7 @@ where
 mod tests {
     use super::*;
     use crate::{OVector, System, Vector1};
-    use nalgebra::{allocator::Allocator, DefaultAllocator, Dim};
+    use nalgebra::{DefaultAllocator, Dim, allocator::Allocator};
 
     // Same as Test3 from rk4.rs, but aborts after x is equal to or greater than 0.5
     struct Test1 {}

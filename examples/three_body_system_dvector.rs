@@ -6,7 +6,7 @@ type State = DVector<f64>;
 type Time = f64;
 
 use std::{
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     io::BufWriter,
     io::Write,
     path::Path,

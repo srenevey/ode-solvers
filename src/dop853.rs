@@ -5,7 +5,7 @@ use crate::constants::{dense_output, initial_step, stiffness};
 use crate::controller::Controller;
 use crate::dop_shared::*;
 
-use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, MatrixSum, OVector, U1};
+use nalgebra::{DefaultAllocator, Dim, MatrixSum, OVector, U1, allocator::Allocator};
 
 trait DefaultController<T: FloatNumber> {
     fn default(x: T, x_end: T) -> Self;
@@ -192,7 +192,7 @@ where
     }
 
     /// Sets the output type
-    /// 
+    ///
     /// See [`OutputType`] for more details.
     pub fn set_output(&mut self, out_type: OutputType) {
         self.out_type = out_type;
@@ -376,7 +376,7 @@ where
                 self.stats.num_eval += 1;
 
                 // Stiffness detection
-                if self.stats.accepted_steps % self.n_stiff == 0 || iasti > 0 {
+                if self.stats.accepted_steps.is_multiple_of(self.n_stiff) || iasti > 0 {
                     let num = T::from((&k[3] - &k[2]).dot(&(&k[3] - &k[2]))).unwrap();
                     let den = T::from((&k[4] - &y_next).dot(&(&k[4] - &y_next))).unwrap();
                     let h_lamb = if den > T::zero() {
@@ -596,7 +596,7 @@ where
 mod tests {
     use super::*;
     use crate::{OVector, System, Vector1};
-    use nalgebra::{allocator::Allocator, DefaultAllocator, Dim};
+    use nalgebra::{DefaultAllocator, Dim, allocator::Allocator};
 
     // Same as Test3 from rk4.rs, but aborts after x is greater/equal than 0.5
     struct Test1 {}

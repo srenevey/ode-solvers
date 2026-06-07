@@ -154,9 +154,5 @@ impl fmt::Display for Stats {
 }
 
 pub(crate) fn sign<T: FloatNumber>(a: T, b: T) -> T {
-    if b > T::zero() {
-        a.abs()
-    } else {
-        -a.abs()
-    }
+    if b > T::zero() { a.abs() } else { -a.abs() }
 }

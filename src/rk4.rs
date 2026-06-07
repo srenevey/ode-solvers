@@ -2,7 +2,7 @@
 
 use crate::dop_shared::{FloatNumber, IntegrationError, SolverResult, Stats, System};
 
-use nalgebra::{allocator::Allocator, DefaultAllocator, Dim, OVector};
+use nalgebra::{DefaultAllocator, Dim, OVector, allocator::Allocator};
 
 /// Structure containing the parameters for the numerical integration.
 pub struct Rk4<T, V, F>
@@ -173,7 +173,7 @@ where
 mod tests {
     use crate::rk4::Rk4;
     use crate::{DVector, OVector, System, Vector1};
-    use nalgebra::{allocator::Allocator, DefaultAllocator, Dim};
+    use nalgebra::{DefaultAllocator, Dim, allocator::Allocator};
 
     struct Test1 {}
     impl<D: Dim> System<f64, OVector<f64, D>> for Test1

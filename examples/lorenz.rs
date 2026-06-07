@@ -4,7 +4,7 @@ use ode_solvers::dop853::*;
 use ode_solvers::*;
 
 use std::{
-    fs::{create_dir_all, File},
+    fs::{File, create_dir_all},
     io::BufWriter,
     io::Write,
     path::Path,
