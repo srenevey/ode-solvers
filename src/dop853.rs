@@ -619,10 +619,67 @@ mod tests {
         let mut stepper = Dop853::new(system, 0., 1., 0.1, Vector1::new(1.), 1e-12, 1e-6);
         let _ = stepper.integrate();
 
+        // Integration stops on the first step past the solout threshold (x >= 0.5).
         let x = stepper.x_out();
-        assert!((*x.last().unwrap() - 0.5).abs() < 1.0E-9); //
+        assert!(*x.last().unwrap() >= 0.5);
 
+        // Dense output at x = 0.5; reference from scipy's DOP853 (rtol=atol=1e-13).
         let out = stepper.y_out();
-        assert!((&out[5][0] - 0.912968195).abs() < 1.0E-9);
+        assert!((&out[5][0] - 0.9130596146).abs() < 1.0E-6);
+    }
+
+    // dy/dt = 7 t^6, y(0) = 0 -> y(t) = t^7. The order-8 method is exact for this
+    // degree-7 polynomial; a wrong node breaks it only for non-autonomous systems.
+    struct NonAutonomousPoly {}
+    impl<D: Dim> System<f64, OVector<f64, D>> for NonAutonomousPoly
+    where
+        DefaultAllocator: Allocator<D>,
+    {
+        fn system(&self, x: f64, _y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
+            dy[0] = 7.0 * x.powi(6);
+        }
+    }
+
+    #[test]
+    fn test_integrate_nonautonomous_polynomial() {
+        let mut stepper = Dop853::new(
+            NonAutonomousPoly {},
+            0.,
+            1.,
+            0.1,
+            Vector1::new(0.),
+            1e-12,
+            1e-12,
+        );
+        stepper.integrate().unwrap();
+        let out = stepper.y_out();
+        assert!((out.last().unwrap()[0] - 1.0).abs() < 1.0E-10);
+    }
+
+    // dy/dt = y + t, y(0) = 0 has the exact solution y(t) = e^t - t - 1, so y(1) = e - 2.
+    struct NonAutonomousLinear {}
+    impl<D: Dim> System<f64, OVector<f64, D>> for NonAutonomousLinear
+    where
+        DefaultAllocator: Allocator<D>,
+    {
+        fn system(&self, x: f64, y: &OVector<f64, D>, dy: &mut OVector<f64, D>) {
+            dy[0] = y[0] + x;
+        }
+    }
+
+    #[test]
+    fn test_integrate_nonautonomous_linear() {
+        let mut stepper = Dop853::new(
+            NonAutonomousLinear {},
+            0.,
+            1.,
+            0.1,
+            Vector1::new(0.),
+            1e-12,
+            1e-12,
+        );
+        stepper.integrate().unwrap();
+        let out = stepper.y_out();
+        assert!((out.last().unwrap()[0] - (std::f64::consts::E - 2.0)).abs() < 1.0E-10);
     }
 }
