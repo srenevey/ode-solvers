@@ -47,8 +47,15 @@ pub mod initial_step {
 pub mod dense_output {
     use super::FloatNumber;
 
-    /// Floating point tolerance for endpoint detection
+    /// Relative floating point slack for endpoint detection.
+    ///
+    /// The dense-output grid is built by repeated `xd += dx`, so round-off
+    /// accumulates (on the order of `1e-7` for `f32`). A fixed absolute
+    /// tolerance such as `1e-9` is therefore too tight and silently drops the
+    /// final `x_end` point. This returns a relative slack (a small multiple of
+    /// the machine epsilon) that callers scale by `max(|x_end|, 1)` so the
+    /// check also holds for large `|x_end|` in `f64`.
     pub fn endpoint_tolerance<T: FloatNumber>() -> T {
-        T::from(1.0e-9).unwrap()
+        T::from(1.0e3).unwrap() * T::epsilon()
     }
 }

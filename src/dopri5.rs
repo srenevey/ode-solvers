@@ -478,7 +478,9 @@ where
             }
 
             // Ensure the last point is added if it's within floating point error of x_end.
-            if (self.xd - self.x_end).abs() < dense_output::endpoint_tolerance() {
+            if (self.xd - self.x_end).abs()
+                < dense_output::endpoint_tolerance::<T>() * self.x_end.abs().max(T::one())
+            {
                 let theta = (self.x_end - self.x_old) / self.h_old;
                 let theta1 = T::one() - theta;
                 let y_out = self.compute_y_out(theta, theta1);
